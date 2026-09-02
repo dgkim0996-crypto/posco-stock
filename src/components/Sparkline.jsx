@@ -1,7 +1,6 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const PERIOD_MS = {
-  tick: 1500,
   "1m": 60_000,
   "5m": 300_000,
   day: 86_400_000,
@@ -28,18 +27,40 @@ function formatFullPrice(value, asset) {
 
 function formatTime(date, period) {
   if (period === "day") return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
-  if (period === "tick") {
-    return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
-  }
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
-export default function Sparkline({ values, asset, period = "tick" }) {
+export default function Sparkline({ values, candles, asset, period = "1m" }) {
   const [hoverIndex, setHoverIndex] = useState(null);
-  const containerRef = useRef(null);
+  const [viewRange, setViewRange] = useState({ start: 0, end: 0 });
+  const svgRef = useRef(null);
+  const dragRef = useRef(null);
+
+  const allCandles = useMemo(() => {
+    const interval = PERIOD_MS[period] || PERIOD_MS["1m"];
+    const now = Date.now();
+    return Array.isArray(candles) && candles.length
+      ? candles.filter((item) => item && Number.isFinite(item.close)).map((item) => ({ ...item, time: new Date(item.time) }))
+      : (values || []).filter(Number.isFinite).map((value, index, list) => ({
+          time: new Date(now - (list.length - 1 - index) * interval),
+          open: value,
+          high: value,
+          low: value,
+          close: value,
+          volume: 0,
+        }));
+  }, [values, candles, period]);
+
+  useEffect(() => {
+    const end = allCandles.length;
+    const initialCount = period === "1m" ? 300 : period === "5m" ? 60 : 96;
+    setViewRange({ start: Math.max(0, end - initialCount), end });
+    setHoverIndex(null);
+  }, [asset?.id, period, allCandles.length]);
 
   const prepared = useMemo(() => {
-    const clean = (values || []).filter(Number.isFinite);
+    const normalized = allCandles.slice(viewRange.start, viewRange.end || allCandles.length);
+    const clean = normalized.map((item) => item.close);
     if (clean.length < 2) return null;
 
     const w = 920;
@@ -54,8 +75,8 @@ export default function Sparkline({ values, asset, period = "tick" }) {
     const plotW = w - left - right;
     const plotH = priceBottom - top;
 
-    const rawMin = Math.min(...clean);
-    const rawMax = Math.max(...clean);
+    const rawMin = Math.min(...normalized.map((item) => item.low));
+    const rawMax = Math.max(...normalized.map((item) => item.high));
     const rawRange = rawMax - rawMin || Math.abs(rawMax || 1) * 0.01 || 1;
     const padding = rawRange * 0.12;
     const min = rawMin - padding;
@@ -68,48 +89,106 @@ export default function Sparkline({ values, asset, period = "tick" }) {
       y: top + ((max - value) / range) * plotH,
     }));
 
-    const volumes = clean.map((value, index) => {
-      const prev = clean[Math.max(0, index - 1)];
-      return Math.abs(value - prev) / (Math.abs(prev) || 1);
-    });
-    const maxVolume = Math.max(...volumes, 0.000001);
-    const interval = PERIOD_MS[period] || PERIOD_MS.tick;
-    const now = Date.now();
-    const times = clean.map((_, index) => new Date(now - (clean.length - 1 - index) * interval));
+    const volumes = normalized.map((item) => Number(item.volume) || 0);
+    const maxVolume = Math.max(...volumes, 1);
+    const times = normalized.map((item) => item.time);
 
-    return { clean, w, h, left, right, top, priceBottom, volumeTop, volumeBottom, axisBottom, plotW, plotH, min, max, range, coords, volumes, maxVolume, times };
-  }, [values, period]);
+    return { normalized, clean, w, h, left, right, top, priceBottom, volumeTop, volumeBottom, axisBottom, plotW, plotH, min, max, range, coords, volumes, maxVolume, times };
+  }, [allCandles, viewRange]);
 
   if (!prepared) {
     return <div className="chart-empty">시세 데이터를 수신하고 있습니다...</div>;
   }
 
-  const { clean, w, h, left, top, priceBottom, volumeTop, volumeBottom, axisBottom, plotW, min, max, range, coords, volumes, maxVolume, times } = prepared;
+  const { normalized, clean, w, h, left, top, priceBottom, volumeTop, volumeBottom, axisBottom, plotW, min, max, range, coords, volumes, maxVolume, times } = prepared;
   const up = clean.at(-1) >= clean[0];
-  const linePoints = coords.map((point) => `${point.x},${point.y}`).join(" ");
-  const areaPoints = `${left},${priceBottom} ${linePoints} ${left + plotW},${priceBottom}`;
   const yTicks = Array.from({ length: 6 }, (_, i) => max - (range * i) / 5);
   const xTickIndexes = Array.from(new Set([0, Math.round((clean.length - 1) * 0.25), Math.round((clean.length - 1) * 0.5), Math.round((clean.length - 1) * 0.75), clean.length - 1]));
-  const active = hoverIndex == null ? clean.length - 1 : hoverIndex;
+  const active = hoverIndex == null ? clean.length - 1 : Math.min(hoverIndex, clean.length - 1);
   const activePoint = coords[active];
   const activeTime = times[active];
 
   function handlePointerMove(event) {
-    const rect = containerRef.current?.getBoundingClientRect();
+    const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return;
+    if (dragRef.current) {
+      const baseCount = dragRef.current.end - dragRef.current.start;
+      if (dragRef.current.mode === "scale") {
+        const delta = event.clientX - dragRef.current.x;
+        const nextCount = Math.max(8, Math.min(allCandles.length, Math.round(baseCount * Math.exp(-delta / 220))));
+        const center = dragRef.current.start + baseCount / 2;
+        let start = Math.round(center - nextCount / 2);
+        start = Math.max(0, Math.min(allCandles.length - nextCount, start));
+        setViewRange({ start, end: start + nextCount });
+      } else {
+        const pointWidth = rect.width / Math.max(1, baseCount - 1);
+        const shift = Math.round((dragRef.current.x - event.clientX) / pointWidth);
+        if (shift !== 0) {
+          const maxStart = Math.max(0, allCandles.length - baseCount);
+          const start = Math.max(0, Math.min(maxStart, dragRef.current.start + shift));
+          setViewRange({ start, end: start + baseCount });
+        }
+      }
+      return;
+    }
     const svgX = ((event.clientX - rect.left) / rect.width) * w;
     const ratio = Math.max(0, Math.min(1, (svgX - left) / plotW));
     setHoverIndex(Math.round(ratio * (clean.length - 1)));
   }
 
+  function zoom(factor, centerRatio = 0.5) {
+    const total = allCandles.length;
+    const currentCount = viewRange.end - viewRange.start;
+    const nextCount = Math.max(8, Math.min(total, Math.round(currentCount * factor)));
+    const center = viewRange.start + currentCount * centerRatio;
+    let start = Math.round(center - nextCount * centerRatio);
+    start = Math.max(0, Math.min(total - nextCount, start));
+    setViewRange({ start, end: start + nextCount });
+    setHoverIndex(null);
+  }
+
+  function handleWheel(event) {
+    event.preventDefault();
+    const rect = svgRef.current?.getBoundingClientRect();
+    const ratio = rect ? Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)) : 0.5;
+    zoom(event.deltaY < 0 ? 0.8 : 1.25, ratio);
+  }
+
+  function resetRange() {
+    setViewRange({ start: 0, end: allCandles.length });
+    setHoverIndex(null);
+  }
+
   return (
-    <div
-      className="market-chart-wrap"
-      ref={containerRef}
-      onPointerMove={handlePointerMove}
-      onPointerLeave={() => setHoverIndex(null)}
-    >
-      <svg className="sparkline" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" role="img" aria-label={`${asset?.name || "종목"} 모의 시세 차트`}>
+    <div className="market-chart-wrap">
+      <svg
+        ref={svgRef}
+        className={`sparkline ${dragRef.current ? "is-dragging" : ""}`}
+        viewBox={`0 0 ${w} ${h}`}
+        preserveAspectRatio="none"
+        role="img"
+        aria-label={`${asset?.name || "종목"} 모의 시세 차트`}
+        onWheel={handleWheel}
+        onPointerDown={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const svgY = ((event.clientY - rect.top) / rect.height) * h;
+          dragRef.current = {
+            mode: svgY >= axisBottom - 18 ? "scale" : "pan",
+            x: event.clientX,
+            start: viewRange.start,
+            end: viewRange.end,
+          };
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }}
+        onPointerMove={handlePointerMove}
+        onPointerUp={(event) => {
+          dragRef.current = null;
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }}
+        onPointerCancel={() => { dragRef.current = null; }}
+        onPointerLeave={() => { if (!dragRef.current) setHoverIndex(null); }}
+        onDoubleClick={resetRange}
+      >
         <defs>
           <linearGradient id="chartAreaUp" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="#e5484d" stopOpacity="0.16" />
@@ -143,7 +222,6 @@ export default function Sparkline({ values, asset, period = "tick" }) {
           );
         })}
 
-        <polygon points={areaPoints} fill={up ? "url(#chartAreaUp)" : "url(#chartAreaDown)"} />
 
         {volumes.map((volume, index) => {
           const barHeight = Math.max(2, (volume / maxVolume) * (volumeBottom - volumeTop));
@@ -151,26 +229,32 @@ export default function Sparkline({ values, asset, period = "tick" }) {
           return (
             <rect
               key={`v-${index}`}
-              x={coords[index].x - Math.max(1.2, plotW / clean.length / 3)}
+              x={coords[index].x - Math.max(0.4, plotW / clean.length / 3)}
               y={volumeBottom - barHeight}
-              width={Math.max(2.4, plotW / clean.length / 1.8)}
+              width={Math.max(0.8, plotW / clean.length / 1.8)}
               height={barHeight}
               rx="1"
               className={rising ? "volume-bar up-bar" : "volume-bar down-bar"}
             />
           );
         })}
-        <text x={left} y={volumeTop - 7} className="chart-volume-label">거래량(모의)</text>
+        <text x={left} y={volumeTop - 7} className="chart-volume-label">거래량</text>
 
-        <polyline
-          points={linePoints}
-          fill="none"
-          stroke={up ? "#e5484d" : "#2f6fed"}
-          strokeWidth="2.4"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
-        />
+        {normalized.map((item, index) => {
+          const x = coords[index].x;
+          const bodyWidth = Math.max(0.8, Math.min(10, plotW / normalized.length * 0.58));
+          const highY = top + ((max - item.high) / range) * (priceBottom - top);
+          const lowY = top + ((max - item.low) / range) * (priceBottom - top);
+          const openY = top + ((max - item.open) / range) * (priceBottom - top);
+          const closeY = top + ((max - item.close) / range) * (priceBottom - top);
+          const rising = item.close >= item.open;
+          return (
+            <g key={`c-${item.time.toISOString()}-${index}`} className={rising ? "candle-up" : "candle-down"}>
+              <line x1={x} y1={highY} x2={x} y2={lowY} stroke={rising ? "#e5484d" : "#2f6fed"} strokeWidth="1.3" />
+              <rect x={x - bodyWidth / 2} y={Math.min(openY, closeY)} width={bodyWidth} height={Math.max(1.5, Math.abs(closeY - openY))} fill={rising ? "#e5484d" : "#2f6fed"} />
+            </g>
+          );
+        })}
 
         {activePoint && (
           <g className="chart-crosshair">

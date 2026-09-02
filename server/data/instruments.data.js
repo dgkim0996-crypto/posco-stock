@@ -1,24 +1,11 @@
-export const instruments = [
-  { symbol: "005490", name: "POSCO홀딩스", market: "KOSPI", type: "STOCK", currency: "KRW", price: 345000 },
-  { symbol: "003670", name: "포스코퓨처엠", market: "KOSPI", type: "STOCK", currency: "KRW", price: 186500 },
-  { symbol: "047050", name: "포스코인터내셔널", market: "KOSPI", type: "STOCK", currency: "KRW", price: 51200 },
-  { symbol: "022100", name: "포스코DX", market: "KOSPI", type: "STOCK", currency: "KRW", price: 34750 },
-  { symbol: "058430", name: "포스코스틸리온", market: "KOSPI", type: "STOCK", currency: "KRW", price: 38650 },
-  { symbol: "009520", name: "포스코엠텍", market: "KOSDAQ", type: "STOCK", currency: "KRW", price: 13120 },
-  { symbol: "005930", name: "삼성전자", market: "KOSPI", type: "STOCK", currency: "KRW", price: 82400 },
-  { symbol: "000660", name: "SK하이닉스", market: "KOSPI", type: "STOCK", currency: "KRW", price: 221500 },
-  { symbol: "035420", name: "NAVER", market: "KOSPI", type: "STOCK", currency: "KRW", price: 196800 },
-  { symbol: "035720", name: "카카오", market: "KOSPI", type: "STOCK", currency: "KRW", price: 62400 },
-  { symbol: "AAPL", name: "Apple", market: "NASDAQ", type: "STOCK", currency: "USD", price: 231.7 },
-  { symbol: "MSFT", name: "Microsoft", market: "NASDAQ", type: "STOCK", currency: "USD", price: 507.8 },
-  { symbol: "NVDA", name: "NVIDIA", market: "NASDAQ", type: "STOCK", currency: "USD", price: 181.4 },
-  { symbol: "GOOGL", name: "Alphabet", market: "NASDAQ", type: "STOCK", currency: "USD", price: 205.3 },
-  { symbol: "AMZN", name: "Amazon", market: "NASDAQ", type: "STOCK", currency: "USD", price: 231.1 },
-  { symbol: "META", name: "Meta Platforms", market: "NASDAQ", type: "STOCK", currency: "USD", price: 754.2 },
-  { symbol: "TSLA", name: "Tesla", market: "NASDAQ", type: "STOCK", currency: "USD", price: 345.6 },
-  { symbol: "AMD", name: "AMD", market: "NASDAQ", type: "STOCK", currency: "USD", price: 176.2 },
-  { symbol: "069500", name: "KODEX 200", market: "KOSPI", type: "ETF", currency: "KRW", price: 36540 },
-  { symbol: "133690", name: "TIGER 미국나스닥100", market: "KOSPI", type: "ETF", currency: "KRW", price: 142350 },
-  { symbol: "QQQ", name: "Invesco QQQ", market: "NASDAQ", type: "ETF", currency: "USD", price: 576.3 },
-  { symbol: "SPY", name: "SPDR S&P 500 ETF", market: "NYSE", type: "ETF", currency: "USD", price: 649.1 },
-];
+import { INITIAL_MARKETS } from "../../src/data/markets.js";
+
+// 화면에 등록된 주식 목록을 API의 종목 원본으로도 사용해 양쪽 목록이 어긋나지 않게 한다.
+export const instruments = INITIAL_MARKETS.stocks.map((stock) => ({
+  symbol: stock.symbol,
+  name: stock.name,
+  market: stock.market,
+  type: stock.group === "ETF" ? "ETF" : "STOCK",
+  currency: stock.unit,
+  price: stock.price,
+}));

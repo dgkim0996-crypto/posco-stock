@@ -6,6 +6,7 @@ import instrumentsRouter from "./routes/instruments.routes.js";
 import accountsRouter from "./routes/accounts.routes.js";
 import ordersRouter from "./routes/orders.routes.js";
 import quotesRouter from "./routes/quotes.routes.js";
+import chartsRouter from "./routes/charts.routes.js";
 import { notFound } from "./middleware/notFound.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
@@ -32,6 +33,7 @@ app.use("/api", instrumentsRouter);
 app.use("/api", accountsRouter);
 app.use("/api", ordersRouter);
 app.use("/api", quotesRouter);
+app.use("/api", chartsRouter);
 
 // Error Handling Middlewares
 app.use(notFound);

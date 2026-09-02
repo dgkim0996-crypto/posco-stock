@@ -7,7 +7,7 @@ import AssetOverview from "./pages/AssetOverview.jsx";
 import InvestmentInfo from "./pages/InvestmentInfo.jsx";
 import Products from "./pages/Products.jsx";
 import Banking from "./pages/Banking.jsx";
-import poscoSymbol from "./assets/posco-symbol.svg";
+import poscoLogo from "./assets/posco-ci-blue.png";
 
 const STARTING_CASH = 10000000;
 const USD_KRW = 1380;
@@ -124,7 +124,9 @@ export default function App() {
   const [filledOrders, setFilledOrders] = useState([]);
   const [quantity, setQuantity] = useState("1");
   const [chartData, setChartData] = useState({});
-  const [chartPeriod, setChartPeriod] = useState("tick");
+  const [chartPeriod, setChartPeriod] = useState("1m");
+  const [chartLoading, setChartLoading] = useState(false);
+  const [chartError, setChartError] = useState("");
   const [message, setMessage] = useState("포스코증권 모의투자 계좌가 준비되었습니다.");
   const [dashboardWidgets, setDashboardWidgets] = useState(loadDashboardWidgets);
   const [editDashboard, setEditDashboard] = useState(false);
@@ -155,7 +157,7 @@ export default function App() {
 
         Object.entries(next).forEach(([type, list]) => {
           list.forEach((asset) => {
-            if (type === "stocks" && asset.group === "POSCO") return;
+            if (type === "stocks" && asset.priceSource?.startsWith("KIS")) return;
             if (type === "bonds") {
               const dy = (Math.random() - 0.5) * 0.018;
               asset.yield = Math.max(0.1, asset.yield + dy);
@@ -235,6 +237,45 @@ export default function App() {
       return { ...prev, [selected.id]: [...base, selected.price].slice(-96) };
     });
   }, [selected.id, selected.price]);
+
+  useEffect(() => {
+    if (category !== "stocks") return undefined;
+    let active = true;
+    let timer;
+    const key = `${selected.symbol}:${chartPeriod}`;
+    const normalRefreshMs = chartPeriod === "day" ? 300_000 : 60_000;
+
+    const loadChart = async () => {
+      let nextRefreshMs = normalRefreshMs;
+      setChartLoading(true);
+      try {
+        const response = await fetch(`/api/charts/${encodeURIComponent(selected.symbol)}?period=${chartPeriod}`);
+        const data = await response.json();
+        if (!response.ok) {
+          const error = new Error(data.error || `차트 API 오류 (${response.status})`);
+          error.retryAfter = Number(data.retryAfter) || Number(response.headers.get("Retry-After")) || 0;
+          throw error;
+        }
+        if (!active) return;
+        setChartData((prev) => ({ ...prev, [key]: data.candles || [] }));
+        setChartError("");
+      } catch (error) {
+        if (error.retryAfter) nextRefreshMs = error.retryAfter * 1000;
+        if (active) setChartError(error.message || "실제 차트 데이터를 불러오지 못했습니다.");
+      } finally {
+        if (active) {
+          setChartLoading(false);
+          timer = window.setTimeout(loadChart, nextRefreshMs);
+        }
+      }
+    };
+
+    loadChart();
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [category, selected.symbol, chartPeriod]);
 
   useEffect(() => {
     window.localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(dashboardWidgets));
@@ -660,10 +701,10 @@ export default function App() {
     <div className="terminal">
       <header className="topbar">
         <div className="topbar-inner">
-          <button type="button" className="brand" onClick={() => setMainTab("trading")} aria-label="포스코증권 홈">
-            <img className="brand-mark" src={poscoSymbol} alt="" />
-            <div>
-              <strong>포스코증권</strong>
+          <button type="button" className="brand" onClick={() => setMainTab("trading")} aria-label="POSCO 증권 홈">
+            <img className="brand-mark" src={poscoLogo} alt="POSCO" />
+            <div className="brand-copy">
+              <strong>증권</strong>
               <span>모의투자</span>
             </div>
           </button>
@@ -692,7 +733,7 @@ export default function App() {
         <div className="market-status">
           <span className="status-dot" />
           <strong>{marketDataStatus.connected ? "KIS 실제시세 연결" : "시세 연결 중"}</strong>
-          <span>{marketDataStatus.connected ? `포스코 ${marketDataStatus.cachedSymbols}종목 REST 수신` : "마지막 정상 가격 유지"}</span>
+          <span>{marketDataStatus.connected ? `전체 ${marketDataStatus.cachedSymbols}종목 REST 수신` : "마지막 정상 가격 유지"}</span>
         </div>
         <div className="top-metrics">
           <div><span>총 평가자산</span><strong>{money(totalAssets)}</strong></div>
@@ -773,7 +814,6 @@ export default function App() {
                 <div className="chart-periods">
                   <strong>종합차트</strong>
                   {[
-                    ["tick", "틱"],
                     ["1m", "1분"],
                     ["5m", "5분"],
                     ["day", "일"],
@@ -788,9 +828,20 @@ export default function App() {
                     </button>
                   ))}
                 </div>
-                <span>마우스를 올리면 시각·가격 확인</span>
+                <span>휠 확대·축소 · 본문 이동 · 하단 시간축 간격 조절</span>
               </div>
-              <Sparkline values={chartData[selected.id] ?? [selected.price]} asset={selected} period={chartPeriod} />
+              {chartLoading && !chartData[`${selected.symbol}:${chartPeriod}`] && category === "stocks" ? (
+                <div className="chart-empty">KIS 실제 {chartPeriod === "day" ? "일봉" : `${chartPeriod}봉`}을 불러오고 있습니다...</div>
+              ) : chartError && !chartData[`${selected.symbol}:${chartPeriod}`] && category === "stocks" ? (
+                <div className="chart-empty">{chartError}</div>
+              ) : (
+                <Sparkline
+                  candles={category === "stocks" ? chartData[`${selected.symbol}:${chartPeriod}`] : null}
+                  values={chartData[selected.id] ?? [selected.price]}
+                  asset={selected}
+                  period={chartPeriod}
+                />
+              )}
               <div className="chart-foot">
                 <span>시가 {assetPrice({ ...selected, price: selected.open ?? selected.price })}</span>
                 <span>고가 {assetPrice({ ...selected, price: selected.high ?? selected.price * 1.006 })}</span>
