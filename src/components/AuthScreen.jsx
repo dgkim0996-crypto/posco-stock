@@ -9,6 +9,26 @@ export default function AuthScreen() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  /**
+   * Supabase를 경유해 소셜 로그인 공급자로 이동한다.
+   * Google은 기본 공급자, Naver는 Supabase Dashboard에 `naver` 식별자로 등록한 Custom OAuth 공급자다.
+   */
+  const signInWithProvider = async (provider) => {
+    setLoading(true);
+    setMessage("");
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: window.location.origin },
+      });
+      if (error) throw error;
+    } catch (error) {
+      setMessage(error.message || "소셜 로그인 연결에 실패했습니다.");
+      setLoading(false);
+    }
+  };
+
+  /** 이메일 가입·로그인·비밀번호 재설정 양식을 현재 모드에 맞게 제출한다. */
   const submit = async (event) => {
     event.preventDefault();
     if (!email.trim()) return setMessage("이메일을 입력해 주세요.");
@@ -53,6 +73,17 @@ export default function AuthScreen() {
           {mode !== "reset" && <label>비밀번호<input type="password" minLength="8" autoComplete={mode === "signup" ? "new-password" : "current-password"} value={password} onChange={(event) => setPassword(event.target.value)} /></label>}
           <button type="submit" disabled={loading}>{loading ? "처리 중..." : mode === "signup" ? "회원가입" : mode === "reset" ? "재설정 메일 보내기" : "로그인"}</button>
         </form>
+        {mode !== "reset" && <>
+          <div className="auth-divider"><span>또는</span></div>
+          <div className="social-login" aria-label="소셜 로그인">
+            <button type="button" className="social-login-google" onClick={() => signInWithProvider("google")} disabled={loading}>
+              <span aria-hidden="true">G</span> Google로 계속하기
+            </button>
+            <button type="button" className="social-login-naver" onClick={() => signInWithProvider("custom:naver")} disabled={loading}>
+              <span aria-hidden="true">N</span> 네이버로 계속하기
+            </button>
+          </div>
+        </>}
         {message && <div className="auth-message" role="status">{message}</div>}
         <div className="auth-links">
           {mode !== "login" && <button type="button" onClick={() => { setMode("login"); setMessage(""); }}>로그인</button>}

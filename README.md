@@ -83,6 +83,16 @@ Site URL을 `http://localhost:5173`, Redirect URL을 `http://localhost:5173/**`�
 인증·계좌 분리 테스트는 실행 중인 서버를 대상으로 `node scripts/auth-e2e.mjs`로 수행할 수 있습니다.
 테스트에서 만든 임시 인증 사용자와 계좌는 완료 여부와 관계없이 자동 삭제됩니다.
 
+## Google·네이버 소셜 로그인
+
+로그인 화면은 Google과 Naver OAuth 버튼을 제공합니다. Google은 Supabase 기본 공급자이며, Naver는 Supabase의 Custom OAuth 공급자로 `naver` 식별자를 사용합니다.
+
+1. Supabase Dashboard의 **Authentication > URL Configuration**에서 Site URL과 Redirect URL에 로컬 주소 `http://localhost:5173` 및 배포 주소를 등록합니다.
+2. Google Cloud Console에서 Web OAuth 클라이언트를 만들고, 승인된 JavaScript 원본에 서비스 주소를 추가합니다. 승인된 리디렉션 URI에는 Supabase Dashboard의 Google 공급자 화면에 표시되는 callback URL을 그대로 입력합니다. 그 Client ID와 Secret을 Supabase **Authentication > Providers > Google**에 등록하고 활성화합니다.
+3. Naver Developers에서 애플리케이션을 만들고 네이버 로그인 API를 활성화합니다. Supabase **Authentication > Providers > Custom OAuth Providers**에서 식별자 `naver`, Authorization URL `https://nid.naver.com/oauth2.0/authorize`, Token URL `https://nid.naver.com/oauth2.0/token`과 Naver Client ID/Secret을 등록합니다. 사용자 정보 엔드포인트와 응답 필드 매핑은 Dashboard의 Custom OAuth 안내에 맞춰 설정하고, Naver 개발자센터 Callback URL에는 Supabase가 표시하는 callback URL을 입력합니다.
+
+공급자 Secret은 `.env`, React 코드 또는 Git 저장소에 넣지 않고 각 공급자의 콘솔과 Supabase Dashboard에서만 관리합니다.
+
 ## 6단계 운영 상태 점검
 
 - `GET /api/health`: 프로세스 생존 여부를 확인합니다.

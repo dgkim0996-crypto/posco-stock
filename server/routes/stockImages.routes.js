@@ -1,11 +1,17 @@
 import express from "express";
+import { createRateLimit } from "../middleware/rateLimit.js";
 
 const router = express.Router();
 const FILE_PATTERN = /^[A-Za-z0-9-]+\.png(?:\?\d+)?$/;
 const TOSS_IMAGE_BASE = "https://static.toss.im/png-icons/securities/icn-sec-fill-";
+const stockImageRateLimit = createRateLimit({
+  windowMs: 60 * 1_000,
+  max: Number(process.env.STOCK_IMAGE_RATE_LIMIT_MAX) || 120,
+  message: "종목 이미지 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+});
 
 // 토스 이미지 서버의 외부 사이트 직접 로딩 제한을 피하고 동일 출처로 원본 PNG를 전달한다.
-router.get("/stock-images/:file", async (req, res, next) => {
+router.get("/stock-images/:file", stockImageRateLimit, async (req, res, next) => {
   try {
     const file = req.params.file;
     if (!FILE_PATTERN.test(file)) return res.status(400).json({ error: "잘못된 종목 이미지 경로입니다." });

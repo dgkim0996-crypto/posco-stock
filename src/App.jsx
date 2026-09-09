@@ -50,6 +50,7 @@ const DASHBOARD_META = {
 };
 
 // 사용자가 편집한 MY 투자 위젯 순서·크기를 복원하고 누락/잘못된 값은 기본값으로 보정한다.
+/** 브라우저에 저장한 대시보드 배치를 읽고 범위 밖 값은 안전한 기본값으로 보정한다. */
 function loadDashboardWidgets() {
   if (typeof window === "undefined") return DEFAULT_DASHBOARD_WIDGETS;
 
@@ -85,6 +86,7 @@ function loadDashboardWidgets() {
   }
 }
 
+/** 초기 종목 목록을 복제하고, 새로고침 직후 표시할 마지막 시세 캐시를 합친다. */
 function cloneMarkets() {
   const initial = JSON.parse(JSON.stringify(INITIAL_MARKETS));
   if (typeof window === "undefined") return initial;
@@ -103,6 +105,7 @@ function cloneMarkets() {
 }
 
 // 기간별 차트를 복원해 1분·5분·일봉 전환 시 저장 데이터를 즉시 보여준다.
+/** 종목·주기별 차트 캐시를 읽되 손상된 localStorage 데이터는 무시한다. */
 function loadChartCache() {
   if (typeof window === "undefined") return {};
   try {
@@ -113,10 +116,12 @@ function loadChartCache() {
   }
 }
 
+/** 사용자별 즐겨찾기 저장소 키를 만들어 계정 간 브라우저 데이터를 분리한다. */
 function favoritesStorageKey(userId) {
   return `posco-market-favorites-v2:${userId}`;
 }
 
+/** 현재 사용자의 즐겨찾기를 읽고, 최초 1회에 한해 기존 공용 키를 이전한다. */
 function loadFavorites(userId) {
   if (typeof window === "undefined") return new Set();
   try {
@@ -131,6 +136,7 @@ function loadFavorites(userId) {
   }
 }
 
+/** 사용자가 선택한 테마가 없으면 운영체제 색상 모드를 기본값으로 사용한다. */
 function loadTheme() {
   if (typeof window === "undefined") return "light";
   const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
@@ -139,6 +145,7 @@ function loadTheme() {
 }
 
 // KIS를 사용하지 않는 선물·채권·디지털자산 차트의 초기 모의 가격 흐름을 생성한다.
+/** 실제 캔들이 준비되기 전 차트가 비지 않도록 현재가 주변의 임시 가격 흐름을 만든다. */
 function seedChartValues(price, count = 72) {
   const start = price * (1 + (Math.random() - 0.5) * 0.018);
   const values = [Math.max(0.0001, start)];
@@ -154,6 +161,7 @@ function seedChartValues(price, count = 72) {
 
 // 두 기초종목의 같은 시각 OHLCV를 동일비중 10배 수익률로 합성한다.
 // 마지막 종가는 현재 합성 ETF 가격과 맞춰 시세 요약과 차트가 서로 어긋나지 않게 한다.
+/** 두 기초자산의 등락률을 조합해 레버리지 모의 종목의 캔들을 계산한다. */
 function buildSyntheticCandles(leftCandles, rightCandles, currentPrice, leverage = 10) {
   const left = Array.isArray(leftCandles) ? leftCandles : [];
   const right = Array.isArray(rightCandles) ? rightCandles : [];
@@ -205,12 +213,14 @@ function buildSyntheticCandles(leftCandles, rightCandles, currentPrice, leverage
 }
 
 // 원화 금액의 부호와 천 단위 구분을 공통 형식으로 출력한다.
+/** 금액을 원화 표기용 문자열로 변환한다. */
 function money(value) {
   const sign = value < 0 ? "-" : "";
   return `${sign}${Math.abs(Math.round(value)).toLocaleString()}원`;
 }
 
 // 상품별 단위(지수·달러·원화)에 맞는 현재가 표시 문자열을 만든다.
+/** 종목 통화에 맞춘 화면 표시 가격을 반환한다. */
 function assetPrice(asset) {
   if (asset.unit === "PTS") {
     return asset.price.toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -221,16 +231,19 @@ function assetPrice(asset) {
   return `${Math.round(asset.price).toLocaleString()}원`;
 }
 
+/** 등락률의 양수·음수 부호를 보존한 표시 문자열을 만든다. */
 function signedPercent(value) {
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
 // 전체 자산 합산을 위해 달러 상품 가격을 고정 환율 기준 원화로 환산한다.
+/** 해외 주식은 고정 환율을 적용해 주문·자산 계산에 쓰는 원화 가격으로 환산한다. */
 function spotPriceInKRW(asset) {
   if (!asset) return 0;
   return asset.unit === "USD" ? asset.price * USD_KRW : asset.price;
 }
 
+/** 로그인 세션을 중심으로 시세, 주문, 보유자산, 화면 상태를 조립하는 메인 거래 화면이다. */
 function TradingApp({ session, onSignOut }) {
   // 거래·계좌·화면 편집에 필요한 상태를 한곳에서 관리하고 하위 페이지에는 필요한 값과 변경 함수를 전달한다.
   const [markets, setMarkets] = useState(cloneMarkets);
@@ -888,6 +901,7 @@ function TradingApp({ session, onSignOut }) {
   }
 
   // 현물 매수/매도의 잔고 검증, 현금 변경, 평균단가·보유수량 갱신을 한 번에 처리한다.
+  /** 체결 가능한 주문을 서버에 전송하고, 반환된 잔고·체결 상태를 화면 상태에 반영한다. */
   async function executeSpotOrder(order, executionPrice, fillQuantity = null) {
     const asset = allAssets.find((item) => item.id === order.assetId);
     if (!asset) return false;
@@ -910,6 +924,7 @@ function TradingApp({ session, onSignOut }) {
   }
 
   // 주문 입력을 검증하고 시장가는 즉시 체결, 지정가는 조건에 따라 체결 또는 대기시킨다.
+  /** 매수·매도 주문을 검증한 뒤 즉시 체결하거나 지정가 대기 주문으로 저장한다. */
   async function placeSpotOrder(side) {
     const qty = Number(quantity);
     const requestedPrice = orderType === "LIMIT" ? Number(limitPrice) : selected.price;
@@ -986,6 +1001,7 @@ function TradingApp({ session, onSignOut }) {
     placeSpotOrder("SELL");
   }
 
+  /** 서버에서 지정가 대기 주문을 취소하고 화면의 예약 주문 목록을 갱신한다. */
   async function cancelPendingOrder(order) {
     try {
       const response=await apiFetch(`/api/accounts/me/pending-orders/${order.pendingOrderId||order.id}`,{method:"DELETE"});
@@ -994,6 +1010,7 @@ function TradingApp({ session, onSignOut }) {
     } catch(error){setMessage(`${order.name} 주문 취소 실패 · ${error.message}`);}
   }
 
+  /** 사용자가 입력한 새 가격·수량으로 대기 주문을 정정한다. */
   async function amendPendingOrder(order) {
     const nextQuantity = Number(window.prompt("정정 수량", String(order.quantity)));
     const nextLimitPrice = Number(window.prompt("정정 지정가", String(order.limitPrice)));
@@ -1007,6 +1024,7 @@ function TradingApp({ session, onSignOut }) {
   }
 
   // 증거금을 확인한 뒤 LONG/SHORT 선물 포지션을 새로 연다.
+  /** 선택한 선물 종목에 새 매수 또는 매도 포지션을 연다. */
   async function openFuture(side) {
     const qty = Math.floor(Number(quantity));
     if (!Number.isFinite(qty) || qty < 1) {
@@ -1024,6 +1042,7 @@ function TradingApp({ session, onSignOut }) {
   }
 
   // 선택 포지션의 증거금과 실현손익을 현금으로 돌려주고 포지션을 닫는다.
+  /** 선택한 선물 포지션을 서버에서 청산하고 현금·포지션 상태를 갱신한다. */
   async function closeFuture(id) {
     const pos = futuresPositions.find((x) => x.id === id);
     if (!pos) return;
@@ -1032,6 +1051,7 @@ function TradingApp({ session, onSignOut }) {
   }
 
   // 모든 모의 거래·잔고·입력값을 최초 상태로 되돌린다.
+  /** 현재 사용자의 모의 계좌를 초기 예수금과 빈 포지션 상태로 되돌린다. */
   async function reset() {
     try {
       const response = await apiFetch("/api/accounts/me/reset", { method: "POST" });

@@ -8,6 +8,7 @@ const spotAssets = Object.entries(INITIAL_MARKETS)
 const assetMap = new Map(spotAssets);
 const createError = (status, message, cause) => Object.assign(new Error(message), { status, cause });
 
+/** 주문 입력값을 DB RPC에 전달 가능한 숫자·종목·유형으로 검증하고 정규화한다. */
 const validateOrder = ({ accountId, symbol, side, quantity, orderType = "MARKET", requestedPrice, pendingOrderId, fillQuantity }) => {
   const parsedAccountId = Number(accountId);
   const parsedQuantity = Number(quantity);
@@ -33,6 +34,7 @@ const validateOrder = ({ accountId, symbol, side, quantity, orderType = "MARKET"
   return { accountId: parsedAccountId, symbol: normalizedSymbol, side, quantity: parsedQuantity, orderType, requestedPrice: parsedRequestedPrice, pendingOrderId, fillQuantity: parsedFillQuantity, asset };
 };
 
+/** Supabase의 snake_case 계좌 행을 API의 camelCase 응답으로 변환한다. */
 const mapAccount = (row) => ({
   id: row.id,
   accountNumber: row.account_number,
@@ -40,6 +42,7 @@ const mapAccount = (row) => ({
   usdBalance: Number(row.usd_balance),
 });
 
+/** 주문 결과에 포함된 보유잔고 행을 화면에서 쓰는 형태로 변환한다. */
 const mapHolding = (row) => row && ({
   id: row.id,
   accountId: row.account_id,
@@ -49,6 +52,7 @@ const mapHolding = (row) => row && ({
   avgPrice: Number(row.avg_price),
 });
 
+/** 주문 행에 체결·취소·수수료 필드를 포함해 일관된 응답 모델로 변환한다. */
 const mapOrder = (row) => ({
   id: row.id,
   accountId: row.account_id,
@@ -73,12 +77,14 @@ const mapOrder = (row) => ({
   createdAt: row.created_at,
 });
 
+/** 실시간 시세가 있으면 우선 사용하고, 없으면 종목 기본 가격으로 체결 가격을 만든다. */
 const executionPriceFor = (input) => {
   const livePrice = marketDataService.getQuote(input.symbol)?.price;
   const nativePrice = Number.isFinite(livePrice) ? livePrice : Number(input.asset.price);
   return input.asset.unit === "USD" ? nativePrice * 1380 : nativePrice;
 };
 
+/** 시장가 또는 체결 조건을 만족한 지정가 주문을 RPC로 원자 처리하고 최종 잔고를 반환한다. */
 const createOrder = async (payload) => {
   const input = validateOrder(payload);
   const executionPrice = executionPriceFor(input);
@@ -124,6 +130,7 @@ const createOrder = async (payload) => {
   };
 };
 
+/** 한 계좌의 최근 체결 주문 100건을 최신순으로 조회한다. */
 const getAll = async (accountIdValue) => {
   let query = getSupabaseAdmin().from("orders").select("*");
   if (accountIdValue !== undefined) {

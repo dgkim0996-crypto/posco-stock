@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import AssetLogo from "./AssetLogo.jsx";
+import { apiFetch } from "../utils/api.js";
 
 const GUIDES = {
   pension: { title: "연금저축", subtitle: "세액공제와 장기 분산투자를 함께", facts: [["연간 납입", "연금계좌 합산 1,800만원"], ["세액공제", "연금저축 600만원 한도"], ["수령", "만 55세 이후 연금수령"], ["운용", "펀드·ETF 중심 직접 운용"]], mix: "주식형 50% · 채권형 35% · 현금성 15%" },
@@ -38,9 +39,10 @@ export default function LongTermGuide({ type, stocks, indices, onClose, onGoTrad
     setLoading(true); setError("");
     try {
       const candidates = stocks.slice(0, 40).map((item) => ({ symbol: item.symbol, name: item.name, market: item.market, group: item.group, price: item.price, change: item.change, volume: item.volume || 0, strength: Math.round(100 + Math.max(-30, Math.min(30, item.change * 8))) }));
-      const response = await fetch("/api/advisor/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ product: type, profile, indices, candidates }) });
-      if (!response.ok) throw new Error("분석 서버 응답 오류");
-      setAnalysis(await response.json());
+      const response = await apiFetch("/api/advisor/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ product: type, profile, indices, candidates }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "분석 서버 응답 오류");
+      setAnalysis(payload);
     } catch (err) { setError(err.message); } finally { setLoading(false); }
   }
 

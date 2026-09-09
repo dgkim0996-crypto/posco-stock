@@ -6,12 +6,14 @@ const assets = new Map(Object.entries(INITIAL_MARKETS)
   .flatMap(([category, list]) => list.map((asset) => [asset.symbol, { ...asset, category }])));
 const createError = (status, message, cause) => Object.assign(new Error(message), { status, cause });
 
+/** API에서 온 계좌 ID가 DB 조회에 안전한 양의 정수인지 확인한다. */
 const accountIdOf = (value) => {
   const id = Number(value);
   if (!Number.isInteger(id) || id <= 0) throw createError(400, "잘못된 계좌 ID 형식입니다.");
   return id;
 };
 
+/** DB의 미체결 주문 행을 화면에서 사용하는 예약 주문 모델로 변환한다. */
 const mapPendingOrder = (row) => ({
   id: row.id,
   accountId: row.account_id,
@@ -24,6 +26,7 @@ const mapPendingOrder = (row) => ({
   createdAt: row.created_at,
 });
 
+/** 특정 계좌의 활성 미체결 주문을 최신순으로 읽는다. */
 const getAll = async (value) => {
   const accountId = accountIdOf(value);
   const { data, error } = await getSupabaseAdmin().from("pending_orders")
@@ -34,6 +37,7 @@ const getAll = async (value) => {
   return data.map(mapPendingOrder);
 };
 
+/** 지정가 주문을 만들고 매수 시 필요한 예약 금액을 함께 계산한다. */
 const create = async (value, payload) => {
   const accountId = accountIdOf(value);
   const asset = assets.get(typeof payload.symbol === "string" ? payload.symbol.trim() : "");
@@ -62,6 +66,7 @@ const create = async (value, payload) => {
   return { ...mapPendingOrder(data.pending_order), orderId: data.order?.id || data.pending_order.order_id || null };
 };
 
+/** 소유 계좌 조건을 포함해 미체결 주문을 취소한다. */
 const remove = async (value, pendingId) => {
   const accountId = accountIdOf(value);
   const { data, error } = await getSupabaseAdmin().rpc("cancel_pending_spot_order", {
@@ -74,6 +79,7 @@ const remove = async (value, pendingId) => {
   return { id: data.pending_order_id, order: data.order || null };
 };
 
+/** 주문 수량·가격을 변경하고 그에 따른 예약 금액을 다시 반영한다. */
 const amend = async (value, pendingId, payload) => {
   const accountId = accountIdOf(value);
   const quantity = Number(payload.quantity);

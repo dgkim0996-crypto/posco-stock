@@ -40,7 +40,7 @@ app.use(
   }),
 );
 // JSON 및 HTML form 형식의 요청 본문을 req.body로 변환한다.
-app.use(express.json());
+app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(requestMetrics);
 
