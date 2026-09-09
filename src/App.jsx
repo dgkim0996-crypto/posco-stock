@@ -1617,22 +1617,25 @@ function TradingApp({ session, onSignOut }) {
             </div>
           </div>
 
-          <div className="panel account-panel">
-            <div className="panel-title">
-              <div><span>계좌</span><strong>자산현황</strong></div>
-              <em>모의투자</em>
-            </div>
-            <div className="summary">
-              <div><span>예수금</span><strong>{money(cash)}</strong></div>
-              <div><span>주식·채권 평가액</span><strong>{money(spotValue)}</strong></div>
-              <div><span>선물 증거금</span><strong>{money(marginTotal)}</strong></div>
-              <div><span>선물 평가손익</span><strong className={futuresPnl >= 0 ? "up" : "down"}>{money(futuresPnl)}</strong></div>
-              <div><span>총 평가손익</span><strong className={totalPnl >= 0 ? "up" : "down"}>{money(totalPnl)}</strong></div>
-              <div><span>총 평가자산</span><strong>{money(totalAssets)}</strong></div>
-            </div>
-          </div>
-          {category === "stocks" && (selected.synthetic ? <section className="panel synthetic-product-info"><strong>10배 레버리지 모의 ETF</strong><p>삼성전자와 SK하이닉스의 당일 등락률을 동일 비중으로 합산한 뒤 10배로 추종합니다. 일간 재조정 상품이므로 장기 누적수익은 기초종목 누적수익의 정확한 10배가 아니며, 급락 시 원금 대부분을 잃을 수 있습니다.</p><div><span>기초자산 <b>삼성전자 50% · SK하이닉스 50%</b></span><span>기준가 <b>10,000원</b></span><span>레버리지 <b>일간 10배</b></span></div></section> : <StockFundamentals asset={selected} />)}
         </section>
+
+        <div className="panel account-panel home-wide-panel">
+          <div className="panel-title">
+            <div><span>계좌</span><strong>자산현황</strong></div>
+            <em>모의투자</em>
+          </div>
+          <div className="summary">
+            <div><span>예수금</span><strong>{money(cash)}</strong></div>
+            <div><span>주식·채권 평가액</span><strong>{money(spotValue)}</strong></div>
+            <div><span>선물 증거금</span><strong>{money(marginTotal)}</strong></div>
+            <div><span>선물 평가손익</span><strong className={futuresPnl >= 0 ? "up" : "down"}>{money(futuresPnl)}</strong></div>
+            <div><span>총 평가손익</span><strong className={totalPnl >= 0 ? "up" : "down"}>{money(totalPnl)}</strong></div>
+            <div><span>총 평가자산</span><strong>{money(totalAssets)}</strong></div>
+          </div>
+        </div>
+        {category === "stocks" && (selected.synthetic
+          ? <section className="panel synthetic-product-info home-wide-panel"><strong>10배 레버리지 모의 ETF</strong><p>삼성전자와 SK하이닉스의 당일 등락률을 동일 비중으로 합산한 뒤 10배로 추종합니다. 일간 재조정 상품이므로 장기 누적수익은 기초종목 누적수익의 정확한 10배가 아니며, 급락 시 원금 대부분을 잃을 수 있습니다.</p><div><span>기초자산 <b>삼성전자 50% · SK하이닉스 50%</b></span><span>기준가 <b>10,000원</b></span><span>레버리지 <b>일간 10배</b></span></div></section>
+          : <div className="home-wide-panel"><StockFundamentals asset={selected} /></div>)}
       </main>
 
       <section className={`dashboard-section ${editDashboard ? "is-editing" : ""}`}>
