@@ -4,6 +4,12 @@ import React, { useEffect, useState } from "react";
 
 const POSCO_GROUP_DOMAIN = "poscofuturem.com";
 
+const TOSS_SECURITY_LOGOS = {
+  "005930":"https://static.toss.im/png-icons/securities/icn-sec-fill-005930.png",
+  "009150":"https://static.toss.im/png-icons/securities/icn-sec-fill-009150.png",
+  "005935":"https://static.toss.im/png-icons/securities/icn-sec-fill-005935.png",
+};
+
 const DOMAINS = {
   "005490":"posco-inc.com","003670":"poscofuturem.com","047050":"poscointl.com","022100":"poscodx.com","058430":"poscosteeleon.com","009520":"poscomtech.com",
   "005930":"samsung.com","000660":"skhynix.com","035420":"navercorp.com","035720":"kakaocorp.com",
@@ -24,9 +30,6 @@ const DOMAINS = {
 
 // 파비콘으로 구분하기 어려운 파생상품·국채·코인은 로컬 SVG로 항상 선명하게 표시한다.
 const LOCAL_ICON_SPECS = {
-  "005930":{ kind:"company", label:"삼성", color:"#1428a0" },
-  "005935":{ kind:"company", label:"삼성우", color:"#1428a0" },
-  "009150":{ kind:"company", label:"SEM", color:"#1428a0" },
   "055550":{ kind:"company", label:"신한", color:"#0046ff" },
   "012330":{ kind:"company", label:"M", color:"#002c5f" },
   SH10X:{ kind:"index", label:"10X", color:"#db3a55" },
@@ -52,7 +55,7 @@ const LOCAL_ICON_SPECS = {
 
 // 외부 파비콘을 제공하지 않는 경우에도 신규 코스피 종목을 구분할 수 있는 회사별 로컬 배지다.
 const COMPANY_FALLBACK_SPECS = {
-  "005935":{ kind:"company", label:"삼성", color:"#1428a0" }, "402340":{ kind:"company", label:"SK", color:"#e1002a" },
+  "005930":{ kind:"company", label:"삼성", color:"#1428a0" }, "005935":{ kind:"company", label:"삼성우", color:"#1428a0" }, "402340":{ kind:"company", label:"SK", color:"#e1002a" },
   "009150":{ kind:"company", label:"SEM", color:"#1428a0" }, "373220":{ kind:"company", label:"LG", color:"#a50034" },
   "005380":{ kind:"company", label:"H", color:"#002c5f" }, "207940":{ kind:"company", label:"BIO", color:"#1428a0" },
   "028260":{ kind:"company", label:"물산", color:"#1428a0" }, "032830":{ kind:"company", label:"생명", color:"#1428a0" },
@@ -140,6 +143,8 @@ function hashHue(value = "") {
 
 // 국내·해외 종목별 도메인을 Google favicon 주소로 변환한다.
 export function assetLogoUrl(asset) {
+  const tossLogo = TOSS_SECURITY_LOGOS[asset?.id] || TOSS_SECURITY_LOGOS[asset?.symbol];
+  if (tossLogo) return tossLogo;
   const domain = asset?.group === "POSCO"
     ? POSCO_GROUP_DOMAIN
     : DOMAINS[asset?.id] || DOMAINS[asset?.symbol];
