@@ -139,7 +139,8 @@ function hashHue(value = "") {
 export function assetLogoUrl(asset) {
   const symbol = asset?.symbol || asset?.id;
   if (symbol && TOSS_SECURITY_MARKETS.has(asset?.market)) {
-    return `https://static.toss.im/png-icons/securities/icn-sec-fill-${encodeURIComponent(symbol)}.png`;
+    const originalUrl = `https://static.toss.im/png-icons/securities/icn-sec-fill-${symbol}.png`;
+    return `https://images.tossinvest.com/${encodeURIComponent(originalUrl)}?width=128&height=128`;
   }
   const domain = asset?.group === "POSCO"
     ? POSCO_GROUP_DOMAIN
