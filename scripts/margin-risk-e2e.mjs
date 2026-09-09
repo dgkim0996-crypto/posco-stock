@@ -1,0 +1,20 @@
+import"dotenv/config";import pg from"pg";
+const assert=(condition,message)=>{if(!condition)throw new Error(`검증 실패: ${message}`);};
+const client=new pg.Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false},connectionTimeoutMillis:15000});
+try{await client.connect();await client.query("begin");
+ const accountId=(await client.query("insert into public.accounts(account_number,krw_balance,usd_balance)values($1,15000,0)returning id",[`E2E-RISK-${Date.now()}`])).rows[0].id;
+ const opened=(await client.query("select public.open_futures_position($1,'K200','LONG',1,100,1000,0.1) result",[accountId])).rows[0].result;
+ assert(Number(opened.position.margin)===10000,"최초증거금 불일치");
+ await client.query("select public.record_risk_snapshot($1,'MARGIN_CALL',7000,7500,0.933333,500,$2::jsonb)",[accountId,JSON.stringify({source:"e2e"})]);
+ const call=(await client.query("select * from public.margin_calls where account_id=$1 and status='OPEN' order by created_at desc limit 1",[accountId])).rows[0];
+ assert(call.status==="OPEN"&&Number(call.required_amount)===500,"마진콜 생성 불일치");
+ const liquidated=(await client.query("select public.force_liquidate_futures_position($1,$2,80) result",[accountId,opened.position.id])).rows[0].result;
+ assert(Number(liquidated.pnl)===-20000&&Number(liquidated.payout)===-10000,"강제청산 손익 불일치");
+ assert(Number(liquidated.deficit)===5000&&Number(liquidated.account.krw_balance)===0,"미충당액 또는 잔액 불일치");
+ const positionCount=Number((await client.query("select count(*) count from public.futures_positions where account_id=$1",[accountId])).rows[0].count);
+ const event=(await client.query("select * from public.cash_ledger where account_id=$1 and event_type='FORCED_LIQUIDATION'",[accountId])).rows[0];
+ const finalCall=(await client.query("select status from public.margin_calls where id=$1",[call.id])).rows[0];
+ assert(positionCount===0,"강제청산 후 포지션 잔존");assert(Number(event.amount)===-5000,"강제청산 원장 금액 불일치");assert(finalCall.status==="LIQUIDATED","마진콜 종료상태 불일치");
+ const ledgerCount=Number((await client.query("select count(*) count from public.account_ledger where account_id=$1 and event_type='FORCED_LIQUIDATION'",[accountId])).rows[0].count);assert(ledgerCount===1,"통합 감사 원장 누락");
+ console.log(JSON.stringify({result:"PASS",initialMargin:10000,marginCallRequired:500,pnl:-20000,payout:-10000,deficit:5000,finalBalance:0,positionClosed:true,marginCallStatus:"LIQUIDATED",accountLedgerRecorded:true,rolledBack:true},null,2));await client.query("rollback");
+}catch(error){await client.query("rollback").catch(()=>undefined);throw error;}finally{await client.end().catch(()=>undefined);}

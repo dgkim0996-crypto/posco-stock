@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 
+// App의 계좌 상태를 요약·보유상품·손익·계좌정보 탭으로 나눠 보여주는 자산 페이지다.
+
 function won(value) {
   const sign = value < 0 ? "-" : "";
   return `${sign}${Math.abs(Math.round(value)).toLocaleString()}원`;
@@ -23,12 +25,19 @@ export default function AssetOverview({
   totalAssets,
   totalPnl,
   totalReturn,
+  financeDebt,
+  lendingCollateral,
+  lendingUsed,
   spotPriceInKRW,
   assetPrice,
+  ledgerEntries = [],
+  orderEvents = [],
+  settlements = [],
   onGoTrading,
 }) {
   const [subTab, setSubTab] = useState("overview");
 
+  // 보유 포지션과 현재가를 결합해 평가액·평가손익·수익률 표시 행을 만든다.
   const holdingRows = useMemo(() => Object.entries(spotPositions).map(([id, pos]) => {
     const asset = allAssets.find((item) => item.id === id);
     const current = asset ? spotPriceInKRW(asset) : 0;
@@ -44,14 +53,23 @@ export default function AssetOverview({
   const base = Math.max(totalAssets, 1);
   const foreignCashValue = foreignCash * usdKrw;
   const investedPercent = Math.max(0, Math.min(100, ((spotValue + marginTotal) / base) * 100));
+  // 금액이 있는 자산군만 자산배분 차트와 범례에 포함한다.
   const allocation = [
-    { label: "현금", value: cash, cls: "alloc-cash" },
-    { label: "외화", value: foreignCashValue, cls: "alloc-foreign" },
-    { label: "주식", value: stockValue, cls: "alloc-stock" },
-    { label: "채권", value: bondValue, cls: "alloc-bond" },
-    { label: "디지털자산", value: cryptoValue, cls: "alloc-crypto" },
-    { label: "선물 증거금", value: marginTotal, cls: "alloc-futures" },
+    { label: "현금", value: cash, cls: "alloc-cash", color: "#cbd5e1" },
+    { label: "외화", value: foreignCashValue, cls: "alloc-foreign", color: "#8b5cf6" },
+    { label: "주식", value: stockValue, cls: "alloc-stock", color: "#168bd2" },
+    { label: "채권", value: bondValue, cls: "alloc-bond", color: "#22a06b" },
+    { label: "디지털자산", value: cryptoValue, cls: "alloc-crypto", color: "#f59e0b" },
+    { label: "선물 증거금", value: marginTotal, cls: "alloc-futures", color: "#e85d75" },
   ].filter((item) => item.value > 0);
+  let allocationCursor = 0;
+  const allocationStops = allocation.flatMap((item) => {
+    const start = allocationCursor;
+    allocationCursor = Math.min(100, allocationCursor + (item.value / base) * 100);
+    return [`${item.color} ${start}%`, `${item.color} ${allocationCursor}%`];
+  });
+  if (allocationCursor < 100) allocationStops.push(`#eef2f5 ${allocationCursor}%`, "#eef2f5 100%");
+  const allocationGradient = `conic-gradient(${allocationStops.join(", ")})`;
 
   return (
     <section className="service-page asset-page">
@@ -65,7 +83,7 @@ export default function AssetOverview({
       </div>
 
       <div className="subnav-tabs">
-        {[["overview","한눈에보기"],["holdings","상품별 잔고"],["profit","손익분석"],["account","계좌정보"]].map(([key,label]) => (
+        {[["overview","한눈에보기"],["holdings","상품별 잔고"],["profit","손익분석"],["ledger","거래 원장"],["settlements","D+2 결제"],["orders","주문 이벤트"],["account","계좌정보"]].map(([key,label]) => (
           <button key={key} type="button" className={subTab === key ? "active" : ""} onClick={() => setSubTab(key)}>{label}</button>
         ))}
       </div>
@@ -82,7 +100,7 @@ export default function AssetOverview({
               </div>
               <small>모의투자 시작금 10,000,000원 대비</small>
             </article>
-            <article className="asset-summary-card"><span>주문가능금액</span><strong>{won(cash)}</strong><small>즉시 주문에 사용할 수 있는 원화</small></article>
+            <article className="asset-summary-card"><span>주문가능금액</span><strong>{won(cash)}</strong><small>금융 실행금 포함 · 금융부채 {won(financeDebt)}</small></article>
             <article className="asset-summary-card"><span>외화 보유</span><strong>${foreignCash.toLocaleString(undefined,{maximumFractionDigits:2})}</strong><small>모의 환전으로 보유 중인 USD</small></article>
             <article className="asset-summary-card"><span>투자상품 평가액</span><strong>{won(spotValue + marginTotal)}</strong><small>현물 평가액 + 선물 증거금</small></article>
           </div>
@@ -91,7 +109,7 @@ export default function AssetOverview({
             <article className="service-card allocation-card">
               <div className="service-card-head"><div><span>자산배분</span><strong>상품별 비중</strong></div><em>{allocation.length}개 자산군</em></div>
               <div className="allocation-body">
-                <div className="allocation-donut" style={{ background: `conic-gradient(#0f8fd0 0 ${investedPercent}%, #d1dce6 ${investedPercent}% 100%)` }}>
+                <div className="allocation-donut" style={{ background: allocationGradient }}>
                   <div><strong>{Math.round(investedPercent)}%</strong><span>투자중</span></div>
                 </div>
                 <div className="allocation-list">
@@ -142,9 +160,46 @@ export default function AssetOverview({
         </div>
       )}
 
+      {subTab === "ledger" && (
+        <article className="service-card">
+          <div className="service-card-head"><div><span>감사 원장</span><strong>현금·증거금·금융거래 변동 기록</strong></div><em>최근 {ledgerEntries.length}건 · 수정 불가</em></div>
+          <div className="service-table-wrap"><table className="service-table ledger-table"><thead><tr><th>시각</th><th>구분</th><th>변동금액</th><th>변동 전</th><th>변동 후</th><th>참조</th></tr></thead><tbody>
+            {ledgerEntries.length === 0 ? <tr><td colSpan="6" className="empty">기록된 원장이 없습니다.</td></tr> : ledgerEntries.map((entry) => <tr key={entry.id}>
+              <td>{new Date(entry.createdAt).toLocaleString("ko-KR")}</td><td><strong>{entry.eventType}</strong><span>{entry.currency}</span></td>
+              <td className={entry.amount >= 0 ? "up" : "down"}>{entry.amount >= 0 ? "+" : ""}{entry.currency === "USD" ? `$${entry.amount.toLocaleString()}` : won(entry.amount)}</td>
+              <td>{entry.balanceBefore == null ? "-" : entry.currency === "USD" ? `$${entry.balanceBefore.toLocaleString()}` : won(entry.balanceBefore)}</td>
+              <td>{entry.currency === "USD" ? `$${entry.balanceAfter.toLocaleString()}` : won(entry.balanceAfter)}</td>
+              <td>{entry.referenceType ? `${entry.referenceType}${entry.referenceId ? ` · ${entry.referenceId.slice(0, 8)}` : ""}` : "-"}</td>
+            </tr>)}
+          </tbody></table></div>
+        </article>
+      )}
+
+      {subTab === "orders" && (
+        <article className="service-card"><div className="service-card-head"><div><span>주문 상태 타임라인</span><strong>접수·정정·체결·취소 이력</strong></div><em>최근 {orderEvents.length}건</em></div>
+          <div className="service-table-wrap"><table className="service-table"><thead><tr><th>시각</th><th>상태</th><th>체결 / 잔여</th><th>체결가</th></tr></thead><tbody>
+            {orderEvents.length === 0 ? <tr><td colSpan="4" className="empty">주문 이벤트가 없습니다.</td></tr> : orderEvents.map((event) => <tr key={event.id}><td>{new Date(event.createdAt).toLocaleString("ko-KR")}</td><td><strong>{event.eventType}</strong></td><td>{Number(event.filledQuantity || 0).toLocaleString()} / {Number(event.remainingQuantity || 0).toLocaleString()}</td><td>{event.executionPrice == null ? "-" : Number(event.executionPrice).toLocaleString()}</td></tr>)}
+          </tbody></table></div>
+        </article>
+      )}
+
+      {subTab === "settlements" && (
+        <article className="service-card">
+          <div className="service-card-head"><div><span>결제 예정금액</span><strong>체결별 수수료·세금·D+2 결제</strong></div><em>최근 {settlements.length}건</em></div>
+          <div className="service-table-wrap"><table className="service-table"><thead><tr><th>거래일</th><th>결제일</th><th>종목</th><th>구분</th><th>체결금액</th><th>수수료</th><th>세금</th><th>순결제금액</th><th>상태</th></tr></thead><tbody>
+            {settlements.length === 0 ? <tr><td colSpan="9" className="empty">결제 예정 거래가 없습니다.</td></tr> : settlements.map((item) => <tr key={item.id}>
+              <td>{item.tradeDate}</td><td>{item.settlementDate}</td><td><strong>{item.symbol}</strong></td><td>{item.side === "BUY" ? "매수" : "매도"}</td>
+              <td>{won(item.grossAmount)}</td><td className="down">{won(-item.feeAmount)}</td><td className={item.taxAmount ? "down" : ""}>{item.taxAmount ? won(-item.taxAmount) : "-"}</td>
+              <td className={item.netAmount >= 0 ? "up" : "down"}>{item.netAmount >= 0 ? "+" : ""}{won(item.netAmount)}</td><td><strong>{item.status === "SETTLED" ? "결제완료" : "결제예정"}</strong></td>
+            </tr>)}
+          </tbody></table></div>
+          <div className="longterm-notice">표시 요율은 모의투자 정책이며 실제 증권사 수수료·세금과 다를 수 있습니다. 결제일은 등록된 휴장일과 주말을 제외한 영업일 기준입니다.</div>
+        </article>
+      )}
+
       {subTab === "account" && (
         <div className="service-two-col">
-          <article className="service-card account-detail-card"><div className="service-card-head"><div><span>계좌상세</span><strong>모의종합계좌</strong></div><em>정상</em></div><dl><div><dt>계좌번호</dt><dd>POSCO-000001</dd></div><div><dt>계좌유형</dt><dd>종합매매 · 모의투자</dd></div><div><dt>원화 예수금</dt><dd>{won(cash)}</dd></div><div><dt>외화 예수금</dt><dd>USD {foreignCash.toLocaleString(undefined,{maximumFractionDigits:2})}</dd></div><div><dt>미수금</dt><dd>0원</dd></div><div><dt>대출잔액</dt><dd>0원</dd></div></dl></article>
+          <article className="service-card account-detail-card"><div className="service-card-head"><div><span>계좌상세</span><strong>모의종합계좌</strong></div><em>정상</em></div><dl><div><dt>계좌번호</dt><dd>POSCO-000001</dd></div><div><dt>계좌유형</dt><dd>종합매매 · 모의투자</dd></div><div><dt>원화 예수금</dt><dd>{won(cash)}</dd></div><div><dt>외화 예수금</dt><dd>USD {foreignCash.toLocaleString(undefined,{maximumFractionDigits:2})}</dd></div><div><dt>금융부채</dt><dd>{won(financeDebt)}</dd></div><div><dt>대주잔고 / 담보금</dt><dd>{won(lendingUsed)} / {won(lendingCollateral)}</dd></div></dl></article>
           <article className="service-card"><div className="service-card-head"><div><span>계좌업무</span><strong>빠른 메뉴</strong></div></div><div className="quick-menu-grid"><button type="button">거래내역 조회</button><button type="button">수수료 조회</button><button type="button">권리·청약 현황</button><button type="button">증거금 현황</button><button type="button">계좌별 잔고</button><button type="button">결제 예정금액</button></div></article>
         </div>
       )}

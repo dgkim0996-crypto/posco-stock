@@ -1,5 +1,7 @@
 import { instruments } from "../data/instruments.data.js";
 
+// 종목 원본 목록을 시장·상품유형·검색어로 조회하는 읽기 전용 서비스다.
+
 const getAll = ({ market, type, q } = {}) => {
   const normalizedQuery = q?.trim().toLowerCase();
   return instruments.filter((instrument) => {
@@ -11,6 +13,7 @@ const getAll = ({ market, type, q } = {}) => {
   });
 };
 
+// 종목코드는 대소문자를 구분하지 않고 하나를 찾는다.
 const getBySymbol = (symbol) => instruments.find(
   (instrument) => instrument.symbol.toLowerCase() === symbol.toLowerCase(),
 ) || null;

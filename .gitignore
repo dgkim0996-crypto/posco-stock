@@ -3,3 +3,6 @@ dist/
 .DS_Store
 .env
 .cache/
+.pptx-work/
+output/*
+!output/포스코증권_6단계_완료보고서_최종.pptx

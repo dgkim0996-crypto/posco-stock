@@ -1,10 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+// SVG 캔들/거래량 차트. 데이터 정규화 → 좌표 계산 → 확대·이동·툴팁 렌더링 순으로 동작한다.
+
 const PERIOD_MS = {
   "1m": 60_000,
   "5m": 300_000,
+  "30m": 1_800_000,
+  "60m": 3_600_000,
   day: 86_400_000,
 };
+const MAX_VISIBLE_CANDLES = 60;
 
 function formatAxisPrice(value, asset) {
   if (!Number.isFinite(value)) return "-";
@@ -19,12 +24,14 @@ function formatAxisPrice(value, asset) {
   return Math.round(value).toLocaleString();
 }
 
+// 툴팁에는 축보다 상세한 가격 단위를 표시한다.
 function formatFullPrice(value, asset) {
   if (asset?.unit === "USD") return `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
   if (asset?.unit === "PTS") return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
   return `${Math.round(value).toLocaleString()}원`;
 }
 
+// 분봉은 시각, 일봉은 월/일 형식으로 하단 축을 표시한다.
 function formatTime(date, period) {
   if (period === "day") return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
@@ -36,6 +43,7 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
   const svgRef = useRef(null);
   const dragRef = useRef(null);
 
+  // 실제 OHLCV가 없으면 모의상품의 가격 배열을 가상 봉으로 변환한다.
   const allCandles = useMemo(() => {
     const interval = PERIOD_MS[period] || PERIOD_MS["1m"];
     const now = Date.now();
@@ -51,13 +59,15 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
         }));
   }, [values, candles, period]);
 
+  // 종목이나 기간이 바뀌면 기간별 기본 봉 개수로 화면 범위를 초기화한다.
   useEffect(() => {
     const end = allCandles.length;
-    const initialCount = period === "1m" ? 300 : period === "5m" ? 60 : 96;
+    const initialCount = Math.min(MAX_VISIBLE_CANDLES, end);
     setViewRange({ start: Math.max(0, end - initialCount), end });
     setHoverIndex(null);
   }, [asset?.id, period, allCandles.length]);
 
+  // 표시 범위의 가격/거래량 최댓값과 각 봉의 SVG 좌표를 미리 계산한다.
   const prepared = useMemo(() => {
     const normalized = allCandles.slice(viewRange.start, viewRange.end || allCandles.length);
     const clean = normalized.map((item) => item.close);
@@ -108,6 +118,7 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
   const activePoint = coords[active];
   const activeTime = times[active];
 
+  // 포인터 툴팁을 이동하고 드래그 중에는 차트 이동 또는 시간축 확대를 수행한다.
   function handlePointerMove(event) {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -115,7 +126,7 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
       const baseCount = dragRef.current.end - dragRef.current.start;
       if (dragRef.current.mode === "scale") {
         const delta = event.clientX - dragRef.current.x;
-        const nextCount = Math.max(8, Math.min(allCandles.length, Math.round(baseCount * Math.exp(-delta / 220))));
+        const nextCount = Math.max(8, Math.min(allCandles.length, MAX_VISIBLE_CANDLES, Math.round(baseCount * Math.exp(-delta / 220))));
         const center = dragRef.current.start + baseCount / 2;
         let start = Math.round(center - nextCount / 2);
         start = Math.max(0, Math.min(allCandles.length - nextCount, start));
@@ -136,10 +147,11 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
     setHoverIndex(Math.round(ratio * (clean.length - 1)));
   }
 
+  // 마우스 위치를 중심으로 화면에 보이는 봉 개수를 조절한다.
   function zoom(factor, centerRatio = 0.5) {
     const total = allCandles.length;
     const currentCount = viewRange.end - viewRange.start;
-    const nextCount = Math.max(8, Math.min(total, Math.round(currentCount * factor)));
+    const nextCount = Math.max(8, Math.min(total, MAX_VISIBLE_CANDLES, Math.round(currentCount * factor)));
     const center = viewRange.start + currentCount * centerRatio;
     let start = Math.round(center - nextCount * centerRatio);
     start = Math.max(0, Math.min(total - nextCount, start));
@@ -154,8 +166,9 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
     zoom(event.deltaY < 0 ? 0.8 : 1.25, ratio);
   }
 
+  // 더블클릭 시 사용자가 조절한 범위를 전체 기간으로 복원한다.
   function resetRange() {
-    setViewRange({ start: 0, end: allCandles.length });
+    setViewRange({ start: Math.max(0, allCandles.length - MAX_VISIBLE_CANDLES), end: allCandles.length });
     setHoverIndex(null);
   }
 

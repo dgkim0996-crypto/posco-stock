@@ -15,6 +15,6 @@ if not exist node_modules (
     exit /b 1
   )
 )
-echo Starting Vite dev server...
-call npm run dev
+echo Starting POSCO Securities frontend and API server...
+call npm run dev:all
 pause
