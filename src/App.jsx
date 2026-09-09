@@ -1345,15 +1345,18 @@ function TradingApp({ session, onSignOut }) {
         </div>
         {riskStatus && riskStatus.status!=="SAFE" && <div className={`risk-alert ${riskStatus.status.toLowerCase()}`}><strong>{riskStatus.status==="WARNING"?"증거금 주의":riskStatus.status==="MARGIN_CALL"?"마진콜 발생":"강제청산 위험"}</strong><span>위험비율 {riskStatus.requiredMargin>0?`${((riskStatus.equity/riskStatus.requiredMargin)*100).toFixed(1)}%`:"-"} · 부족액 {money(riskStatus.deficit)}</span></div>}
         <div className="top-metrics">
-          <div><span>총 평가자산</span><strong>{money(totalAssets)}</strong></div>
-          <div><span>주문가능금액</span><strong>{money(cash)}</strong></div>
-          <div>
-            <span>평가손익</span>
-            <strong className={totalPnl >= 0 ? "up" : "down"}>{money(totalPnl)}</strong>
-          </div>
-          <div>
-            <span>수익률</span>
-            <strong className={totalPnl >= 0 ? "up" : "down"}>{signedPercent(totalReturn)}</strong>
+          {/* 홈 계좌 핵심 수치는 한 그룹으로 유지하고 초기화 동작은 별도 버튼으로 분리한다. */}
+          <div className="top-metric-cards">
+            <div><span>총 평가자산</span><strong>{money(totalAssets)}</strong></div>
+            <div><span>주문가능금액</span><strong>{money(cash)}</strong></div>
+            <div>
+              <span>평가손익</span>
+              <strong className={totalPnl >= 0 ? "up" : "down"}>{money(totalPnl)}</strong>
+            </div>
+            <div>
+              <span>수익률</span>
+              <strong className={totalPnl >= 0 ? "up" : "down"}>{signedPercent(totalReturn)}</strong>
+            </div>
           </div>
           <button className="reset" onClick={reset}>계좌 초기화</button>
         </div>

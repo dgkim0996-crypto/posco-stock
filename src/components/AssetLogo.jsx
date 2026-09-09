@@ -6,6 +6,25 @@ const POSCO_GROUP_DOMAIN = "poscofuturem.com";
 
 const TOSS_SECURITY_MARKETS = new Set(["KOSPI", "KOSDAQ", "NASDAQ", "NYSE"]);
 
+// 토스증권은 일부 미국 주식에 티커가 아닌 내부 로고 키를 사용한다.
+// 토스증권 종목 검색 결과의 실제 img src와 대조한 파일명을 그대로 유지한다.
+const TOSS_SECURITY_IMAGE_FILES = {
+  "005935":"005930.png",
+  QQQ:"QQQ.png?20240415", SPY:"SPY.png",
+  AAPL:"NAS000C7F-E0.png", MSFT:"NAS000Q07-E0.png", NVDA:"NAS00208X-E0.png", GOOGL:"NASWFJYTJ-R0.png",
+  AMZN:"NAS001MF1-E0.png", META:"MVRS.png", TSLA:"NAS006XY7-E0.png", AVGO:"NAS0JCLYY-E0.png",
+  ORCL:"NYS000SY8-E0.png", NFLX:"NAS002X9M-E0.png", PLTR:"NYS00726J-E0.png", AMD:"NAS000BK7-E0.png",
+  INTC:"NAS000N01-E0.png?20240502", QCOM:"NAS000V67-E0.png", MU:"NAS000PZY-E0.png?20241104", TXN:"NAS000XNY-E0.png",
+  ARM:"NAS0X9K7C-E0.png?20230918", TSM:"NYS001Y70-E0.png?20240424", ASML:"NAS000CBQ-E0.png", AMAT:"NAS000C7R-E0.png",
+  LRCX:"NAS000NYZ-E0.png", KLAC:"NAS001NWQ-E0.png", MRVL:"MRVL.png", ADI:"ADI.png", MCHP:"MCHP.png",
+  NXPI:"NXPI.png", ON:"ON.png", CRM:"NYS0058W5-E0.png", ADBE:"NAS000BJT-E0.png", NOW:"NYS008L5S-E0.png",
+  SNOW:"NYS0DYJ1L-E0.png", DDOG:"NAS0BXYRK-E0.png", MDB:"MDB.png", NET:"NYS00C9MC-E0.png",
+  CRWD:"NAS00DL89-E0.png", PANW:"NAS0078TM-E0.png", FTNT:"FTNT.png", ZS:"ZS.png", OKTA:"OKTA.png",
+  TEAM:"TEAM.png", WDAY:"WDAY.png", INTU:"NAS0011HX-E0.png", ADSK:"NAS000CFP-E0.png", CSCO:"NAS000DS6-E0.png",
+  IBM:"NYS000N1N-E0.png", DELL:"NYS0GGD8K-E0.png", HPE:"HPE.png", SMCI:"NAS008MS1-E0.png",
+  SAP:"NYS05HDZK-E0.png", SHOP:"SHOP.png", UBER:"NYS0B49NF-E0.png", ABNB:"NAS09LZGJ-E0.png", RBLX:"NYS006T63-E0.png",
+};
+
 const DOMAINS = {
   "005490":"posco-inc.com","003670":"poscofuturem.com","047050":"poscointl.com","022100":"poscodx.com","058430":"poscosteeleon.com","009520":"poscomtech.com",
   "005930":"samsung.com","000660":"skhynix.com","035420":"navercorp.com","035720":"kakaocorp.com",
@@ -139,8 +158,8 @@ function hashHue(value = "") {
 export function assetLogoUrl(asset) {
   const symbol = asset?.symbol || asset?.id;
   if (symbol && TOSS_SECURITY_MARKETS.has(asset?.market)) {
-    const originalUrl = `https://static.toss.im/png-icons/securities/icn-sec-fill-${symbol}.png`;
-    return `https://images.tossinvest.com/${encodeURIComponent(originalUrl)}?width=128&height=128`;
+    const imageFile = TOSS_SECURITY_IMAGE_FILES[symbol] || `${symbol}.png`;
+    return `/api/stock-images/${encodeURIComponent(imageFile)}`;
   }
   const domain = asset?.group === "POSCO"
     ? POSCO_GROUP_DOMAIN

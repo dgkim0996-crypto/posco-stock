@@ -100,7 +100,9 @@ export default function MarketSummary({ stocks, indices, onOpenAsset }) {
         {Object.entries(MARKET_META).map(([key, item]) => {
           const live = indices.find((index) => index.name === key);
           const shown = live ? { ...item, value: live.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), change: live.change } : { ...item, value: "불러오는 중", change: null };
-          return <button key={key} type="button" className={market === key ? "active" : ""} onClick={() => setMarket(key)}><span>{shown.label}<em>{shown.count}</em></span><strong>{shown.value}</strong><b className={shown.change === null ? "index-pending" : shown.change >= 0 ? "heat-up" : "heat-down"}>{shown.change === null ? "실제 지수 연결 중" : signed(shown.change)}</b></button>;
+          // 피드 카드와 같은 등락 배경을 사용하되 로딩·보합 상태는 별도로 구분한다.
+          const directionClass = shown.change === null ? "market-index-pending" : shown.change > 0 ? "market-index-up" : shown.change < 0 ? "market-index-down" : "market-index-flat";
+          return <button key={key} type="button" className={`${directionClass}${market === key ? " active" : ""}`} onClick={() => setMarket(key)}><span>{shown.label}<em>{shown.count}</em></span><strong>{shown.value}</strong><b className={shown.change === null ? "index-pending" : shown.change >= 0 ? "heat-up" : "heat-down"}>{shown.change === null ? "실제 지수 연결 중" : signed(shown.change)}</b></button>;
         })}
       </section>
       <section className="heatmap-panel">

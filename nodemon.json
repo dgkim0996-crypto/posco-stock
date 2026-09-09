@@ -1,0 +1,11 @@
+{
+  "watch": ["server"],
+  "ext": "js,mjs,cjs,json",
+  "ignore": [
+    ".cache/**",
+    "dist/**",
+    "node_modules/**",
+    ".pptx-work/**",
+    "output/**"
+  ]
+}
