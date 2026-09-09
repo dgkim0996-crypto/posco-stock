@@ -24,6 +24,8 @@ const DOMAINS = {
 
 // 파비콘으로 구분하기 어려운 파생상품·국채·코인은 로컬 SVG로 항상 선명하게 표시한다.
 const LOCAL_ICON_SPECS = {
+  "005930":{ kind:"company", label:"삼성", color:"#1428a0" },
+  "005935":{ kind:"company", label:"삼성우", color:"#1428a0" },
   "009150":{ kind:"company", label:"SEM", color:"#1428a0" },
   "055550":{ kind:"company", label:"신한", color:"#0046ff" },
   "012330":{ kind:"company", label:"M", color:"#002c5f" },
