@@ -4,11 +4,7 @@ import React, { useEffect, useState } from "react";
 
 const POSCO_GROUP_DOMAIN = "poscofuturem.com";
 
-const TOSS_SECURITY_LOGOS = {
-  "005930":"https://static.toss.im/png-icons/securities/icn-sec-fill-005930.png",
-  "009150":"https://static.toss.im/png-icons/securities/icn-sec-fill-009150.png",
-  "005935":"https://static.toss.im/png-icons/securities/icn-sec-fill-005935.png",
-};
+const TOSS_SECURITY_MARKETS = new Set(["KOSPI", "KOSDAQ", "NASDAQ", "NYSE"]);
 
 const DOMAINS = {
   "005490":"posco-inc.com","003670":"poscofuturem.com","047050":"poscointl.com","022100":"poscodx.com","058430":"poscosteeleon.com","009520":"poscomtech.com",
@@ -30,8 +26,6 @@ const DOMAINS = {
 
 // 파비콘으로 구분하기 어려운 파생상품·국채·코인은 로컬 SVG로 항상 선명하게 표시한다.
 const LOCAL_ICON_SPECS = {
-  "055550":{ kind:"company", label:"신한", color:"#0046ff" },
-  "012330":{ kind:"company", label:"M", color:"#002c5f" },
   SH10X:{ kind:"index", label:"10X", color:"#db3a55" },
   K200:{ kind:"index", label:"K2", color:"#0066b3" }, KQ150:{ kind:"index", label:"KQ", color:"#008f83" },
   NQ:{ kind:"index", label:"NQ", color:"#7048e8" }, ES:{ kind:"index", label:"ES", color:"#1971c2" },
@@ -141,10 +135,12 @@ function hashHue(value = "") {
   return hash;
 }
 
-// 국내·해외 종목별 도메인을 Google favicon 주소로 변환한다.
+// 국내·해외 상장 종목은 토스증권의 종목코드별 이미지를 사용하고, 미지원 상품만 회사 favicon으로 대체한다.
 export function assetLogoUrl(asset) {
-  const tossLogo = TOSS_SECURITY_LOGOS[asset?.id] || TOSS_SECURITY_LOGOS[asset?.symbol];
-  if (tossLogo) return tossLogo;
+  const symbol = asset?.symbol || asset?.id;
+  if (symbol && TOSS_SECURITY_MARKETS.has(asset?.market)) {
+    return `https://static.toss.im/png-icons/securities/icn-sec-fill-${encodeURIComponent(symbol)}.png`;
+  }
   const domain = asset?.group === "POSCO"
     ? POSCO_GROUP_DOMAIN
     : DOMAINS[asset?.id] || DOMAINS[asset?.symbol];
