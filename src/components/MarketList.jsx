@@ -24,8 +24,15 @@ export default function MarketList({ assets, selectedId, onSelect, type, favorit
     return assets
       .filter((asset) => assetMatchesSearch(asset, keyword))
       .filter((asset) => !favoritesOnly || favorites.has(asset.id))
-      .sort((a, b) => Number(favorites.has(b.id)) - Number(favorites.has(a.id)));
-  }, [assets, keyword, favorites, favoritesOnly]);
+      .sort((a, b) => {
+        if (type === "stocks") {
+          const aRank = Number.isFinite(a.kospiRank) ? a.kospiRank : Number.MAX_SAFE_INTEGER;
+          const bRank = Number.isFinite(b.kospiRank) ? b.kospiRank : Number.MAX_SAFE_INTEGER;
+          if (aRank !== bRank) return aRank - bRank;
+        }
+        return Number(favorites.has(b.id)) - Number(favorites.has(a.id));
+      });
+  }, [assets, keyword, favorites, favoritesOnly, type]);
 
   return (
     <>
