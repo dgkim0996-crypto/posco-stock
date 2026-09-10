@@ -3933,6 +3933,16 @@ footer strong {
   font-size: 10px;
   font-weight: 650;
 }
+.chart-price-axis-hitarea {
+  fill: transparent;
+  cursor: ns-resize;
+}
+.chart-price-scale-status {
+  fill: #9aa5af;
+  font-size: 8px;
+  font-weight: 700;
+  pointer-events: none;
+}
 .chart-time-text {
   font-size: 9.5px;
 }

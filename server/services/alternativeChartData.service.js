@@ -11,8 +11,19 @@ const cache = new Map();
 
 const createError = (status, message) => Object.assign(new Error(message), { status });
 const candle = (time, open, high, low, close, volume = 0) => {
-  const item = { time, open:Number(open), high:Number(high), low:Number(low), close:Number(close), volume:Number(volume) || 0 };
-  return item.time && [item.open,item.high,item.low,item.close].every(Number.isFinite) ? item : null;
+  const closePrice = Number(close);
+  if (!time || !Number.isFinite(closePrice) || closePrice <= 0) return null;
+  const openPrice = Number(open) > 0 ? Number(open) : closePrice;
+  const reportedHigh = Number(high) > 0 ? Number(high) : Math.max(openPrice, closePrice);
+  const reportedLow = Number(low) > 0 ? Number(low) : Math.min(openPrice, closePrice);
+  return {
+    time,
+    open:openPrice,
+    high:Math.max(reportedHigh, openPrice, closePrice),
+    low:Math.min(reportedLow, openPrice, closePrice),
+    close:closePrice,
+    volume:Number(volume) || 0,
+  };
 };
 
 const fetchYahooChart = async (ticker, period) => {

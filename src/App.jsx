@@ -1464,7 +1464,7 @@ function TradingApp({ session, onSignOut }) {
                     </button>
                   ))}
                 </div>
-                <span>휠 확대·축소 · 본문 이동 · 하단 시간축 간격 조절</span>
+                <span>휠 확대·축소 · 본문 이동 · 하단 시간축/우측 가격축 조절</span>
               </div>
               {chartLoading && !chartData[`${selected.symbol}:${chartPeriod}`] ? (
                 <div className="chart-empty">실제 {chartPeriod === "day" ? "일봉" : `${chartPeriod}봉`}을 불러오고 있습니다...</div>

@@ -10,17 +10,34 @@ const PERIOD_MS = {
   day: 86_400_000,
 };
 const MAX_VISIBLE_CANDLES = 60;
+const PRICE_TICK_COUNT = 8;
+const MIN_PRICE_SCALE = 0.35;
+const MAX_PRICE_SCALE = 8;
 
-function formatAxisPrice(value, asset) {
+function fractionDigitsForStep(step, unit = 1, maximum = 4) {
+  const normalized = Math.abs(step) / unit;
+  if (!Number.isFinite(normalized) || normalized <= 0 || normalized >= 1) return 0;
+  return Math.min(maximum, Math.max(0, Math.ceil(-Math.log10(normalized)) + 1));
+}
+
+// 눈금 간격에 맞춰 큰 가격도 서로 구분될 만큼 충분한 소수 자릿수를 유지한다.
+function formatAxisPrice(value, asset, tickStep = 0) {
   if (!Number.isFinite(value)) return "-";
   if (asset?.unit === "USD") {
-    return `$${value.toLocaleString(undefined, { maximumFractionDigits: value >= 100 ? 0 : 2 })}`;
+    const maximumFractionDigits = fractionDigitsForStep(tickStep, 1, 4);
+    return `$${value.toLocaleString(undefined, { maximumFractionDigits })}`;
   }
   if (asset?.unit === "PTS") {
     return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
   }
-  if (Math.abs(value) >= 100000000) return `${(value / 100000000).toFixed(1)}억`;
-  if (Math.abs(value) >= 10000) return `${Math.round(value / 1000).toLocaleString()}천`;
+  if (Math.abs(value) >= 100000000) {
+    const digits = fractionDigitsForStep(tickStep, 100000000, 4);
+    return `${(value / 100000000).toFixed(digits)}억`;
+  }
+  if (Math.abs(value) >= 10000) {
+    const digits = fractionDigitsForStep(tickStep, 1000, 3);
+    return `${(value / 1000).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })}천`;
+  }
   return Math.round(value).toLocaleString();
 }
 
@@ -40,6 +57,7 @@ function formatTime(date, period) {
 export default function Sparkline({ values, candles, asset, period = "1m" }) {
   const [hoverIndex, setHoverIndex] = useState(null);
   const [viewRange, setViewRange] = useState({ start: 0, end: 0 });
+  const [priceScale, setPriceScale] = useState(1);
   const svgRef = useRef(null);
   const dragRef = useRef(null);
 
@@ -48,7 +66,22 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
     const interval = PERIOD_MS[period] || PERIOD_MS["1m"];
     const now = Date.now();
     return Array.isArray(candles) && candles.length
-      ? candles.filter((item) => item && Number.isFinite(item.close)).map((item) => ({ ...item, time: new Date(item.time) }))
+      ? candles
+          .filter((item) => item && Number.isFinite(Number(item.close)) && Number(item.close) > 0)
+          .map((item) => {
+            const close = Number(item.close);
+            const open = Number(item.open) > 0 ? Number(item.open) : close;
+            const reportedHigh = Number(item.high) > 0 ? Number(item.high) : Math.max(open, close);
+            const reportedLow = Number(item.low) > 0 ? Number(item.low) : Math.min(open, close);
+            return {
+              ...item,
+              time: new Date(item.time),
+              open,
+              high: Math.max(reportedHigh, open, close),
+              low: Math.min(reportedLow, open, close),
+              close,
+            };
+          })
       : (values || []).filter(Number.isFinite).map((value, index, list) => ({
           time: new Date(now - (list.length - 1 - index) * interval),
           open: value,
@@ -66,6 +99,11 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
     setViewRange({ start: Math.max(0, end - initialCount), end });
     setHoverIndex(null);
   }, [asset?.id, period, allCandles.length]);
+
+  // 다른 종목이나 기간으로 이동하면 세로축을 해당 데이터의 자동 범위로 되돌린다.
+  useEffect(() => {
+    setPriceScale(1);
+  }, [asset?.id, period]);
 
   // 표시 범위의 가격/거래량 최댓값과 각 봉의 SVG 좌표를 미리 계산한다.
   const prepared = useMemo(() => {
@@ -88,10 +126,11 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
     const rawMin = Math.min(...normalized.map((item) => item.low));
     const rawMax = Math.max(...normalized.map((item) => item.high));
     const rawRange = rawMax - rawMin || Math.abs(rawMax || 1) * 0.01 || 1;
-    const padding = rawRange * 0.12;
-    const min = rawMin - padding;
-    const max = rawMax + padding;
-    const range = max - min || 1;
+    const autoRange = rawRange * 1.12;
+    const center = (rawMin + rawMax) / 2;
+    const range = Math.max(autoRange * priceScale, Number.EPSILON);
+    const min = center - range / 2;
+    const max = center + range / 2;
 
     const coords = clean.map((value, index) => ({
       value,
@@ -104,7 +143,7 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
     const times = normalized.map((item) => item.time);
 
     return { normalized, clean, w, h, left, right, top, priceBottom, volumeTop, volumeBottom, axisBottom, plotW, plotH, min, max, range, coords, volumes, maxVolume, times };
-  }, [allCandles, viewRange]);
+  }, [allCandles, viewRange, priceScale]);
 
   if (!prepared) {
     return <div className="chart-empty">시세 데이터를 수신하고 있습니다...</div>;
@@ -112,7 +151,8 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
 
   const { normalized, clean, w, h, left, top, priceBottom, volumeTop, volumeBottom, axisBottom, plotW, min, max, range, coords, volumes, maxVolume, times } = prepared;
   const up = clean.at(-1) >= clean[0];
-  const yTicks = Array.from({ length: 6 }, (_, i) => max - (range * i) / 5);
+  const priceTickStep = range / (PRICE_TICK_COUNT - 1);
+  const yTicks = Array.from({ length: PRICE_TICK_COUNT }, (_, i) => max - priceTickStep * i);
   const xTickIndexes = Array.from(new Set([0, Math.round((clean.length - 1) * 0.25), Math.round((clean.length - 1) * 0.5), Math.round((clean.length - 1) * 0.75), clean.length - 1]));
   const active = hoverIndex == null ? clean.length - 1 : Math.min(hoverIndex, clean.length - 1);
   const activePoint = coords[active];
@@ -124,7 +164,11 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
     if (!rect) return;
     if (dragRef.current) {
       const baseCount = dragRef.current.end - dragRef.current.start;
-      if (dragRef.current.mode === "scale") {
+      if (dragRef.current.mode === "price-scale") {
+        const delta = event.clientY - dragRef.current.y;
+        const nextScale = dragRef.current.priceScale * Math.exp(delta / 180);
+        setPriceScale(Math.max(MIN_PRICE_SCALE, Math.min(MAX_PRICE_SCALE, nextScale)));
+      } else if (dragRef.current.mode === "time-scale") {
         const delta = event.clientX - dragRef.current.x;
         const nextCount = Math.max(8, Math.min(allCandles.length, MAX_VISIBLE_CANDLES, Math.round(baseCount * Math.exp(-delta / 220))));
         const center = dragRef.current.start + baseCount / 2;
@@ -166,9 +210,16 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
     zoom(event.deltaY < 0 ? 0.8 : 1.25, ratio);
   }
 
-  // 더블클릭 시 사용자가 조절한 범위를 전체 기간으로 복원한다.
-  function resetRange() {
+  // 본문/시간축 더블클릭은 기간을, 우측 가격축 더블클릭은 세로 자동 범위를 복원한다.
+  function resetRange(event) {
+    const rect = svgRef.current?.getBoundingClientRect();
+    const svgX = rect ? ((event.clientX - rect.left) / rect.width) * prepared.w : 0;
+    if (svgX > left + plotW) {
+      setPriceScale(1);
+      return;
+    }
     setViewRange({ start: Math.max(0, allCandles.length - MAX_VISIBLE_CANDLES), end: allCandles.length });
+    setPriceScale(1);
     setHoverIndex(null);
   }
 
@@ -184,12 +235,15 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
         onWheel={handleWheel}
         onPointerDown={(event) => {
           const rect = event.currentTarget.getBoundingClientRect();
+          const svgX = ((event.clientX - rect.left) / rect.width) * w;
           const svgY = ((event.clientY - rect.top) / rect.height) * h;
           dragRef.current = {
-            mode: svgY >= axisBottom - 18 ? "scale" : "pan",
+            mode: svgX > left + plotW ? "price-scale" : svgY >= axisBottom - 18 ? "time-scale" : "pan",
             x: event.clientX,
+            y: event.clientY,
             start: viewRange.start,
             end: viewRange.end,
+            priceScale,
           };
           event.currentTarget.setPointerCapture(event.pointerId);
         }}
@@ -213,15 +267,27 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
           </linearGradient>
         </defs>
 
+        <rect
+          x={left + plotW}
+          y={top}
+          width={w - left - plotW}
+          height={priceBottom - top}
+          className="chart-price-axis-hitarea"
+        />
+
         {yTicks.map((tick, index) => {
-          const y = top + (index / 5) * (priceBottom - top);
+          const y = top + (index / (PRICE_TICK_COUNT - 1)) * (priceBottom - top);
           return (
             <g key={tick}>
               <line x1={left} y1={y} x2={left + plotW} y2={y} className="grid-line" />
-              <text x={left + plotW + 10} y={y + 4} className="chart-axis-text">{formatAxisPrice(tick, asset)}</text>
+              <text x={left + plotW + 10} y={y + 4} className="chart-axis-text">{formatAxisPrice(tick, asset, priceTickStep)}</text>
             </g>
           );
         })}
+
+        <text x={w - 7} y={priceBottom + 15} textAnchor="end" className="chart-price-scale-status">
+          {priceScale === 1 ? "가격축 자동" : `가격축 ${priceScale.toFixed(2)}x`}
+        </text>
 
         {xTickIndexes.map((index) => {
           const x = coords[index].x;
@@ -275,7 +341,7 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
             <line x1={left} y1={activePoint.y} x2={left + plotW} y2={activePoint.y} />
             <circle cx={activePoint.x} cy={activePoint.y} r="4" />
             <rect x={left + plotW + 4} y={activePoint.y - 12} width="82" height="24" rx="5" className="chart-floating-label" />
-            <text x={left + plotW + 45} y={activePoint.y + 4} textAnchor="middle" className="chart-floating-text">{formatAxisPrice(activePoint.value, asset)}</text>
+            <text x={left + plotW + 45} y={activePoint.y + 4} textAnchor="middle" className="chart-floating-text">{formatAxisPrice(activePoint.value, asset, priceTickStep)}</text>
             <rect x={Math.max(left, Math.min(left + plotW - 92, activePoint.x - 46))} y={axisBottom - 15} width="92" height="20" rx="5" className="chart-time-label" />
             <text x={Math.max(left + 46, Math.min(left + plotW - 46, activePoint.x))} y={axisBottom - 1} textAnchor="middle" className="chart-time-floating-text">{formatTime(activeTime, period)}</text>
           </g>

@@ -66,15 +66,22 @@ const request = async (url, token, trId) => {
 
 // 서로 다른 KIS 응답 필드를 숫자형 OHLCV 객체로 정규화하고 잘못된 봉은 제거한다.
 const candle = (time, open, high, low, close, volume) => {
-  const item = {
+  const closePrice = numberValue(close);
+  if (!time || !Number.isFinite(closePrice) || closePrice <= 0) return null;
+  const parsedOpen = numberValue(open);
+  const parsedHigh = numberValue(high);
+  const parsedLow = numberValue(low);
+  const openPrice = parsedOpen > 0 ? parsedOpen : closePrice;
+  const reportedHigh = parsedHigh > 0 ? parsedHigh : Math.max(openPrice, closePrice);
+  const reportedLow = parsedLow > 0 ? parsedLow : Math.min(openPrice, closePrice);
+  return {
     time,
-    open: numberValue(open),
-    high: numberValue(high),
-    low: numberValue(low),
-    close: numberValue(close),
+    open: openPrice,
+    high: Math.max(reportedHigh, openPrice, closePrice),
+    low: Math.min(reportedLow, openPrice, closePrice),
+    close: closePrice,
     volume: numberValue(volume) ?? 0,
   };
-  return item.time && [item.open, item.high, item.low, item.close].every(Number.isFinite) ? item : null;
 };
 
 // 국내 일자/시각 문자열에 한국 시간대 오프셋을 붙여 ISO 시각으로 만든다.
