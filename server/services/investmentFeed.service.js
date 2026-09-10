@@ -1,6 +1,3 @@
-import { Readability } from "@mozilla/readability";
-import { JSDOM } from "jsdom";
-
 // 외부 공개 피드에서 실제 금융 기사와 예정된 실적 발표 일정을 모아 프론트에 전달한다.
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 7000;
@@ -8,6 +5,21 @@ let cachedFeed = null;
 let cachedAt = 0;
 // 같은 기사를 반복해서 열 때 언론사 페이지를 다시 파싱하지 않도록 본문도 캐시한다.
 const articleCache = new Map();
+let articleParserPromise = null;
+
+// 기사 본문 파서가 다른 API의 서버 시작을 막지 않도록 실제 기사 요청 시에만 로드한다.
+const loadArticleParser = () => {
+  if (!articleParserPromise) {
+    articleParserPromise = Promise.all([
+      import("@mozilla/readability"),
+      import("jsdom"),
+    ]).then(([readabilityModule, jsdomModule]) => ({
+      Readability: readabilityModule.Readability,
+      JSDOM: jsdomModule.JSDOM,
+    }));
+  }
+  return articleParserPromise;
+};
 
 const decodeEntities = (value = "") => value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code))).trim();
 const readTag = (xml, tag) => decodeEntities(xml.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, "i"))?.[1] || "");
@@ -85,7 +97,8 @@ const resolveGoogleNewsUrl = async (googleUrl) => {
 };
 
 // Readability 결과에서 광고·고지 문구를 제외하고 모달에 표시할 본문 문단만 추린다.
-const extractArticleParagraphs = (html, url) => {
+const extractArticleParagraphs = async (html, url) => {
+  const { Readability, JSDOM } = await loadArticleParser();
   const document = new JSDOM(html, { url }).window.document;
   const article = new Readability(document).parse();
   if (!article?.content) return [];
@@ -112,7 +125,7 @@ const loadArticle = async (url) => {
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("text/html")) throw Object.assign(new Error("본문 형식을 읽을 수 없습니다."), { status: 502 });
   const html = await response.text();
-  const paragraphs = extractArticleParagraphs(html, resolvedUrl);
+  const paragraphs = await extractArticleParagraphs(html, resolvedUrl);
   if (!paragraphs.length) throw Object.assign(new Error("언론사에서 본문 제공을 제한하고 있습니다."), { status: 502 });
   const payload = { title: article.title, source: article.source, publishedAt: article.publishedAt, paragraphs };
   articleCache.set(url, { cachedAt: Date.now(), payload });
