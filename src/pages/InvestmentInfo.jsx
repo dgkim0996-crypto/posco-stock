@@ -10,6 +10,7 @@ const formatFeedDate = (value, includeTime = false) => {
   return new Intl.DateTimeFormat("ko-KR", includeTime ? { month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" } : { month:"2-digit", day:"2-digit" }).format(date);
 };
 const ModalLinkIcon = () => <span className="modal-link-icon" aria-hidden="true">›</span>;
+const FULL_FEED_LIMIT = 30;
 
 export default function InvestmentInfo({ markets, indices, onOpenAsset }) {
   const [filter,setFilter] = useState("전체");
@@ -143,18 +144,18 @@ export default function InvestmentInfo({ markets, indices, onOpenAsset }) {
                   </dl>
                   <p>실적 발표 일정과 예상치는 현지 사정에 따라 변경될 수 있습니다.</p>
                 </div>
-              ) : feedModal === "articles" ? feed.articles.map((item,index) => (
+              ) : feedModal === "articles" ? feed.articles.slice(0,FULL_FEED_LIMIT).map((item,index) => (
                 <button type="button" className="feed-modal-item" key={`${item.url}-${item.title}`} onClick={() => openArticle(item)}>
                   <b>{String(index + 1).padStart(2,"0")}</b><div><span>{item.category} · {item.source}</span><strong>{item.title}</strong><time>{formatFeedDate(item.publishedAt, true)}</time></div><ModalLinkIcon />
                 </button>
-              )) : feed.schedules.map((item,index) => (
+              )) : feed.schedules.slice(0,FULL_FEED_LIMIT).map((item,index) => (
                 <button type="button" className="feed-modal-item schedule" key={`${item.date}-${item.title}`} onClick={() => openSchedule(item)}>
                   <b>{formatFeedDate(item.date)}</b><div><span>{item.source}</span><strong>{item.title}</strong><p>{item.description}</p></div><ModalLinkIcon />
                 </button>
               ))}
               {!articleDetail && !scheduleDetail && !(feedModal === "articles" ? feed.articles.length : feed.schedules.length) && <div className="feed-status">{feedMessage}</div>}
             </div>
-            <footer><span>외부 페이지로 이동하지 않고 최신 수집 결과를 표시합니다.</span><button type="button" onClick={() => setFeedModal(null)}>확인</button></footer>
+            <footer><span>외부 페이지로 이동하지 않고 저장된 최신 {Math.min(FULL_FEED_LIMIT, feedModal === "articles" ? feed.articles.length : feed.schedules.length)}개를 표시합니다.</span><button type="button" onClick={() => setFeedModal(null)}>확인</button></footer>
           </section>
         </div>
       )}

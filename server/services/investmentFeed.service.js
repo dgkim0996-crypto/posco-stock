@@ -1,7 +1,15 @@
 // 외부 공개 피드에서 실제 금융 기사와 예정된 실적 발표 일정을 모아 프론트에 전달한다.
+import marketDatabaseService from "./marketDatabase.service.js";
+
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 7000;
-let cachedFeed = null;
+const FEED_LIMIT = 30;
+const restoredArticles = marketDatabaseService.loadFeedItems("articles");
+const restoredSchedules = marketDatabaseService.loadFeedItems("schedules");
+const restoredUpdatedAt = [restoredArticles.updatedAt, restoredSchedules.updatedAt].filter(Boolean).sort().at(-1) || null;
+let cachedFeed = restoredArticles.items.length || restoredSchedules.items.length
+  ? { articles: restoredArticles.items, schedules: restoredSchedules.items, updatedAt: restoredUpdatedAt, errors: [] }
+  : null;
 let cachedAt = 0;
 // 같은 기사를 반복해서 열 때 언론사 페이지를 다시 파싱하지 않도록 본문도 캐시한다.
 const articleCache = new Map();
@@ -37,7 +45,7 @@ const fetchWithTimeout = async (url, options = {}) => {
 const loadArticles = async () => {
   const query = encodeURIComponent("한국 증시 OR 코스피 OR 반도체 OR 2차전지 when:2d");
   const xml = await (await fetchWithTimeout(`https://news.google.com/rss/search?q=${query}&hl=ko&gl=KR&ceid=KR:ko`, { headers: { "User-Agent": "Mozilla/5.0 POSCO-Securities-Learning-App" } })).text();
-  return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].slice(0, 8).map((match) => {
+  return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].slice(0, FEED_LIMIT * 2).map((match) => {
     const item = match[1];
     const publishedAt = readTag(item, "pubDate");
     return { title: readTag(item, "title"), url: readTag(item, "link"), source: readTag(item, "source") || "Google 뉴스", publishedAt: publishedAt ? new Date(publishedAt).toISOString() : null, category: "뉴스" };
@@ -58,16 +66,57 @@ const loadSchedules = async () => {
     const payload = await response.json();
     return (payload?.data?.rows || []).map((row) => ({ ...row, date }));
   }));
-  return results.flatMap((result) => result.status === "fulfilled" ? result.value : []).sort((a, b) => marketCapNumber(b.marketCap) - marketCapNumber(a.marketCap)).slice(0, 8).map((row) => ({
-    date: row.date, title: `${row.name || row.symbol} 실적 발표`, description: `${row.symbol} · ${row.time || "발표 시각 미정"}${row.epsForecast ? ` · EPS 예상 ${row.epsForecast}` : ""}`, source: "Nasdaq Earnings Calendar", url: `https://www.nasdaq.com/market-activity/stocks/${String(row.symbol).toLowerCase()}/earnings`,
+  return results.flatMap((result) => result.status === "fulfilled" ? result.value : []).sort((a, b) => a.date.localeCompare(b.date) || marketCapNumber(b.marketCap) - marketCapNumber(a.marketCap)).slice(0, FEED_LIMIT * 2).map((row) => ({
+    date: row.date, symbol:row.symbol, title: `${row.name || row.symbol} 실적 발표`, description: `${row.symbol} · ${row.time || "발표 시각 미정"}${row.epsForecast ? ` · EPS 예상 ${row.epsForecast}` : ""}`, source: "Nasdaq Earnings Calendar", url: `https://www.nasdaq.com/market-activity/stocks/${String(row.symbol).toLowerCase()}/earnings`,
   }));
+};
+
+const articleTime = (item) => {
+  const value = new Date(item.publishedAt || 0).getTime();
+  return Number.isFinite(value) ? value : 0;
+};
+
+// 새 항목을 우선 병합하고 중복을 제거한 뒤 가장 오래된 기사부터 30개 밖으로 밀어낸다.
+const mergeArticles = (freshItems, savedItems = []) => {
+  const unique = new Map();
+  for (const item of [...freshItems, ...savedItems]) {
+    const key = String(item.url || item.title || "");
+    if (key && !unique.has(key)) unique.set(key, item);
+  }
+  return [...unique.values()].sort((a, b) => articleTime(b) - articleTime(a)).slice(0, FEED_LIMIT);
+};
+
+// 지난 일정은 제거하고 가까운 발표일 순으로 30개만 남겨 새 일정이 자연스럽게 순환되게 한다.
+const mergeSchedules = (freshItems, savedItems = []) => {
+  const today = formatDate(new Date());
+  const unique = new Map();
+  for (const item of [...freshItems, ...savedItems]) {
+    const key = `${item.date || ""}|${item.symbol || item.title || ""}`;
+    if (item.date >= today && key !== "|" && !unique.has(key)) unique.set(key, item);
+  }
+  return [...unique.values()].sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title)).slice(0, FEED_LIMIT);
+};
+
+const saveRollingFeed = (articles, schedules) => {
+  try {
+    marketDatabaseService.saveFeedItems("articles", articles);
+    marketDatabaseService.saveFeedItems("schedules", schedules);
+  } catch (error) {
+    console.warn("투자 피드 캐시 저장 실패:", error.message);
+  }
 };
 
 const loadFeed = async ({ force = false } = {}) => {
   if (!force && cachedFeed && Date.now() - cachedAt < CACHE_TTL_MS) return cachedFeed;
   const [articlesResult, schedulesResult] = await Promise.allSettled([loadArticles(), loadSchedules()]);
-  const nextFeed = { articles: articlesResult.status === "fulfilled" ? articlesResult.value : cachedFeed?.articles || [], schedules: schedulesResult.status === "fulfilled" ? schedulesResult.value : cachedFeed?.schedules || [], updatedAt: new Date().toISOString(), errors: [articlesResult.status === "rejected" ? `뉴스: ${articlesResult.reason.message}` : null, schedulesResult.status === "rejected" ? `일정: ${schedulesResult.reason.message}` : null].filter(Boolean) };
+  const articles = articlesResult.status === "fulfilled" ? mergeArticles(articlesResult.value, cachedFeed?.articles) : cachedFeed?.articles || [];
+  const schedules = schedulesResult.status === "fulfilled" ? mergeSchedules(schedulesResult.value, cachedFeed?.schedules) : cachedFeed?.schedules || [];
+  const refreshed = articlesResult.status === "fulfilled" || schedulesResult.status === "fulfilled";
+  const nextFeed = { articles, schedules, updatedAt: refreshed ? new Date().toISOString() : cachedFeed?.updatedAt || null, errors: [articlesResult.status === "rejected" ? `뉴스: ${articlesResult.reason.message}` : null, schedulesResult.status === "rejected" ? `일정: ${schedulesResult.reason.message}` : null].filter(Boolean) };
   if (!nextFeed.articles.length && !nextFeed.schedules.length && cachedFeed) return cachedFeed;
+  saveRollingFeed(nextFeed.articles, nextFeed.schedules);
+  const activeArticleUrls = new Set(nextFeed.articles.map((item) => item.url));
+  for (const url of articleCache.keys()) if (!activeArticleUrls.has(url)) articleCache.delete(url);
   cachedFeed = nextFeed; cachedAt = Date.now(); return nextFeed;
 };
 

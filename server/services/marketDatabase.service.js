@@ -56,6 +56,18 @@ database.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_chart_candles_lookup
   ON chart_candles (symbol, period, time);
+
+  CREATE TABLE IF NOT EXISTS investment_feed_items (
+    kind TEXT NOT NULL,
+    item_key TEXT NOT NULL,
+    position INTEGER NOT NULL,
+    payload TEXT NOT NULL,
+    saved_at TEXT NOT NULL,
+    PRIMARY KEY (kind, item_key)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_investment_feed_order
+  ON investment_feed_items (kind, position);
 `);
 
 const upsertQuoteStatement = database.prepare(`
@@ -148,6 +160,50 @@ const loadCharts = () => {
   return entries;
 };
 
+const FEED_KINDS = new Set(["articles", "schedules"]);
+const deleteFeedItemsStatement = database.prepare("DELETE FROM investment_feed_items WHERE kind = ?");
+const insertFeedItemStatement = database.prepare(`
+  INSERT INTO investment_feed_items (kind, item_key, position, payload, saved_at)
+  VALUES (?, ?, ?, ?, ?)
+`);
+
+const feedItemKey = (kind, item) => kind === "articles"
+  ? String(item.url || item.title || "")
+  : `${item.date || ""}|${item.symbol || item.title || ""}`;
+
+// 정렬이 끝난 최신 피드 배열을 한 트랜잭션으로 교체해 저장 순서와 개수를 그대로 보존한다.
+const saveFeedItems = (kind, items) => {
+  if (!FEED_KINDS.has(kind)) throw new Error("지원하지 않는 피드 종류입니다.");
+  const savedAt = new Date().toISOString();
+  database.exec("BEGIN IMMEDIATE");
+  try {
+    deleteFeedItemsStatement.run(kind);
+    items.forEach((item, position) => {
+      const key = feedItemKey(kind, item);
+      if (key) insertFeedItemStatement.run(kind, key, position, JSON.stringify(item), savedAt);
+    });
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  }
+  return savedAt;
+};
+
+// 서버 재시작 시 마지막으로 저장한 뉴스·일정의 표시 순서를 복원한다.
+const loadFeedItems = (kind) => {
+  if (!FEED_KINDS.has(kind)) return { items: [], updatedAt: null };
+  const rows = database.prepare(`
+    SELECT payload, saved_at FROM investment_feed_items
+    WHERE kind = ? ORDER BY position ASC
+  `).all(kind);
+  const items = rows.flatMap((row) => {
+    try { return [JSON.parse(row.payload)]; }
+    catch { return []; }
+  });
+  return { items, updatedAt: rows[0]?.saved_at || null };
+};
+
 const getStatus = () => {
   const quoteStats = database.prepare(`
     SELECT COUNT(*) AS count, MAX(updated_at) AS last_updated_at FROM market_quotes
@@ -200,4 +256,13 @@ const migrateJsonCaches = () => {
 // 이 모듈이 처음 로드될 때 한 번만 이전 데이터의 이관 여부를 확인한다.
 migrateJsonCaches();
 
-export default { getStatus, loadQuotes, saveQuote, loadCharts, saveChart, databasePath: DATABASE_PATH };
+export default {
+  getStatus,
+  loadQuotes,
+  saveQuote,
+  loadCharts,
+  saveChart,
+  loadFeedItems,
+  saveFeedItems,
+  databasePath: DATABASE_PATH,
+};
