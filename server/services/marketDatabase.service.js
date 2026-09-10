@@ -1,8 +1,13 @@
 import { DatabaseSync } from "node:sqlite";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
-const CACHE_DIRECTORY = path.resolve(".cache");
+// Vercel Function의 배포 파일은 읽기 전용이므로 임시 쓰기 영역을 사용한다.
+// 서버리스 인스턴스가 교체되면 캐시는 사라지지만 실제 계좌 데이터는 Supabase에 유지된다.
+const CACHE_DIRECTORY = process.env.VERCEL
+  ? path.join(tmpdir(), "posco-stock-cache")
+  : path.resolve(".cache");
 const DATABASE_PATH = path.join(CACHE_DIRECTORY, "market-data.sqlite");
 
 // DB 파일을 만들기 전에 저장 폴더가 존재하도록 보장한다.

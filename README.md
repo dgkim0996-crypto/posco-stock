@@ -89,9 +89,43 @@ Site URL을 `http://localhost:5173`, Redirect URL을 `http://localhost:5173/**`�
 
 1. Supabase Dashboard의 **Authentication > URL Configuration**에서 Site URL과 Redirect URL에 로컬 주소 `http://localhost:5173` 및 배포 주소를 등록합니다.
 2. Google Cloud Console에서 Web OAuth 클라이언트를 만들고, 승인된 JavaScript 원본에 서비스 주소를 추가합니다. 승인된 리디렉션 URI에는 Supabase Dashboard의 Google 공급자 화면에 표시되는 callback URL을 그대로 입력합니다. 그 Client ID와 Secret을 Supabase **Authentication > Providers > Google**에 등록하고 활성화합니다.
-3. Naver Developers에서 애플리케이션을 만들고 네이버 로그인 API를 활성화합니다. Supabase **Authentication > Providers > Custom OAuth Providers**에서 식별자 `naver`, Authorization URL `https://nid.naver.com/oauth2.0/authorize`, Token URL `https://nid.naver.com/oauth2.0/token`과 Naver Client ID/Secret을 등록합니다. 사용자 정보 엔드포인트와 응답 필드 매핑은 Dashboard의 Custom OAuth 안내에 맞춰 설정하고, Naver 개발자센터 Callback URL에는 Supabase가 표시하는 callback URL을 입력합니다.
+3. Naver Developers에서 애플리케이션을 만들고 네이버 로그인 API를 활성화합니다. Supabase **Authentication > Providers > Custom OAuth Providers**에서 식별자 `custom:naver`, Authorization URL `https://nid.naver.com/oauth2.0/authorize`, Token URL `https://nid.naver.com/oauth2.0/token`과 Naver Client ID/Secret을 등록합니다. Naver 개발자센터 Callback URL에는 Supabase가 표시하는 callback URL을 입력합니다.
+
+네이버 프로필 API는 표준 OAuth Claim과 달리 사용자 정보를 `response` 객체 안에 반환합니다. Supabase가
+`sub`와 `email`을 인식하도록 Custom Provider의 UserInfo URL에는 배포된 Express 변환 경로를 사용합니다.
+
+```text
+https://<Vercel 배포 도메인>/api/auth/naver/userinfo
+```
+
+로컬 주소는 Supabase Auth 서버에서 접근할 수 없으므로 이 UserInfo URL에는 반드시 공개 HTTPS 배포 주소를
+입력해야 합니다. 네이버 개발자센터에서 이메일을 필수 제공 항목으로 설정해야 신규 사용자 계정이 정상 생성됩니다.
 
 공급자 Secret은 `.env`, React 코드 또는 Git 저장소에 넣지 않고 각 공급자의 콘솔과 Supabase Dashboard에서만 관리합니다.
+
+## Vercel 배포
+
+이 저장소는 `vercel.json`에서 Vite SPA와 Express API를 함께 배포합니다. `/api/*` 요청은
+`api/index.js`의 Vercel Function으로 전달되고, 나머지 경로는 React의 `index.html`로 연결됩니다.
+
+Vercel **Project Settings > Environment Variables**에서 최소한 다음 값을 Production과 Preview에
+각각 등록한 뒤 새 Deployment를 실행합니다. 환경변수 변경은 이미 완료된 배포에 자동 반영되지 않습니다.
+
+- 브라우저 공개 변수: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`
+- 서버 전용 변수: `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_ENABLED=true`
+- 실시간 시세 사용 시: `KIS_APP_KEY`, `KIS_APP_SECRET`, `KIS_ENV=demo`
+- AI 분석 사용 시: `OPENAI_API_KEY`, 필요하면 `OPENAI_MODEL`
+
+`VITE_` 접두사가 붙은 변수는 빌드 결과에 포함되므로 Supabase Publishable Key처럼 공개 가능한 값만
+사용합니다. `SUPABASE_SECRET_KEY`, KIS Secret, OpenAI API Key에는 절대 `VITE_`를 붙이지 않습니다.
+
+Supabase **Authentication > URL Configuration**의 Site URL 및 Redirect URLs에도 실제
+`https://...vercel.app` 주소와 사용자 지정 도메인을 추가해야 이메일 확인과 OAuth 로그인이 배포 주소로 돌아옵니다.
+
+Vercel Function의 로컬 SQLite 시세 캐시는 임시 저장소를 사용하므로 인스턴스 교체 시 초기화됩니다.
+계좌·주문 데이터의 원본은 Supabase PostgreSQL이며 영향을 받지 않습니다. 장기 연결 기반 실시간 시세는
+Vercel 요금제와 Function의 연결 시간 제한을 확인하고, 필요하면 Express/WebSocket 서버를 별도 상시 실행
+호스팅으로 분리해 프런트의 WebSocket 주소를 연결해야 합니다.
 
 ## 6단계 운영 상태 점검
 

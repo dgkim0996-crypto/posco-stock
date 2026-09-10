@@ -21,6 +21,7 @@ import pendingOrdersRouter from "./routes/pendingOrders.routes.js";
 import settlementsRouter from "./routes/settlements.routes.js";
 import riskRouter from "./routes/risk.routes.js";
 import stockImagesRouter from "./routes/stockImages.routes.js";
+import authProvidersRouter from "./routes/authProviders.routes.js";
 import { notFound } from "./middleware/notFound.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { requestMetrics } from "./middleware/requestMetrics.js";
@@ -60,6 +61,8 @@ app.use("/api", fundamentalsRouter);
 app.use("/api", databaseRouter);
 // 외부 종목 이미지는 브라우저에서 직접 요청하지 않고 동일 출처 프록시로 전달한다.
 app.use("/api", stockImagesRouter);
+// 네이버의 중첩 프로필 응답을 Supabase 표준 OAuth Claim으로 변환한다.
+app.use("/api", authProvidersRouter);
 
 // 계좌 소유권이 필요한 변경/조회 API는 공개 시장 데이터 뒤에서 인증한다.
 app.use("/api", accountsRouter);
