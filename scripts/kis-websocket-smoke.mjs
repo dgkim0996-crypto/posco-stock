@@ -3,14 +3,16 @@ import WebSocket from "ws";
 
 const port = process.env.PORT || 3001;
 const observeMs = Number(process.env.KIS_WS_OBSERVE_MS || 15_000);
-const socket = new WebSocket(`ws://localhost:${port}/ws/market`);
+const websocketUrl = process.env.KIS_WS_TEST_URL || `ws://localhost:${port}/ws/market`;
+const symbol = process.env.KIS_WS_TEST_SYMBOL || "005930";
+const socket = new WebSocket(websocketUrl);
 const result = { internalConnected: false, kisConnected: false, tradeSubscription: false, orderBookSubscription: false, quoteReceived: false, orderBookReceived: false, quoteMessages: 0, orderBookMessages: 0 };
 let observationTimer = null;
 const finish = (label, code) => {
   clearTimeout(timeout);
   clearTimeout(observationTimer);
   console.log(JSON.stringify({ ...result, observedMs: observeMs, result: label }, null, 2));
-  socket.send(JSON.stringify({ type: "unsubscribe", symbol: "005930" }));
+  socket.send(JSON.stringify({ type: "unsubscribe", symbol }));
   socket.close();
   process.exitCode = code;
 };
@@ -21,15 +23,15 @@ const timeout = setTimeout(() => {
 
 socket.on("open", () => {
   result.internalConnected = true;
-  socket.send(JSON.stringify({ type: "subscribe", symbol: "005930" }));
+  socket.send(JSON.stringify({ type: "subscribe", symbol }));
 });
 socket.on("message", (raw) => {
   const message = JSON.parse(raw.toString());
   if (message.type === "status" && message.data?.connected) result.kisConnected = true;
   if (message.type === "subscription" && message.data?.ok && message.data?.trId === "H0STCNT0") result.tradeSubscription = true;
   if (message.type === "subscription" && message.data?.ok && message.data?.trId === "H0STASP0") result.orderBookSubscription = true;
-  if (message.type === "quote" && message.data?.symbol === "005930") { result.quoteReceived = true; result.quoteMessages += 1; }
-  if (message.type === "orderbook" && message.data?.symbol === "005930") { result.orderBookReceived = true; result.orderBookMessages += 1; }
+  if (message.type === "quote" && message.data?.symbol === symbol) { result.quoteReceived = true; result.quoteMessages += 1; }
+  if (message.type === "orderbook" && message.data?.symbol === symbol) { result.orderBookReceived = true; result.orderBookMessages += 1; }
   if (!observationTimer && result.kisConnected && result.quoteReceived && result.orderBookReceived) {
     observationTimer = setTimeout(() => finish("PASS", 0), observeMs);
   }

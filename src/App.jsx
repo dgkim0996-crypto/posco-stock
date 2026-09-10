@@ -8,7 +8,7 @@ import AuthScreen from "./components/AuthScreen.jsx";
 import PasswordRecovery from "./components/PasswordRecovery.jsx";
 import poscoLogo from "./assets/posco-ci-blue.png";
 import { assetMatchesSearch } from "./utils/assetSearch.js";
-import { apiFetch } from "./utils/api.js";
+import { apiFetch, apiUrl, websocketUrl } from "./utils/api.js";
 import { supabase } from "./lib/supabase.js";
 
 const AssetOverview = lazy(() => import("./pages/AssetOverview.jsx"));
@@ -344,7 +344,7 @@ function TradingApp({ session, onSignOut }) {
     let timer;
     const loadIndices = async () => {
       try {
-        const response = await fetch("/api/indices");
+        const response = await fetch(apiUrl("/api/indices"));
         if (!response.ok) throw new Error("시장 지수 요청 실패");
         const payload = await response.json();
         if (active && Array.isArray(payload.items) && payload.items.length) setMarketIndices(payload.items);
@@ -364,7 +364,7 @@ function TradingApp({ session, onSignOut }) {
     let timer;
     const loadAlternativeQuotes = async () => {
       try {
-        const response = await fetch("/api/alternative-quotes");
+        const response = await fetch(apiUrl("/api/alternative-quotes"));
         if (!response.ok) throw new Error("대체시장 시세 요청 실패");
         const payload = await response.json();
         if (!active) return;
@@ -403,8 +403,7 @@ function TradingApp({ session, onSignOut }) {
     let reconnectTimer;
     let socket;
     const connect = () => {
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      socket = new WebSocket(`${protocol}//${window.location.host}/ws/market`);
+      socket = new WebSocket(websocketUrl("/ws/market"));
       socket.addEventListener("open", () => socket.send(JSON.stringify({ type: "subscribe", symbol: selected.symbol })));
       socket.addEventListener("message", (event) => {
         if (!active) return;
@@ -512,7 +511,7 @@ function TradingApp({ session, onSignOut }) {
     // 서버 저장값을 먼저 받고, KIS 값이 갱신되면 다음 2초 폴링에서 화면에 반영한다.
     const loadQuotes = async () => {
       try {
-        const response = await fetch("/api/quotes");
+        const response = await fetch(apiUrl("/api/quotes"));
         if (!response.ok) throw new Error(`시세 API 오류 (${response.status})`);
         const data = await response.json();
         if (!active) return;
@@ -621,7 +620,7 @@ function TradingApp({ session, onSignOut }) {
       if (selected.synthetic) {
         const componentSymbols = selected.components || ["005930", "000660"];
         const responses = await Promise.all(componentSymbols.map((symbol) => (
-          fetch(`/api/charts/${encodeURIComponent(symbol)}?period=${period}`)
+          fetch(apiUrl(`/api/charts/${encodeURIComponent(symbol)}?period=${period}`))
         )));
         const payloads = await Promise.all(responses.map(async (response) => {
           const payload = await response.json();
@@ -638,7 +637,7 @@ function TradingApp({ session, onSignOut }) {
       const chartUrl = category === "stocks"
         ? `/api/charts/${encodeURIComponent(selected.symbol)}?period=${period}`
         : `/api/alternative-charts/${category}/${encodeURIComponent(selected.symbol)}?period=${period}`;
-      const response = await fetch(chartUrl);
+      const response = await fetch(apiUrl(chartUrl));
       const payload = await response.json();
       if (!response.ok) {
         const error = new Error(payload.error || `차트 API 오류 (${response.status})`);

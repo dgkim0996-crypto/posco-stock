@@ -113,7 +113,7 @@ Vercel **Project Settings > Environment Variables**에서 최소한 다음 값�
 
 - 브라우저 공개 변수: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`
 - 서버 전용 변수: `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_ENABLED=true`
-- 실시간 시세 사용 시: `KIS_APP_KEY`, `KIS_APP_SECRET`, `KIS_ENV=demo`
+- 실시간 시세 사용 시: `KIS_APP_KEY`, `KIS_APP_SECRET`, `KIS_ENV=paper`
 - AI 분석 사용 시: `OPENAI_API_KEY`, 필요하면 `OPENAI_MODEL`
 
 `VITE_` 접두사가 붙은 변수는 빌드 결과에 포함되므로 Supabase Publishable Key처럼 공개 가능한 값만
@@ -126,6 +126,37 @@ Vercel Function의 로컬 SQLite 시세 캐시는 임시 저장소를 사용하�
 계좌·주문 데이터의 원본은 Supabase PostgreSQL이며 영향을 받지 않습니다. 장기 연결 기반 실시간 시세는
 Vercel 요금제와 Function의 연결 시간 제한을 확인하고, 필요하면 Express/WebSocket 서버를 별도 상시 실행
 호스팅으로 분리해 프런트의 WebSocket 주소를 연결해야 합니다.
+
+## 프런트·실시간 백엔드 분리 배포
+
+KIS WebSocket과 시세 순환 수집은 계속 실행되는 프로세스가 필요합니다. 별도 서버에서는 `npm start`로
+Express와 `/ws/market`을 함께 시작합니다. 저장소의 `Dockerfile`은 Node 24 기반이며 Docker를 지원하는
+호스팅에서 그대로 사용할 수 있습니다. 서버 환경변수에는 다음 값을 등록합니다.
+
+- `PORT`: 호스팅에서 자동 제공하는 값이 있으면 그 값을 사용합니다.
+- `HOST=0.0.0.0`
+- `CLIENT_URLS=http://localhost:5173,https://posco-stock.vercel.app`
+- `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_ENABLED=true`
+- `KIS_APP_KEY`, `KIS_APP_SECRET`, `KIS_ENV=paper`
+- 선택 기능을 사용할 때 `OPENAI_API_KEY`, `BOK_ECOS_API_KEY`
+
+백엔드가 `https://<API 도메인>`으로 배포됐다면 Vercel의 빌드 환경변수에 아래 공개 주소를 등록하고
+새로 배포합니다. 두 값은 브라우저에 공개되는 서버 주소이며 Secret을 포함하지 않습니다.
+
+```text
+VITE_API_BASE_URL=https://<API 도메인>
+VITE_WS_BASE_URL=wss://<API 도메인>
+```
+
+값을 비워 두면 로컬 개발에서는 Vite 프록시를, 기존 Vercel 통합 배포에서는 동일 출처 `/api`를 사용합니다.
+분리 배포 후 Supabase Custom Naver Provider의 Userinfo URL도
+`https://<API 도메인>/api/auth/naver/userinfo`로 옮길 수 있습니다. 전환 전에는 기존 Vercel Userinfo URL을
+유지해도 로그인에는 문제가 없습니다.
+
+배포 확인 순서는 `GET /api/health` → `GET /api/health/ready` → 로그인 후
+`GET /api/operations/status` → 브라우저 `/ws/market` 연결 순서입니다.
+원격 WebSocket 스모크 테스트는 `KIS_WS_TEST_URL=wss://<API 도메인>/ws/market`을 설정한 뒤
+`npm run test:websocket`으로 실행합니다.
 
 ## 6단계 운영 상태 점검
 

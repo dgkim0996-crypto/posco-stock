@@ -9,12 +9,13 @@ import kisWebSocketService from "./services/kisWebSocket.service.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || "0.0.0.0";
 
 const startServer = () => {
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, HOST, () => {
     console.log("----------------------------------------");
     console.log("포스코증권 API 서버가 실행되었습니다.");
-    console.log(`http://localhost:${PORT}`);
+    console.log(`http://${HOST}:${PORT}`);
     console.log("----------------------------------------");
     try {
       marketDataService.startPolling();

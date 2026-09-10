@@ -32,11 +32,29 @@ dotenv.config();
 
 const app = express();
 
-// CLIENT_URL에서 온 브라우저 요청을 허용하며, 미설정 시 Vite 기본 주소를 사용한다.
-const allowedOrigin = process.env.CLIENT_URL || "http://localhost:5173";
+const normalizeOrigin = (origin) => String(origin || "").trim().replace(/\/$/, "");
+const vercelOrigin = (hostname) => {
+  const value = normalizeOrigin(hostname);
+  if (!value) return "";
+  return /^https?:\/\//i.test(value) ? value : `https://${value}`;
+};
+
+// 로컬·별도 배포 프런트와 현재 Vercel Production/Preview 주소를 함께 허용한다.
+// CLIENT_URL은 기존 단일 값과의 호환을 유지한다.
+const allowedOrigins = new Set([
+  "http://localhost:5173",
+  ...(process.env.CLIENT_URLS || process.env.CLIENT_URL || "").split(",").map(normalizeOrigin),
+  vercelOrigin(process.env.VERCEL_PROJECT_PRODUCTION_URL),
+  vercelOrigin(process.env.VERCEL_URL),
+].filter(Boolean));
 app.use(
   cors({
-    origin: allowedOrigin,
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.has(normalizeOrigin(origin))) return callback(null, true);
+      const error = new Error("허용되지 않은 프런트엔드 주소입니다.");
+      error.status = 403;
+      return callback(error);
+    },
     credentials: true,
   }),
 );

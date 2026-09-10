@@ -6,6 +6,7 @@ import { instruments } from "../data/instruments.data.js";
 const domesticSymbols = new Set(instruments.filter((item) => item.currency === "KRW" && item.market !== "SIM").map((item) => item.symbol));
 const clients = new Set();
 const subscriptions = new Map();
+const confirmedSubscriptions = new Map();
 const orderBooks = new Map();
 let upstream = null;
 let approvalKey = null;
@@ -48,6 +49,23 @@ const broadcast = (payload, symbol = null) => {
   const encoded = JSON.stringify(payload);
   for (const client of clients) {
     if (client.socket.readyState === WebSocket.OPEN && (!symbol || client.symbols.has(symbol))) client.socket.send(encoded);
+  }
+};
+
+const rememberConfirmedSubscription = (symbol, trId) => {
+  if (!symbol || !trId || !subscriptions.has(symbol)) return;
+  const confirmed = confirmedSubscriptions.get(symbol) || new Set();
+  confirmed.add(trId);
+  confirmedSubscriptions.set(symbol, confirmed);
+};
+
+// 이미 상위 KIS 구독이 살아 있으면 새 브라우저에도 현재 승인 상태를 즉시 알려준다.
+const replayConfirmedSubscriptions = (client, symbol) => {
+  for (const trId of confirmedSubscriptions.get(symbol) || []) {
+    client.socket.send(JSON.stringify({
+      type: "subscription",
+      data: { ok: true, trId, symbol, message: "기존 KIS 구독을 공유합니다." },
+    }));
   }
 };
 
@@ -96,6 +114,7 @@ const handleUpstreamMessage = (data) => {
       lastError = { message: parsed.body.msg1 || "KIS 구독 실패", occurredAt: new Date().toISOString() };
       broadcast({ type: "subscription", data: { ok: false, trId: parsed?.header?.tr_id, symbol: parsed?.header?.tr_key, message: parsed.body.msg1 } }, parsed?.header?.tr_key);
     } else if (parsed?.body?.rt_cd === "0" && parsed?.header?.tr_id) {
+      rememberConfirmedSubscription(parsed.header.tr_key, parsed.header.tr_id);
       broadcast({ type: "subscription", data: { ok: true, trId: parsed.header.tr_id, symbol: parsed.header.tr_key, message: parsed.body.msg1 } }, parsed.header.tr_key);
     }
   } catch { /* 알 수 없는 KIS 프레임은 다음 정상 프레임을 계속 기다린다. */ }
@@ -114,13 +133,13 @@ const connect = async () => {
     approvalKey = await getApprovalKey();
     upstream = new WebSocket(upstreamUrl());
     upstream.on("open", () => {
-      reconnectAttempts = 0; connectedAt = new Date().toISOString(); lastError = null;
+      reconnectAttempts = 0; connectedAt = new Date().toISOString(); lastError = null; confirmedSubscriptions.clear();
       for (const symbol of subscriptions.keys()) requestSubscription(symbol);
       broadcast({ type: "status", data: getStatus() });
     });
     upstream.on("message", handleUpstreamMessage);
     upstream.on("error", (error) => { lastError = { message: error.message, occurredAt: new Date().toISOString() }; });
-    upstream.on("close", () => { upstream = null; connectedAt = null; broadcast({ type: "status", data: getStatus() }); scheduleReconnect(); });
+    upstream.on("close", () => { upstream = null; connectedAt = null; confirmedSubscriptions.clear(); broadcast({ type: "status", data: getStatus() }); scheduleReconnect(); });
   } catch (error) {
     lastError = { message: error.message, occurredAt: new Date().toISOString() };
     broadcast({ type: "status", data: getStatus() }); scheduleReconnect();
@@ -133,6 +152,7 @@ const addSubscription = (client, symbol) => {
   const count = subscriptions.get(symbol) || 0;
   subscriptions.set(symbol, count + 1);
   if (count === 0) requestSubscription(symbol);
+  else replayConfirmedSubscriptions(client, symbol);
   const cachedBook = orderBooks.get(symbol);
   if (cachedBook) client.socket.send(JSON.stringify({ type: "orderbook", data: cachedBook }));
   connect().catch(() => undefined);
@@ -140,7 +160,7 @@ const addSubscription = (client, symbol) => {
 const removeSubscription = (client, symbol) => {
   if (!client.symbols.delete(symbol)) return;
   const next = Math.max(0, (subscriptions.get(symbol) || 1) - 1);
-  if (next === 0) { subscriptions.delete(symbol); requestSubscription(symbol, "2"); } else subscriptions.set(symbol, next);
+  if (next === 0) { subscriptions.delete(symbol); confirmedSubscriptions.delete(symbol); requestSubscription(symbol, "2"); } else subscriptions.set(symbol, next);
 };
 
 const getStatus = () => ({

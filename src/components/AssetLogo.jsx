@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { apiUrl } from "../utils/api.js";
 
 // 상품 로고를 표시하고 외부 이미지 실패 시 종목 이니셜 배지로 대체하는 컴포넌트다.
 
@@ -159,7 +160,7 @@ export function assetLogoUrl(asset) {
   const symbol = asset?.symbol || asset?.id;
   if (symbol && TOSS_SECURITY_MARKETS.has(asset?.market)) {
     const imageFile = TOSS_SECURITY_IMAGE_FILES[symbol] || `${symbol}.png`;
-    return `/api/stock-images/${encodeURIComponent(imageFile)}`;
+    return apiUrl(`/api/stock-images/${encodeURIComponent(imageFile)}`);
   }
   const domain = asset?.group === "POSCO"
     ? POSCO_GROUP_DOMAIN

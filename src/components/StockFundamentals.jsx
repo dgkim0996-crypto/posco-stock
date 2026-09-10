@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { apiUrl } from "../utils/api.js";
 
 const value = (number, suffix = "", digits = 2) => Number.isFinite(number) ? `${number.toLocaleString(undefined, { maximumFractionDigits: digits })}${suffix}` : "자료 없음";
 
@@ -11,7 +12,7 @@ export default function StockFundamentals({ asset }) {
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError(""); setData(null);
-    fetch(`/api/fundamentals/${encodeURIComponent(asset.symbol)}`, { signal: controller.signal })
+    fetch(apiUrl(`/api/fundamentals/${encodeURIComponent(asset.symbol)}`), { signal: controller.signal })
       .then(async (response) => { if (!response.ok) throw new Error("종목정보를 불러오지 못했습니다."); return response.json(); })
       .then(setData).catch((err) => { if (err.name !== "AbortError") setError(err.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();

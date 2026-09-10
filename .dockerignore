@@ -1,0 +1,9 @@
+node_modules
+dist
+.git
+.env
+.cache
+.pptx-work
+output
+*.pptx
+npm-debug.log*

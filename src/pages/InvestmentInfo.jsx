@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { apiUrl } from "../utils/api.js";
 
 // 시세 상태로 등락 순위를 만들고, 서버에서 받은 실제 뉴스·기업 일정을 함께 보여준다.
 function pct(value){ return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`; }
@@ -24,7 +25,7 @@ export default function InvestmentInfo({ markets, indices, onOpenAsset }) {
   // 모달이 열린 동안 배경 스크롤을 막고 Escape 키로 닫을 수 있게 한다.
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/feed", { signal:controller.signal }).then((response) => {
+    fetch(apiUrl("/api/feed"), { signal:controller.signal }).then((response) => {
       if (!response.ok) throw new Error("피드 요청 실패");
       return response.json();
     }).then((payload) => {
@@ -64,7 +65,7 @@ export default function InvestmentInfo({ markets, indices, onOpenAsset }) {
     setScheduleDetail(null);
     setArticleDetail({ state:"loading", item, data:null, error:null });
     try {
-      const response = await fetch(`/api/feed/article?url=${encodeURIComponent(item.url)}`);
+      const response = await fetch(apiUrl(`/api/feed/article?url=${encodeURIComponent(item.url)}`));
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "뉴스 본문을 불러오지 못했습니다.");
       setArticleDetail({ state:"ready", item, data:payload, error:null });
