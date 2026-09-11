@@ -56,7 +56,7 @@ function formatTime(date, period) {
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
-export default function Sparkline({ values, candles, asset, period = "1m" }) {
+export default function Sparkline({ values, candles, asset, period = "1m", averagePrice = null, tradeMarkers = [] }) {
   const [hoverIndex, setHoverIndex] = useState(null);
   const [viewRange, setViewRange] = useState({ start: 0, end: 0 });
   const [priceScale, setPriceScale] = useState(1);
@@ -126,9 +126,25 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
     const h = axisBottom + 12;
     const plotW = w - left - right;
     const plotH = priceBottom - top;
+    const interval = PERIOD_MS[period] || PERIOD_MS["1m"];
+    const firstVisibleTime = normalized[0].time.getTime();
+    const lastVisibleTime = normalized.at(-1).time.getTime();
+    const visibleTradeMarkers = tradeMarkers.filter((marker) => {
+      const markerTime = Number(marker?.time);
+      return Number.isFinite(markerTime)
+        && markerTime >= firstVisibleTime - interval
+        && markerTime <= lastVisibleTime + interval * 2
+        && Number.isFinite(Number(marker.price))
+        && Number(marker.price) > 0;
+    });
+    const averagePriceValue = Number(averagePrice);
+    const guidePrices = [
+      ...(Number.isFinite(averagePriceValue) && averagePriceValue > 0 ? [averagePriceValue] : []),
+      ...visibleTradeMarkers.map((marker) => Number(marker.price)),
+    ];
 
-    const rawMin = Math.min(...normalized.map((item) => item.low));
-    const rawMax = Math.max(...normalized.map((item) => item.high));
+    const rawMin = Math.min(...normalized.map((item) => item.low), ...guidePrices);
+    const rawMax = Math.max(...normalized.map((item) => item.high), ...guidePrices);
     const rawRange = rawMax - rawMin || Math.abs(rawMax || 1) * 0.01 || 1;
     const autoRange = rawRange * 1.12;
     const center = (rawMin + rawMax) / 2;
@@ -145,15 +161,28 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
     const volumes = normalized.map((item) => Number(item.volume) || 0);
     const maxVolume = Math.max(...volumes, 1);
     const times = normalized.map((item) => item.time);
+    const averageY = Number.isFinite(averagePriceValue) && averagePriceValue > 0
+      ? top + ((max - averagePriceValue) / range) * plotH
+      : null;
+    const tradeMarkerCoords = visibleTradeMarkers.map((marker) => {
+      const nearestIndex = times.reduce((closest, time, index) => (
+        Math.abs(time.getTime() - marker.time) < Math.abs(times[closest].getTime() - marker.time) ? index : closest
+      ), 0);
+      return {
+        ...marker,
+        x: coords[nearestIndex].x,
+        y: top + ((max - Number(marker.price)) / range) * plotH,
+      };
+    });
 
-    return { normalized, clean, w, h, left, right, top, priceBottom, volumeTop, volumeBottom, volumeHeight, axisBottom, plotW, plotH, min, max, range, coords, volumes, maxVolume, times };
-  }, [allCandles, viewRange, priceScale, volumeLevel]);
+    return { normalized, clean, w, h, left, right, top, priceBottom, volumeTop, volumeBottom, volumeHeight, axisBottom, plotW, plotH, min, max, range, coords, volumes, maxVolume, times, averageY, averagePriceValue, tradeMarkerCoords };
+  }, [allCandles, viewRange, priceScale, volumeLevel, averagePrice, tradeMarkers, period]);
 
   if (!prepared) {
     return <div className="chart-empty">시세 데이터를 수신하고 있습니다...</div>;
   }
 
-  const { normalized, clean, w, h, left, top, priceBottom, volumeTop, volumeBottom, volumeHeight, axisBottom, plotW, min, max, range, coords, volumes, maxVolume, times } = prepared;
+  const { normalized, clean, w, h, left, top, priceBottom, volumeTop, volumeBottom, volumeHeight, axisBottom, plotW, min, max, range, coords, volumes, maxVolume, times, averageY, averagePriceValue, tradeMarkerCoords } = prepared;
   const up = clean.at(-1) >= clean[0];
   const priceTickStep = range / (PRICE_TICK_COUNT - 1);
   const yTicks = Array.from({ length: PRICE_TICK_COUNT }, (_, i) => max - priceTickStep * i);
@@ -340,6 +369,14 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
         })}
         <text x={left + 5} y={volumeTop + 13} className="chart-volume-label">거래량</text>
 
+        {Number.isFinite(averageY) && (
+          <g className="chart-average-guide">
+            <line x1={left} y1={averageY} x2={left + plotW} y2={averageY} />
+            <rect x={left + 6} y={averageY - 11} width="132" height="22" rx="6" />
+            <text x={left + 14} y={averageY + 4}>내 평단 {formatFullPrice(averagePriceValue, asset)}</text>
+          </g>
+        )}
+
         {normalized.map((item, index) => {
           const x = coords[index].x;
           const bodyWidth = Math.max(0.8, Math.min(10, plotW / normalized.length * 0.58));
@@ -352,6 +389,23 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
             <g key={`c-${item.time.toISOString()}-${index}`} className={rising ? "candle-up" : "candle-down"}>
               <line x1={x} y1={highY} x2={x} y2={lowY} stroke={rising ? "#e5484d" : "#2f6fed"} strokeWidth="1.3" />
               <rect x={x - bodyWidth / 2} y={Math.min(openY, closeY)} width={bodyWidth} height={Math.max(1.5, Math.abs(closeY - openY))} fill={rising ? "#e5484d" : "#2f6fed"} />
+            </g>
+          );
+        })}
+
+        {tradeMarkerCoords.map((marker, index) => {
+          const isBuy = marker.side === "BUY";
+          const markerX = Math.max(left + 22, Math.min(left + plotW - 22, marker.x));
+          const placeBelow = isBuy ? marker.y < priceBottom - 30 : marker.y <= top + 30;
+          const labelY = placeBelow ? marker.y + 9 : marker.y - 27;
+          const connectorY = placeBelow ? labelY : labelY + 18;
+          return (
+            <g className={`chart-trade-marker ${isBuy ? "is-buy" : "is-sell"}`} key={`${marker.id || marker.time}-${index}`}>
+              <title>{`${isBuy ? "매수" : "매도"} ${marker.quantity || ""} · ${formatFullPrice(marker.price, asset)}`}</title>
+              <circle cx={marker.x} cy={marker.y} r="3.5" />
+              <line x1={marker.x} y1={marker.y} x2={markerX} y2={connectorY} />
+              <rect x={markerX - 20} y={labelY} width="40" height="18" rx="6" />
+              <text x={markerX} y={labelY + 12.5} textAnchor="middle">{isBuy ? "BUY" : "SELL"}</text>
             </g>
           );
         })}

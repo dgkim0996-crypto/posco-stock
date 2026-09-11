@@ -346,7 +346,7 @@ function TradingApp({ session, onSignOut }) {
       setSpotPositions(Object.fromEntries(state.holdings.map((item)=>[item.symbol,{quantity:item.quantity,avgPrice:item.avgPrice,type:item.category}])));
       setShortPositions(Object.fromEntries(state.shortPositions.map((item)=>[item.symbol,{quantity:item.quantity,avgPrice:item.avgPrice}])));
       setFuturesPositions(state.futuresPositions.map((item)=>{const asset=INITIAL_MARKETS.futures.find((candidate)=>candidate.symbol===item.symbol);return{...item,assetId:item.symbol,name:asset?.name||item.symbol};}));
-      setFilledOrders(state.orders.filter((order)=>order.status==="FILLED").map((order)=>{const asset=Object.values(INITIAL_MARKETS).flat().find((candidate)=>candidate.symbol===order.symbol);return{...order,assetId:order.symbol,name:asset?.name||order.symbol,executionPrice:asset?.unit==="USD"?order.executionPrice/USD_KRW:order.executionPrice,filledAt:new Date(order.updatedAt||order.createdAt).toLocaleTimeString("ko-KR")};}));
+      setFilledOrders(state.orders.filter((order)=>order.status==="FILLED").map((order)=>{const asset=Object.values(INITIAL_MARKETS).flat().find((candidate)=>candidate.symbol===order.symbol);const filledDate=new Date(order.updatedAt||order.createdAt);return{...order,assetId:order.symbol,name:asset?.name||order.symbol,executionPrice:asset?.unit==="USD"?order.executionPrice/USD_KRW:order.executionPrice,filledAtTime:filledDate.getTime(),filledAt:filledDate.toLocaleTimeString("ko-KR")};}));
       setPendingOrders(state.pendingOrders.map((order)=>{const asset=Object.values(INITIAL_MARKETS).flat().find((candidate)=>candidate.symbol===order.symbol);return{...order,pendingOrderId:order.id,assetId:order.symbol,name:asset?.name||order.symbol,orderType:"LIMIT",orderedAt:new Date(order.createdAt).toLocaleTimeString("ko-KR")};}));
     }).catch((error)=>{if(active)setMessage(`계좌 데이터 연결 실패 · ${error.message}`);});
     return()=>{active=false;};
@@ -866,6 +866,31 @@ function TradingApp({ session, onSignOut }) {
   const selectedPendingSellQuantity = pendingOrders
     .filter((item) => item.assetId === selected.id && item.side === "SELL")
     .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const selectedAveragePrice = useMemo(() => {
+    if (category === "futures") {
+      const positions = futuresPositions.filter((position) => position.assetId === selected.id || position.symbol === selected.symbol);
+      const totalQuantity = positions.reduce((sum, position) => sum + Number(position.quantity || 0), 0);
+      if (totalQuantity <= 0) return null;
+      return positions.reduce((sum, position) => sum + Number(position.entryPrice || 0) * Number(position.quantity || 0), 0) / totalQuantity;
+    }
+
+    const position = spotPositions[selected.id] || shortPositions[selected.id];
+    const averagePrice = Number(position?.avgPrice);
+    if (!Number.isFinite(averagePrice) || averagePrice <= 0) return null;
+    return selected.unit === "USD" ? averagePrice / USD_KRW : averagePrice;
+  }, [category, futuresPositions, selected.id, selected.symbol, selected.unit, shortPositions, spotPositions]);
+  const selectedTradeMarkers = useMemo(() => filledOrders
+    .filter((order) => order.assetId === selected.id || order.symbol === selected.symbol)
+    .slice(0, 30)
+    .map((order) => ({
+      id: order.id,
+      side: order.side,
+      price: Number(order.executionPrice),
+      quantity: Number(order.quantity),
+      time: Number(order.filledAtTime) || Date.parse(order.updatedAt || order.createdAt),
+    }))
+    .filter((marker) => Number.isFinite(marker.price) && marker.price > 0 && Number.isFinite(marker.time)),
+  [filledOrders, selected.id, selected.symbol]);
 
   // 선택한 매수·매도 방향에 맞춰 예수금 또는 실제 매도 가능 잔고로 최대 수량을 계산한다.
   function setMaximumOrderQuantity() {
@@ -955,6 +980,7 @@ function TradingApp({ session, onSignOut }) {
       ...order,
       status: "FILLED",
       executionPrice,
+      filledAtTime: Date.now(),
       filledAt: new Date().toLocaleTimeString("ko-KR"),
     }, ...prev].slice(0, 40));
   }
@@ -1552,6 +1578,8 @@ function TradingApp({ session, onSignOut }) {
                   values={chartData[selected.id] ?? [selected.price]}
                   asset={selected}
                   period={chartPeriod}
+                  averagePrice={selectedAveragePrice}
+                  tradeMarkers={selectedTradeMarkers}
                 />
               )}
               <div className="chart-foot">

@@ -4134,6 +4134,59 @@ footer strong {
 .volume-bar {
   opacity: 0.72;
 }
+.chart-average-guide,
+.chart-trade-marker {
+  pointer-events: none;
+}
+.chart-average-guide line {
+  stroke: #f09a24;
+  stroke-width: 1.4;
+  stroke-dasharray: 6 4;
+  opacity: 0.92;
+}
+.chart-average-guide rect {
+  fill: #fff6e8;
+  stroke: #f0b45e;
+  stroke-width: 1;
+}
+.chart-average-guide text {
+  fill: #b56808;
+  font-size: 10px;
+  font-weight: 800;
+}
+.chart-trade-marker line {
+  stroke-width: 1.4;
+  opacity: 0.88;
+}
+.chart-trade-marker circle {
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+.chart-trade-marker rect {
+  stroke: #fff;
+  stroke-width: 1;
+  filter: drop-shadow(0 2px 3px rgba(35, 53, 68, 0.18));
+}
+.chart-trade-marker text {
+  fill: #fff;
+  font-size: 8.5px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+.chart-trade-marker.is-buy line {
+  stroke: #e5484d;
+}
+.chart-trade-marker.is-buy circle,
+.chart-trade-marker.is-buy rect {
+  fill: #e5484d;
+}
+.chart-trade-marker.is-sell line {
+  stroke: #2f6fed;
+}
+.chart-trade-marker.is-sell circle,
+.chart-trade-marker.is-sell rect {
+  fill: #2f6fed;
+}
 .up-bar {
   fill: #e5484d;
 }
@@ -6368,6 +6421,20 @@ html[data-theme="dark"] .chart-volume-background {
 }
 html[data-theme="dark"] .chart-volume-divider {
   stroke: #2d3b47;
+}
+html[data-theme="dark"] .chart-average-guide line {
+  stroke: #f3ad4c;
+}
+html[data-theme="dark"] .chart-average-guide rect {
+  fill: #332716;
+  stroke: #a9752f;
+}
+html[data-theme="dark"] .chart-average-guide text {
+  fill: #ffc66f;
+}
+html[data-theme="dark"] .chart-trade-marker circle,
+html[data-theme="dark"] .chart-trade-marker rect {
+  stroke: #121b25;
 }
 html[data-theme="dark"] .chart-axis-text,
 html[data-theme="dark"] .chart-volume-label {
