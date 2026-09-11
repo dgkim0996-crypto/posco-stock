@@ -255,6 +255,7 @@ function TradingApp({ session, onSignOut }) {
   const [mainTab, setMainTab] = useState("trading");
   const [foreignCash, setForeignCash] = useState(0);
   const [category, setCategory] = useState("stocks");
+  const [marketPanelOpen, setMarketPanelOpen] = useState(true);
   const [selectedId, setSelectedId] = useState(INITIAL_MARKETS.stocks[0].id);
   const [cash, setCash] = useState(STARTING_CASH);
   const [accountNumber, setAccountNumber] = useState("계좌 준비 중");
@@ -1495,11 +1496,19 @@ function TradingApp({ session, onSignOut }) {
         ))}
       </div>
 
-      <main className="workspace">
-        <aside className="panel left-panel">
+      <main className={`workspace ${marketPanelOpen ? "" : "is-market-collapsed"}`}>
+        {marketPanelOpen && <aside className="panel left-panel">
           <div className="panel-title">
             <div><span>종목</span><strong>관심·시세</strong></div>
-            <em>{assets.length}종목</em>
+            <button
+              type="button"
+              className="market-panel-toggle"
+              onClick={() => setMarketPanelOpen(false)}
+              aria-label="종목 목록 접기"
+              title="종목 목록 접기"
+            >
+              <span aria-hidden="true">‹</span> 접기
+            </button>
           </div>
           <MarketList
             assets={assets}
@@ -1509,10 +1518,21 @@ function TradingApp({ session, onSignOut }) {
             favorites={favorites}
             onToggleFavorite={toggleFavorite}
           />
-        </aside>
+        </aside>}
 
         <section className="center">
           <div className="panel instrument">
+            {!marketPanelOpen && (
+              <button
+                type="button"
+                className="market-panel-reopen"
+                onClick={() => setMarketPanelOpen(true)}
+                aria-label="종목 목록 열기"
+                title="종목 목록 열기"
+              >
+                <span aria-hidden="true">›</span> 종목 목록
+              </button>
+            )}
             <div className="instrument-identity">
               <AssetLogo asset={selected} size="xl" />
               <div className="instrument-name">

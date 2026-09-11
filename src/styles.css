@@ -264,6 +264,9 @@ button {
   gap: 10px;
   padding: 0 2.2vw 10px;
 }
+.workspace.is-market-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
 .panel {
   background: #fff;
   border: 1px solid var(--line);
@@ -271,8 +274,9 @@ button {
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.025);
 }
 .left-panel {
-  height: 840px;
-  min-height: 840px;
+  height: auto;
+  min-height: 980px;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -301,6 +305,44 @@ button {
   font-style: normal;
   color: #8a96a3;
   font-size: 11px;
+}
+.market-panel-toggle,
+.market-panel-reopen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #d8e2e9;
+  border-radius: 8px;
+  background: #f7fafc;
+  color: #627584;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.market-panel-toggle {
+  height: 30px;
+  padding: 0 9px 0 7px;
+}
+.market-panel-toggle span,
+.market-panel-reopen span {
+  color: var(--brand);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+}
+.market-panel-toggle:hover,
+.market-panel-reopen:hover {
+  border-color: #9dc9e3;
+  background: #eef8fd;
+  color: var(--brand);
+}
+.market-panel-reopen {
+  flex: 0 0 auto;
+  height: 34px;
+  margin-right: 2px;
+  padding: 0 11px 0 8px;
 }
 .stock-search {
   margin: 11px;
@@ -1214,8 +1256,8 @@ footer strong {
     min-height: auto;
   }
   .left-panel {
-    height: 680px;
-    min-height: 680px;
+    height: auto;
+    min-height: 820px;
   }
   .tabs {
     padding-left: 16px;
@@ -1259,8 +1301,8 @@ footer strong {
     min-width: 82px;
   }
   .left-panel {
-    height: 560px;
-    min-height: 560px;
+    height: auto;
+    min-height: 700px;
   }
   .instrument {
     flex-direction: column;
@@ -6344,6 +6386,18 @@ html[data-theme="dark"] .market-index-row button {
   background: #121b25;
   border-color: #2b3947;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.16);
+}
+html[data-theme="dark"] .market-panel-toggle,
+html[data-theme="dark"] .market-panel-reopen {
+  border-color: #344653;
+  background: #17232d;
+  color: #b3c0ca;
+}
+html[data-theme="dark"] .market-panel-toggle:hover,
+html[data-theme="dark"] .market-panel-reopen:hover {
+  border-color: #4e819e;
+  background: #1b3343;
+  color: #78cef8;
 }
 html[data-theme="dark"] .panel-title,
 html[data-theme="dark"] .service-card-head,
