@@ -4138,20 +4138,31 @@ footer strong {
 .chart-trade-marker {
   pointer-events: none;
 }
-.chart-average-guide line {
-  stroke: #f09a24;
-  stroke-width: 1.4;
-  stroke-dasharray: 6 4;
-  opacity: 0.92;
+.chart-average-line {
+  stroke: #7e8b95;
+  stroke-width: 1.2;
+  stroke-dasharray: 5 5;
+  opacity: 0.62;
 }
-.chart-average-guide rect {
-  fill: #fff6e8;
-  stroke: #f0b45e;
+.chart-average-caption-bg {
+  fill: #fff;
+  fill-opacity: 0.72;
+  stroke: #aab4bc;
+  stroke-opacity: 0.55;
   stroke-width: 1;
 }
-.chart-average-guide text {
-  fill: #b56808;
+.chart-average-caption {
+  fill: #667681;
   font-size: 10px;
+  font-weight: 800;
+}
+.chart-average-price-bg {
+  fill: #526574;
+  fill-opacity: 0.82;
+}
+.chart-average-price {
+  fill: #fff;
+  font-size: 9px;
   font-weight: 800;
 }
 .chart-trade-marker line {
@@ -6422,15 +6433,20 @@ html[data-theme="dark"] .chart-volume-background {
 html[data-theme="dark"] .chart-volume-divider {
   stroke: #2d3b47;
 }
-html[data-theme="dark"] .chart-average-guide line {
-  stroke: #f3ad4c;
+html[data-theme="dark"] .chart-average-line {
+  stroke: #9aa9b5;
 }
-html[data-theme="dark"] .chart-average-guide rect {
-  fill: #332716;
-  stroke: #a9752f;
+html[data-theme="dark"] .chart-average-caption-bg {
+  fill: #18232d;
+  fill-opacity: 0.74;
+  stroke: #71808d;
 }
-html[data-theme="dark"] .chart-average-guide text {
-  fill: #ffc66f;
+html[data-theme="dark"] .chart-average-caption {
+  fill: #c0ccd5;
+}
+html[data-theme="dark"] .chart-average-price-bg {
+  fill: #425563;
+  fill-opacity: 0.86;
 }
 html[data-theme="dark"] .chart-trade-marker circle,
 html[data-theme="dark"] .chart-trade-marker rect {

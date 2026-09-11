@@ -371,9 +371,20 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
 
         {Number.isFinite(averageY) && (
           <g className="chart-average-guide">
-            <line x1={left} y1={averageY} x2={left + plotW} y2={averageY} />
-            <rect x={left + 6} y={averageY - 11} width="132" height="22" rx="6" />
-            <text x={left + 14} y={averageY + 4}>내 평단 {formatFullPrice(averagePriceValue, asset)}</text>
+            <line className="chart-average-line" x1={left} y1={averageY} x2={left + plotW} y2={averageY} />
+            <rect
+              className="chart-average-caption-bg"
+              x={left + plotW / 2 - 36}
+              y={averageY - 10}
+              width="72"
+              height="20"
+              rx="6"
+            />
+            <text className="chart-average-caption" x={left + plotW / 2} y={averageY + 3.5} textAnchor="middle">나의 평단</text>
+            <rect className="chart-average-price-bg" x={left + plotW + 4} y={averageY - 11} width="84" height="22" rx="6" />
+            <text className="chart-average-price" x={left + plotW + 46} y={averageY + 4} textAnchor="middle">
+              {formatFullPrice(averagePriceValue, asset)}
+            </text>
           </g>
         )}
 
