@@ -13,6 +13,8 @@ const MAX_VISIBLE_CANDLES = 60;
 const PRICE_TICK_COUNT = 8;
 const MIN_PRICE_SCALE = 0.35;
 const MAX_PRICE_SCALE = 8;
+const VOLUME_HEIGHTS = [48, 72, 96, 120];
+const DEFAULT_VOLUME_LEVEL = 1;
 
 function fractionDigitsForStep(step, unit = 1, maximum = 4) {
   const normalized = Math.abs(step) / unit;
@@ -58,6 +60,7 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
   const [hoverIndex, setHoverIndex] = useState(null);
   const [viewRange, setViewRange] = useState({ start: 0, end: 0 });
   const [priceScale, setPriceScale] = useState(1);
+  const [volumeLevel, setVolumeLevel] = useState(DEFAULT_VOLUME_LEVEL);
   const svgRef = useRef(null);
   const dragRef = useRef(null);
 
@@ -112,14 +115,15 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
     if (clean.length < 2) return null;
 
     const w = 920;
-    const h = 360;
     const left = 18;
     const right = 92;
     const top = 20;
     const priceBottom = 270;
     const volumeTop = 292;
-    const volumeBottom = 326;
-    const axisBottom = 348;
+    const volumeHeight = VOLUME_HEIGHTS[volumeLevel] || VOLUME_HEIGHTS[DEFAULT_VOLUME_LEVEL];
+    const volumeBottom = volumeTop + volumeHeight;
+    const axisBottom = volumeBottom + 22;
+    const h = axisBottom + 12;
     const plotW = w - left - right;
     const plotH = priceBottom - top;
 
@@ -142,14 +146,14 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
     const maxVolume = Math.max(...volumes, 1);
     const times = normalized.map((item) => item.time);
 
-    return { normalized, clean, w, h, left, right, top, priceBottom, volumeTop, volumeBottom, axisBottom, plotW, plotH, min, max, range, coords, volumes, maxVolume, times };
-  }, [allCandles, viewRange, priceScale]);
+    return { normalized, clean, w, h, left, right, top, priceBottom, volumeTop, volumeBottom, volumeHeight, axisBottom, plotW, plotH, min, max, range, coords, volumes, maxVolume, times };
+  }, [allCandles, viewRange, priceScale, volumeLevel]);
 
   if (!prepared) {
     return <div className="chart-empty">시세 데이터를 수신하고 있습니다...</div>;
   }
 
-  const { normalized, clean, w, h, left, top, priceBottom, volumeTop, volumeBottom, axisBottom, plotW, min, max, range, coords, volumes, maxVolume, times } = prepared;
+  const { normalized, clean, w, h, left, top, priceBottom, volumeTop, volumeBottom, volumeHeight, axisBottom, plotW, min, max, range, coords, volumes, maxVolume, times } = prepared;
   const up = clean.at(-1) >= clean[0];
   const priceTickStep = range / (PRICE_TICK_COUNT - 1);
   const yTicks = Array.from({ length: PRICE_TICK_COUNT }, (_, i) => max - priceTickStep * i);
@@ -224,7 +228,7 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
   }
 
   return (
-    <div className="market-chart-wrap">
+    <div className="market-chart-wrap" style={{ "--chart-height": `${h}px` }}>
       <svg
         ref={svgRef}
         className={`sparkline ${dragRef.current ? "is-dragging" : ""}`}
@@ -268,6 +272,15 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
         </defs>
 
         <rect
+          x={left}
+          y={volumeTop}
+          width={plotW}
+          height={volumeHeight}
+          className="chart-volume-background"
+        />
+        <line x1={left} y1={volumeTop} x2={left + plotW} y2={volumeTop} className="chart-volume-divider" />
+
+        <rect
           x={left + plotW}
           y={top}
           width={w - left - plotW}
@@ -303,13 +316,15 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
 
 
         {volumes.map((volume, index) => {
-          const barHeight = Math.max(2, (volume / maxVolume) * (volumeBottom - volumeTop));
+          const barTop = volumeTop + 18;
+          const barBottom = volumeBottom - 4;
+          const barHeight = Math.max(2, (volume / maxVolume) * (barBottom - barTop));
           const rising = index === 0 || clean[index] >= clean[index - 1];
           return (
             <rect
               key={`v-${index}`}
               x={coords[index].x - Math.max(0.4, plotW / clean.length / 3)}
-              y={volumeBottom - barHeight}
+              y={barBottom - barHeight}
               width={Math.max(0.8, plotW / clean.length / 1.8)}
               height={barHeight}
               rx="1"
@@ -317,7 +332,7 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
             />
           );
         })}
-        <text x={left} y={volumeTop - 7} className="chart-volume-label">거래량</text>
+        <text x={left + 5} y={volumeTop + 13} className="chart-volume-label">거래량</text>
 
         {normalized.map((item, index) => {
           const x = coords[index].x;
@@ -347,6 +362,32 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
           </g>
         )}
       </svg>
+
+      <div
+        className="chart-volume-controls"
+        style={{ top: `${((volumeTop + 4) / h) * 100}%` }}
+        aria-label="거래량 차트 크기 조절"
+      >
+        <span>거래량 크기</span>
+        <button
+          type="button"
+          aria-label="거래량 차트 줄이기"
+          title="거래량 차트 줄이기"
+          disabled={volumeLevel === 0}
+          onClick={() => setVolumeLevel((level) => Math.max(0, level - 1))}
+        >
+          −
+        </button>
+        <button
+          type="button"
+          aria-label="거래량 차트 늘리기"
+          title="거래량 차트 늘리기"
+          disabled={volumeLevel === VOLUME_HEIGHTS.length - 1}
+          onClick={() => setVolumeLevel((level) => Math.min(VOLUME_HEIGHTS.length - 1, level + 1))}
+        >
+          +
+        </button>
+      </div>
 
       <div className={`chart-hover-card ${up ? "is-up" : "is-down"}`}>
         <span>{formatTime(activeTime, period)}</span>
