@@ -4029,7 +4029,9 @@ footer strong {
 }
 .chart-volume-controls {
   position: absolute;
+  top: 50%;
   right: 98px;
+  transform: translateY(var(--volume-control-offset, 116px));
   z-index: 3;
   display: flex;
   align-items: center;

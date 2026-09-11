@@ -228,7 +228,13 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
   }
 
   return (
-    <div className="market-chart-wrap" style={{ "--chart-height": `${h}px` }}>
+    <div
+      className="market-chart-wrap"
+      style={{
+        "--chart-height": `${h}px`,
+        "--volume-control-offset": `${volumeTop + 4 - h / 2}px`,
+      }}
+    >
       <svg
         ref={svgRef}
         className={`sparkline ${dragRef.current ? "is-dragging" : ""}`}
@@ -365,7 +371,6 @@ export default function Sparkline({ values, candles, asset, period = "1m" }) {
 
       <div
         className="chart-volume-controls"
-        style={{ top: `${((volumeTop + 4) / h) * 100}%` }}
         aria-label="거래량 차트 크기 조절"
       >
         <span>거래량 크기</span>
