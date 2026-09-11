@@ -720,6 +720,35 @@ button {
 .order-heading strong {
   font-size: 14px;
 }
+.order-side-tabs {
+  margin: 12px 14px 2px;
+  padding: 3px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  border-radius: 10px;
+  background: #f1f4f6;
+}
+.order-side-tabs button {
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #82909b;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.order-side-tabs .is-buy.active {
+  background: #fff;
+  color: var(--up);
+  box-shadow: 0 3px 12px rgba(229, 72, 77, 0.12);
+}
+.order-side-tabs .is-sell.active {
+  background: #fff;
+  color: var(--down);
+  box-shadow: 0 3px 12px rgba(47, 111, 237, 0.12);
+}
 .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -804,19 +833,18 @@ button {
   border-color: var(--brand);
   background: #dff2fc;
 }
-.order-buttons {
+.order-submit {
   padding: 3px 14px 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
 }
-.order-buttons button {
+.order-submit button {
+  width: 100%;
   padding: 12px;
   border: 0;
-  border-radius: 2px;
+  border-radius: 8px;
   color: #fff;
   font-size: 13px;
   font-weight: 900;
+  cursor: pointer;
 }
 .buy {
   background: var(--up);
@@ -6206,6 +6234,16 @@ html[data-theme="dark"] .message {
 html[data-theme="dark"] .order-tabs button.active {
   background: #17232d;
   color: var(--brand);
+}
+html[data-theme="dark"] .order-side-tabs {
+  background: #0e171f;
+}
+html[data-theme="dark"] .order-side-tabs button {
+  color: #8394a1;
+}
+html[data-theme="dark"] .order-side-tabs .is-buy.active,
+html[data-theme="dark"] .order-side-tabs .is-sell.active {
+  background: #1a2833;
 }
 html[data-theme="dark"] .order-toast {
   border-color: #344653;

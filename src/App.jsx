@@ -30,6 +30,11 @@ const LABELS = {
   crypto: "디지털자산",
 };
 
+// DB의 모의 거래 수수료 정책과 같은 비율로 최대 매수수량에 필요한 현금을 계산한다.
+function spotBuyFeeRate(category, asset) {
+  return category === "stocks" && asset?.unit === "USD" ? 0.0007 : 0.00015;
+}
+
 const DASHBOARD_STORAGE_KEY = "posco-dashboard-layout-v2";
 const LEGACY_DASHBOARD_STORAGE_KEY = "posco-dashboard-layout-v1";
 // 서버 응답을 브라우저에도 보관해 새로고침 직후 네트워크보다 먼저 표시한다.
@@ -264,6 +269,7 @@ function TradingApp({ session, onSignOut }) {
   const [futuresPositions, setFuturesPositions] = useState([]);
   const [trades, setTrades] = useState([]);
   const [orderTab, setOrderTab] = useState("order");
+  const [orderSide, setOrderSide] = useState("BUY");
   const [orderType, setOrderType] = useState("MARKET");
   const [limitPrice, setLimitPrice] = useState("");
   const [pendingOrders, setPendingOrders] = useState([]);
@@ -856,14 +862,20 @@ function TradingApp({ session, onSignOut }) {
 
   const bestAsk = orderBook?.symbol === selected.symbol && Number.isFinite(orderBook.asks?.[0]?.price) ? orderBook.asks[0].price : selected.price * 1.001;
   const bestBid = orderBook?.symbol === selected.symbol && Number.isFinite(orderBook.bids?.[0]?.price) ? orderBook.bids[0].price : selected.price * 0.999;
+  const selectedOwnedQuantity = Number(spotPositions[selected.id]?.quantity) || 0;
+  const selectedPendingSellQuantity = pendingOrders
+    .filter((item) => item.assetId === selected.id && item.side === "SELL")
+    .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
-  // 현재 현금과 주문가격을 기준으로 매수 가능한 최대 수량(선물은 최대 계약수)을 입력한다.
+  // 선택한 매수·매도 방향에 맞춰 예수금 또는 실제 매도 가능 잔고로 최대 수량을 계산한다.
   function setMaximumOrderQuantity() {
     if (category === "futures") {
       const marginPerContract = selected.price * selected.multiplier * selected.marginRate;
       const maximum = marginPerContract > 0 ? Math.floor(cash / marginPerContract) : 0;
       setQuantity(String(maximum));
-      setMessage(maximum > 0 ? `주문가능금액 기준 최대 ${maximum}계약입니다.` : "현재 현금으로 주문 가능한 계약이 없습니다.");
+      setMessage(maximum > 0
+        ? `${orderSide === "BUY" ? "매수" : "매도"} 증거금 기준 최대 ${maximum}계약입니다.`
+        : `현재 현금으로 ${orderSide === "BUY" ? "매수" : "매도"} 가능한 계약이 없습니다.`);
       return;
     }
 
@@ -873,20 +885,41 @@ function TradingApp({ session, onSignOut }) {
       return;
     }
 
-    const reservedBuyAmount = pendingOrders
-      .filter((item) => item.side === "BUY")
-      .reduce((sum, item) => {
-        const asset = allAssets.find((candidate) => candidate.id === item.assetId);
-        return sum + (asset ? spotPriceInKRW({ ...asset, price: item.limitPrice }) * item.quantity : 0);
-      }, 0);
-    const availableCash = Math.max(0, cash - reservedBuyAmount);
     const unitPrice = spotPriceInKRW({ ...selected, price: requestedPrice });
-    const maximum = category === "crypto"
-      ? Math.floor((availableCash / unitPrice) * 1000000) / 1000000
-      : Math.floor(availableCash / unitPrice);
+    let maximum;
+
+    if (orderSide === "SELL") {
+      const availableOwnedQuantity = Math.max(0, selectedOwnedQuantity - selectedPendingSellQuantity);
+
+      maximum = availableOwnedQuantity;
+      if (category === "stocks" && financeAccount.lending.active) {
+        const pendingShortQuantity = Math.max(0, selectedPendingSellQuantity - selectedOwnedQuantity);
+        const pendingShortAmount = pendingShortQuantity * unitPrice;
+        const availableLendingAmount = Math.max(0, financeAccount.lending.limit - lendingUsed - pendingShortAmount);
+        maximum += unitPrice > 0 ? Math.floor(availableLendingAmount / unitPrice) : 0;
+      }
+    } else {
+      const reservedBuyAmount = pendingOrders
+        .filter((item) => item.side === "BUY")
+        .reduce((sum, item) => {
+          const asset = allAssets.find((candidate) => candidate.id === item.assetId);
+          if (!asset) return sum;
+          const grossAmount = spotPriceInKRW({ ...asset, price: item.limitPrice }) * item.quantity;
+          return sum + grossAmount * (1 + spotBuyFeeRate(item.category, asset));
+        }, 0);
+      const availableCash = Math.max(0, cash - reservedBuyAmount);
+      const unitCostWithFee = unitPrice * (1 + spotBuyFeeRate(category, selected));
+      maximum = unitCostWithFee > 0 ? availableCash / unitCostWithFee : 0;
+    }
+
+    maximum = category === "crypto"
+      ? Math.floor(maximum * 1000000) / 1000000
+      : Math.floor(maximum);
 
     setQuantity(String(maximum));
-    setMessage(maximum > 0 ? `주문가능금액 기준 최대 수량은 ${maximum.toLocaleString()}입니다.` : "현재 현금으로 주문 가능한 수량이 없습니다.");
+    setMessage(maximum > 0
+      ? `${orderSide === "BUY" ? "매수가능금액" : "매도가능수량"} 기준 최대 ${maximum.toLocaleString()}입니다.`
+      : `현재 ${orderSide === "BUY" ? "매수" : "매도"} 가능한 수량이 없습니다.`);
   }
 
   // 사용자에게 보여줄 체결 메시지와 최근 거래내역을 동시에 추가한다.
@@ -1025,16 +1058,6 @@ function TradingApp({ session, onSignOut }) {
     }
   }
 
-  // 주문 버튼에서 공통 주문 함수로 매수 방향을 전달한다.
-  function buySpot() {
-    placeSpotOrder("BUY");
-  }
-
-  // 주문 버튼에서 공통 주문 함수로 매도 방향을 전달한다.
-  function sellSpot() {
-    placeSpotOrder("SELL");
-  }
-
   /** 서버에서 지정가 대기 주문을 취소하고 화면의 예약 주문 목록을 갱신한다. */
   async function cancelPendingOrder(order) {
     try {
@@ -1109,6 +1132,7 @@ function TradingApp({ session, onSignOut }) {
     setPendingOrders([]);
     setFilledOrders([]);
     setOrderTab("order");
+    setOrderSide("BUY");
     setOrderType("MARKET");
     setLimitPrice("");
     setChartData({});
@@ -1552,6 +1576,27 @@ function TradingApp({ session, onSignOut }) {
                 <strong>{assetPrice(selected)}</strong>
               </div>
 
+              <div className="order-side-tabs" role="tablist" aria-label="주문 방향">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={orderSide === "BUY"}
+                  className={`is-buy ${orderSide === "BUY" ? "active" : ""}`}
+                  onClick={() => setOrderSide("BUY")}
+                >
+                  매수
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={orderSide === "SELL"}
+                  className={`is-sell ${orderSide === "SELL" ? "active" : ""}`}
+                  onClick={() => setOrderSide("SELL")}
+                >
+                  매도
+                </button>
+              </div>
+
               {category === "stocks" && selected.unit === "KRW" && (
                 <div className="realtime-orderbook">
                   <div className="orderbook-title"><strong>실시간 호가</strong><span>{orderBook ? "10단계 WebSocket" : "REST 기준 추정호가"}</span></div>
@@ -1632,8 +1677,10 @@ function TradingApp({ session, onSignOut }) {
                   </div>
                 </div>
                 <div className="order-line">
-                  <span>주문가능</span>
-                  <strong>{money(cash)}</strong>
+                  <span>{orderSide === "BUY" || category === "futures" ? "주문가능" : "보유 / 매도대기"}</span>
+                  <strong>{orderSide === "BUY" || category === "futures"
+                    ? money(cash)
+                    : `${selectedOwnedQuantity.toLocaleString()} / ${selectedPendingSellQuantity.toLocaleString()}`}</strong>
                 </div>
                 {category === "stocks" && financeAccount.lending.active && (
                   <div className="order-line lending-order-info">
@@ -1649,17 +1696,19 @@ function TradingApp({ session, onSignOut }) {
                 )}
               </div>
 
-              {category === "futures" ? (
-                <div className="order-buttons">
-                  <button className="buy" onClick={() => openFuture("LONG")}>매수 LONG</button>
-                  <button className="sell" onClick={() => openFuture("SHORT")}>매도 SHORT</button>
-                </div>
-              ) : (
-                <div className="order-buttons">
-                  <button className="buy" onClick={buySpot}>매수</button>
-                  <button className="sell" onClick={sellSpot}>매도</button>
-                </div>
-              )}
+              <div className="order-submit">
+                <button
+                  type="button"
+                  className={orderSide === "BUY" ? "buy" : "sell"}
+                  onClick={() => category === "futures"
+                    ? openFuture(orderSide === "BUY" ? "LONG" : "SHORT")
+                    : placeSpotOrder(orderSide)}
+                >
+                  {category === "futures"
+                    ? `${orderSide === "BUY" ? "매수 LONG" : "매도 SHORT"} 주문`
+                    : `${orderSide === "BUY" ? "매수" : "매도"} 주문`}
+                </button>
+              </div>
 
               <div className="message"><b>주문 알림</b>{message}</div>
                 </>
