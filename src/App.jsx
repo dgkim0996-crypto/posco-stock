@@ -29,6 +29,13 @@ const LABELS = {
   bonds: "채권",
   crypto: "디지털자산",
 };
+const CHART_INDICATOR_OPTIONS = [
+  { key: "ma5", label: "이동평균선 5", description: "단기 추세" },
+  { key: "ma20", label: "이동평균선 20", description: "중기 추세" },
+  { key: "bollinger", label: "볼린저밴드", description: "20일·2σ" },
+  { key: "rsi", label: "RSI", description: "14기간 과매수·과매도" },
+  { key: "macd", label: "MACD", description: "12·26·9 추세 강도" },
+];
 
 // DB의 모의 거래 수수료 정책과 같은 비율로 최대 매수수량에 필요한 현금을 계산한다.
 function spotBuyFeeRate(category, asset) {
@@ -280,6 +287,7 @@ function TradingApp({ session, onSignOut }) {
   const [quantity, setQuantity] = useState("1");
   const [chartData, setChartData] = useState(loadChartCache);
   const [chartPeriod, setChartPeriod] = useState("1m");
+  const [chartIndicators, setChartIndicators] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [chartError, setChartError] = useState("");
   const [message, setMessage] = useState("포스코증권 모의투자 계좌가 준비되었습니다.");
@@ -1567,6 +1575,41 @@ function TradingApp({ session, onSignOut }) {
                   ))}
                 </div>
                 <span>휠 확대·축소 · 본문 이동 · 하단 시간축/우측 가격축 조절</span>
+                <details className="chart-indicator-menu">
+                  <summary>
+                    보조지표
+                    {chartIndicators.length > 0 && <b>{chartIndicators.length}</b>}
+                  </summary>
+                  <div className="chart-indicator-popover">
+                    <div className="chart-indicator-popover-head">
+                      <strong>보조지표</strong>
+                      <span>필요한 지표만 선택하세요</span>
+                    </div>
+                    {CHART_INDICATOR_OPTIONS.map((option) => {
+                      const selectedIndicator = chartIndicators.includes(option.key);
+                      return (
+                        <button
+                          type="button"
+                          key={option.key}
+                          className={selectedIndicator ? "active" : ""}
+                          aria-pressed={selectedIndicator}
+                          onClick={() => setChartIndicators((current) => (
+                            current.includes(option.key)
+                              ? current.filter((key) => key !== option.key)
+                              : [...current, option.key]
+                          ))}
+                        >
+                          <span className={`chart-indicator-swatch ${option.key}`} aria-hidden="true" />
+                          <span>
+                            <strong>{option.label}</strong>
+                            <small>{option.description}</small>
+                          </span>
+                          <em aria-hidden="true">{selectedIndicator ? "✓" : "+"}</em>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </details>
               </div>
               {chartLoading && !chartData[`${selected.symbol}:${chartPeriod}`] ? (
                 <div className="chart-empty">실제 {chartPeriod === "day" ? "일봉" : `${chartPeriod}봉`}을 불러오고 있습니다...</div>
@@ -1580,6 +1623,7 @@ function TradingApp({ session, onSignOut }) {
                   period={chartPeriod}
                   averagePrice={selectedAveragePrice}
                   tradeMarkers={selectedTradeMarkers}
+                  indicators={chartIndicators}
                 />
               )}
               <div className="chart-foot">

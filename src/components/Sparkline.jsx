@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 
 // SVG 캔들/거래량 차트. 데이터 정규화 → 좌표 계산 → 확대·이동·툴팁 렌더링 순으로 동작한다.
 
@@ -15,6 +15,112 @@ const MIN_PRICE_SCALE = 0.35;
 const MAX_PRICE_SCALE = 8;
 const VOLUME_HEIGHTS = [48, 72, 96, 120];
 const DEFAULT_VOLUME_LEVEL = 1;
+const INDICATOR_PANEL_HEIGHT = 76;
+const INDICATOR_PANEL_GAP = 10;
+
+function movingAverage(values, period) {
+  let sum = 0;
+  return values.map((value, index) => {
+    sum += value;
+    if (index >= period) sum -= values[index - period];
+    return index >= period - 1 ? sum / period : null;
+  });
+}
+
+function exponentialMovingAverage(values, period) {
+  if (!values.length) return [];
+  const multiplier = 2 / (period + 1);
+  let previous = values[0];
+  return values.map((value, index) => {
+    if (index === 0) return previous;
+    previous = value * multiplier + previous * (1 - multiplier);
+    return previous;
+  });
+}
+
+function bollingerBands(values, period = 20, multiplier = 2) {
+  const middle = movingAverage(values, period);
+  const upper = [];
+  const lower = [];
+
+  values.forEach((value, index) => {
+    if (index < period - 1) {
+      upper.push(null);
+      lower.push(null);
+      return;
+    }
+    const window = values.slice(index - period + 1, index + 1);
+    const average = middle[index];
+    const variance = window.reduce((sum, item) => sum + (item - average) ** 2, 0) / period;
+    const deviation = Math.sqrt(variance) * multiplier;
+    upper.push(average + deviation);
+    lower.push(average - deviation);
+  });
+
+  return { middle, upper, lower };
+}
+
+function relativeStrengthIndex(values, period = 14) {
+  const result = Array(values.length).fill(null);
+  if (values.length <= period) return result;
+
+  let gains = 0;
+  let losses = 0;
+  for (let index = 1; index <= period; index += 1) {
+    const change = values[index] - values[index - 1];
+    gains += Math.max(change, 0);
+    losses += Math.max(-change, 0);
+  }
+
+  let averageGain = gains / period;
+  let averageLoss = losses / period;
+  result[period] = averageLoss === 0 ? 100 : 100 - 100 / (1 + averageGain / averageLoss);
+
+  for (let index = period + 1; index < values.length; index += 1) {
+    const change = values[index] - values[index - 1];
+    averageGain = (averageGain * (period - 1) + Math.max(change, 0)) / period;
+    averageLoss = (averageLoss * (period - 1) + Math.max(-change, 0)) / period;
+    result[index] = averageLoss === 0 ? 100 : 100 - 100 / (1 + averageGain / averageLoss);
+  }
+
+  return result;
+}
+
+function movingAverageConvergenceDivergence(values) {
+  const fast = exponentialMovingAverage(values, 12);
+  const slow = exponentialMovingAverage(values, 26);
+  const macd = values.map((_, index) => fast[index] - slow[index]);
+  const signal = exponentialMovingAverage(macd, 9);
+  const histogram = macd.map((value, index) => value - signal[index]);
+  return { macd, signal, histogram };
+}
+
+function linePath(series, coords, valueToY) {
+  let drawing = false;
+  return series.reduce((path, value, index) => {
+    if (!Number.isFinite(value)) {
+      drawing = false;
+      return path;
+    }
+    const command = drawing ? "L" : "M";
+    drawing = true;
+    return `${path}${command}${coords[index].x.toFixed(2)},${valueToY(value).toFixed(2)} `;
+  }, "").trim();
+}
+
+function bandAreaPath(upper, lower, coords, valueToY) {
+  const points = upper.map((value, index) => ({ value, index })).filter(({ value }) => Number.isFinite(value));
+  if (points.length < 2) return "";
+  const start = points[0].index;
+  const end = points.at(-1).index;
+  const upperPath = Array.from({ length: end - start + 1 }, (_, offset) => start + offset)
+    .filter((index) => Number.isFinite(upper[index]) && Number.isFinite(lower[index]))
+    .map((index) => `${coords[index].x.toFixed(2)},${valueToY(upper[index]).toFixed(2)}`);
+  const lowerPath = Array.from({ length: end - start + 1 }, (_, offset) => end - offset)
+    .filter((index) => Number.isFinite(upper[index]) && Number.isFinite(lower[index]))
+    .map((index) => `${coords[index].x.toFixed(2)},${valueToY(lower[index]).toFixed(2)}`);
+  return upperPath.length > 1 ? `M${upperPath.join(" L")} L${lowerPath.join(" L")} Z` : "";
+}
 
 function fractionDigitsForStep(step, unit = 1, maximum = 4) {
   const normalized = Math.abs(step) / unit;
@@ -56,13 +162,15 @@ function formatTime(date, period) {
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
-export default function Sparkline({ values, candles, asset, period = "1m", averagePrice = null, tradeMarkers = [] }) {
+export default function Sparkline({ values, candles, asset, period = "1m", averagePrice = null, tradeMarkers = [], indicators = [] }) {
   const [hoverIndex, setHoverIndex] = useState(null);
   const [viewRange, setViewRange] = useState({ start: 0, end: 0 });
   const [priceScale, setPriceScale] = useState(1);
   const [volumeLevel, setVolumeLevel] = useState(DEFAULT_VOLUME_LEVEL);
+  const priceClipId = `chart-price-${useId().replaceAll(":", "")}`;
   const svgRef = useRef(null);
   const dragRef = useRef(null);
+  const indicatorSignature = [...indicators].sort().join(",");
 
   // 실제 OHLCV가 없으면 모의상품의 가격 배열을 가상 봉으로 변환한다.
   const allCandles = useMemo(() => {
@@ -95,6 +203,18 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
         }));
   }, [values, candles, period]);
 
+  // 전체 봉 기준으로 지표를 먼저 계산해 화면을 이동해도 지표 시작값이 흔들리지 않게 한다.
+  const indicatorData = useMemo(() => {
+    const closes = allCandles.map((item) => item.close);
+    return {
+      ma5: movingAverage(closes, 5),
+      ma20: movingAverage(closes, 20),
+      bollinger: bollingerBands(closes),
+      rsi: relativeStrengthIndex(closes),
+      macd: movingAverageConvergenceDivergence(closes),
+    };
+  }, [allCandles]);
+
   // 종목이나 기간이 바뀌면 기간별 기본 봉 개수로 화면 범위를 초기화한다.
   useEffect(() => {
     const end = allCandles.length;
@@ -114,6 +234,24 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
     const clean = normalized.map((item) => item.close);
     if (clean.length < 2) return null;
 
+    const enabled = new Set(indicators);
+    const sliceEnd = viewRange.end || allCandles.length;
+    const indicatorSeries = {
+      ma5: indicatorData.ma5.slice(viewRange.start, sliceEnd),
+      ma20: indicatorData.ma20.slice(viewRange.start, sliceEnd),
+      bollinger: {
+        middle: indicatorData.bollinger.middle.slice(viewRange.start, sliceEnd),
+        upper: indicatorData.bollinger.upper.slice(viewRange.start, sliceEnd),
+        lower: indicatorData.bollinger.lower.slice(viewRange.start, sliceEnd),
+      },
+      rsi: indicatorData.rsi.slice(viewRange.start, sliceEnd),
+      macd: {
+        macd: indicatorData.macd.macd.slice(viewRange.start, sliceEnd),
+        signal: indicatorData.macd.signal.slice(viewRange.start, sliceEnd),
+        histogram: indicatorData.macd.histogram.slice(viewRange.start, sliceEnd),
+      },
+    };
+
     const w = 920;
     const left = 18;
     const right = 92;
@@ -122,7 +260,15 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
     const volumeTop = 292;
     const volumeHeight = VOLUME_HEIGHTS[volumeLevel] || VOLUME_HEIGHTS[DEFAULT_VOLUME_LEVEL];
     const volumeBottom = volumeTop + volumeHeight;
-    const axisBottom = volumeBottom + 22;
+    const indicatorPanels = {};
+    let contentBottom = volumeBottom;
+    ["rsi", "macd"].forEach((key) => {
+      if (!enabled.has(key)) return;
+      const panelTop = contentBottom + INDICATOR_PANEL_GAP;
+      indicatorPanels[key] = { top: panelTop, bottom: panelTop + INDICATOR_PANEL_HEIGHT };
+      contentBottom = panelTop + INDICATOR_PANEL_HEIGHT;
+    });
+    const axisBottom = contentBottom + 22;
     const h = axisBottom + 12;
     const plotW = w - left - right;
     const plotH = priceBottom - top;
@@ -141,6 +287,12 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
     const guidePrices = [
       ...(Number.isFinite(averagePriceValue) && averagePriceValue > 0 ? [averagePriceValue] : []),
       ...visibleTradeMarkers.map((marker) => Number(marker.price)),
+      ...(enabled.has("ma5") ? indicatorSeries.ma5.filter(Number.isFinite) : []),
+      ...(enabled.has("ma20") ? indicatorSeries.ma20.filter(Number.isFinite) : []),
+      ...(enabled.has("bollinger") ? [
+        ...indicatorSeries.bollinger.upper.filter(Number.isFinite),
+        ...indicatorSeries.bollinger.lower.filter(Number.isFinite),
+      ] : []),
     ];
 
     const rawMin = Math.min(...normalized.map((item) => item.low), ...guidePrices);
@@ -175,14 +327,15 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
       };
     });
 
-    return { normalized, clean, w, h, left, right, top, priceBottom, volumeTop, volumeBottom, volumeHeight, axisBottom, plotW, plotH, min, max, range, coords, volumes, maxVolume, times, averageY, averagePriceValue, tradeMarkerCoords };
-  }, [allCandles, viewRange, priceScale, volumeLevel, averagePrice, tradeMarkers, period]);
+    return { normalized, clean, w, h, left, right, top, priceBottom, volumeTop, volumeBottom, volumeHeight, contentBottom, indicatorPanels, indicatorSeries, axisBottom, plotW, plotH, min, max, range, coords, volumes, maxVolume, times, averageY, averagePriceValue, tradeMarkerCoords };
+  }, [allCandles, viewRange, priceScale, volumeLevel, averagePrice, tradeMarkers, period, indicatorData, indicatorSignature]);
 
   if (!prepared) {
     return <div className="chart-empty">시세 데이터를 수신하고 있습니다...</div>;
   }
 
-  const { normalized, clean, w, h, left, top, priceBottom, volumeTop, volumeBottom, volumeHeight, axisBottom, plotW, min, max, range, coords, volumes, maxVolume, times, averageY, averagePriceValue, tradeMarkerCoords } = prepared;
+  const { normalized, clean, w, h, left, top, priceBottom, volumeTop, volumeBottom, volumeHeight, contentBottom, indicatorPanels, indicatorSeries, axisBottom, plotW, min, max, range, coords, volumes, maxVolume, times, averageY, averagePriceValue, tradeMarkerCoords } = prepared;
+  const enabledIndicators = new Set(indicators);
   const up = clean.at(-1) >= clean[0];
   const priceTickStep = range / (PRICE_TICK_COUNT - 1);
   const yTicks = Array.from({ length: PRICE_TICK_COUNT }, (_, i) => max - priceTickStep * i);
@@ -190,6 +343,20 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
   const active = hoverIndex == null ? clean.length - 1 : Math.min(hoverIndex, clean.length - 1);
   const activePoint = coords[active];
   const activeTime = times[active];
+  const priceToY = (value) => top + ((max - value) / range) * (priceBottom - top);
+  const rsiPanel = indicatorPanels.rsi;
+  const rsiToY = (value) => rsiPanel.top + ((100 - value) / 100) * (rsiPanel.bottom - rsiPanel.top);
+  const rsiPath = rsiPanel ? linePath(indicatorSeries.rsi, coords, rsiToY) : "";
+  const latestRsi = [...indicatorSeries.rsi].reverse().find(Number.isFinite);
+  const macdPanel = indicatorPanels.macd;
+  const macdValues = macdPanel
+    ? [...indicatorSeries.macd.macd, ...indicatorSeries.macd.signal, ...indicatorSeries.macd.histogram].filter(Number.isFinite)
+    : [];
+  const macdExtent = Math.max(...macdValues.map((value) => Math.abs(value)), Number.EPSILON);
+  const macdToY = (value) => macdPanel.top + ((macdExtent - value) / (macdExtent * 2)) * (macdPanel.bottom - macdPanel.top);
+  const macdPath = macdPanel ? linePath(indicatorSeries.macd.macd, coords, macdToY) : "";
+  const signalPath = macdPanel ? linePath(indicatorSeries.macd.signal, coords, macdToY) : "";
+  const latestMacd = [...indicatorSeries.macd.macd].reverse().find(Number.isFinite);
 
   // 포인터 툴팁을 이동하고 드래그 중에는 차트 이동 또는 시간축 확대를 수행한다.
   function handlePointerMove(event) {
@@ -277,7 +444,7 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
           const svgX = ((event.clientX - rect.left) / rect.width) * w;
           const svgY = ((event.clientY - rect.top) / rect.height) * h;
           dragRef.current = {
-            mode: svgX > left + plotW ? "price-scale" : svgY >= axisBottom - 18 ? "time-scale" : "pan",
+            mode: svgX > left + plotW && svgY <= priceBottom ? "price-scale" : svgY >= axisBottom - 18 ? "time-scale" : "pan",
             x: event.clientX,
             y: event.clientY,
             start: viewRange.start,
@@ -304,6 +471,9 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
             <stop offset="0%" stopColor="#2f6fed" stopOpacity="0.14" />
             <stop offset="100%" stopColor="#2f6fed" stopOpacity="0" />
           </linearGradient>
+          <clipPath id={priceClipId}>
+            <rect x={left} y={top} width={plotW} height={priceBottom - top} />
+          </clipPath>
         </defs>
 
         <rect
@@ -341,7 +511,7 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
           const x = coords[index].x;
           return (
             <g key={index}>
-              <line x1={x} y1={top} x2={x} y2={volumeBottom} className="grid-line chart-grid-vertical" />
+              <line x1={x} y1={top} x2={x} y2={contentBottom} className="grid-line chart-grid-vertical" />
               <text x={x} y={axisBottom} textAnchor={index === 0 ? "start" : index === clean.length - 1 ? "end" : "middle"} className="chart-axis-text chart-time-text">
                 {formatTime(times[index], period)}
               </text>
@@ -368,6 +538,25 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
           );
         })}
         <text x={left + 5} y={volumeTop + 13} className="chart-volume-label">거래량</text>
+
+        <g className="chart-price-indicators" clipPath={`url(#${priceClipId})`}>
+          {enabledIndicators.has("bollinger") && (
+            <>
+              <path
+                d={bandAreaPath(indicatorSeries.bollinger.upper, indicatorSeries.bollinger.lower, coords, priceToY)}
+                className="chart-bollinger-area"
+              />
+              <path d={linePath(indicatorSeries.bollinger.upper, coords, priceToY)} className="chart-indicator-line bollinger" />
+              <path d={linePath(indicatorSeries.bollinger.lower, coords, priceToY)} className="chart-indicator-line bollinger" />
+            </>
+          )}
+          {enabledIndicators.has("ma5") && (
+            <path d={linePath(indicatorSeries.ma5, coords, priceToY)} className="chart-indicator-line ma5" />
+          )}
+          {enabledIndicators.has("ma20") && (
+            <path d={linePath(indicatorSeries.ma20, coords, priceToY)} className="chart-indicator-line ma20" />
+          )}
+        </g>
 
         {Number.isFinite(averageY) && (
           <g className="chart-average-guide">
@@ -421,9 +610,58 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
           );
         })}
 
+        {rsiPanel && (
+          <g className="chart-indicator-panel chart-rsi-panel">
+            <rect className="chart-indicator-background" x={left} y={rsiPanel.top} width={plotW} height={rsiPanel.bottom - rsiPanel.top} />
+            {[70, 50, 30].map((level) => (
+              <line
+                key={level}
+                x1={left}
+                y1={rsiToY(level)}
+                x2={left + plotW}
+                y2={rsiToY(level)}
+                className={level === 50 ? "indicator-mid-line" : "indicator-guide-line"}
+              />
+            ))}
+            <text x={left + 5} y={rsiPanel.top + 13} className="chart-indicator-label">
+              RSI 14{Number.isFinite(latestRsi) ? `  ${latestRsi.toFixed(1)}` : ""}
+            </text>
+            <text x={left + plotW + 10} y={rsiToY(70) + 3} className="chart-indicator-axis">70</text>
+            <text x={left + plotW + 10} y={rsiToY(30) + 3} className="chart-indicator-axis">30</text>
+            <path d={rsiPath} className="chart-indicator-line rsi" />
+          </g>
+        )}
+
+        {macdPanel && (
+          <g className="chart-indicator-panel chart-macd-panel">
+            <rect className="chart-indicator-background" x={left} y={macdPanel.top} width={plotW} height={macdPanel.bottom - macdPanel.top} />
+            <line x1={left} y1={macdToY(0)} x2={left + plotW} y2={macdToY(0)} className="indicator-mid-line" />
+            {indicatorSeries.macd.histogram.map((value, index) => {
+              if (!Number.isFinite(value)) return null;
+              const zeroY = macdToY(0);
+              const valueY = macdToY(value);
+              return (
+                <rect
+                  key={`macd-volume-${index}`}
+                  x={coords[index].x - Math.max(0.4, plotW / clean.length / 3)}
+                  y={Math.min(zeroY, valueY)}
+                  width={Math.max(0.8, plotW / clean.length / 1.8)}
+                  height={Math.max(0.8, Math.abs(zeroY - valueY))}
+                  className={value >= 0 ? "macd-bar positive" : "macd-bar negative"}
+                />
+              );
+            })}
+            <text x={left + 5} y={macdPanel.top + 13} className="chart-indicator-label">
+              MACD 12·26·9{Number.isFinite(latestMacd) ? `  ${latestMacd.toFixed(2)}` : ""}
+            </text>
+            <path d={macdPath} className="chart-indicator-line macd" />
+            <path d={signalPath} className="chart-indicator-line signal" />
+          </g>
+        )}
+
         {activePoint && (
           <g className="chart-crosshair">
-            <line x1={activePoint.x} y1={top} x2={activePoint.x} y2={volumeBottom} />
+            <line x1={activePoint.x} y1={top} x2={activePoint.x} y2={contentBottom} />
             <line x1={left} y1={activePoint.y} x2={left + plotW} y2={activePoint.y} />
             <circle cx={activePoint.x} cy={activePoint.y} r="4" />
             <rect x={left + plotW + 4} y={activePoint.y - 12} width="82" height="24" rx="5" className="chart-floating-label" />
@@ -458,6 +696,14 @@ export default function Sparkline({ values, candles, asset, period = "1m", avera
           +
         </button>
       </div>
+
+      {(enabledIndicators.has("ma5") || enabledIndicators.has("ma20") || enabledIndicators.has("bollinger")) && (
+        <div className="chart-indicator-legend" aria-label="차트에 표시 중인 가격 보조지표">
+          {enabledIndicators.has("ma5") && <span className="ma5">MA5</span>}
+          {enabledIndicators.has("ma20") && <span className="ma20">MA20</span>}
+          {enabledIndicators.has("bollinger") && <span className="bollinger">볼린저 20·2</span>}
+        </div>
+      )}
 
       <div className={`chart-hover-card ${up ? "is-up" : "is-down"}`}>
         <span>{formatTime(activeTime, period)}</span>
