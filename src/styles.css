@@ -840,6 +840,147 @@ button {
   color: #3f4e5d;
   font-size: 10px;
 }
+.order-toast-viewport {
+  position: fixed;
+  top: 74px;
+  left: 50%;
+  z-index: 3000;
+  width: min(430px, calc(100vw - 28px));
+  display: grid;
+  gap: 9px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.order-toast {
+  position: relative;
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 12px 15px 14px;
+  overflow: hidden;
+  border: 1px solid #d8e2e9;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 14px 42px rgba(25, 47, 67, 0.2);
+  backdrop-filter: blur(14px);
+  animation: orderToastIn 220ms ease-out both;
+  pointer-events: auto;
+}
+.order-toast-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #eaf6fd;
+  color: var(--brand);
+  font-size: 18px;
+  font-weight: 900;
+}
+.order-toast > div {
+  min-width: 0;
+}
+.order-toast strong {
+  display: block;
+  color: #20384a;
+  font-size: 13px;
+  font-weight: 850;
+}
+.order-toast p {
+  margin: 4px 0 0;
+  color: #697986;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.order-toast > button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #8a98a3;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.order-toast > button:hover {
+  background: #f0f4f7;
+  color: #344c5d;
+}
+.order-toast.is-success .order-toast-icon {
+  background: #e7f7f0;
+  color: #149066;
+}
+.order-toast.is-warning .order-toast-icon {
+  background: #fff4dc;
+  color: #d18400;
+}
+.order-toast.is-error .order-toast-icon {
+  background: #fff0f1;
+  color: #d8424c;
+}
+.order-toast-progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--brand);
+  transform-origin: left;
+  animation: orderToastProgress 4.8s linear forwards;
+}
+.order-toast.is-success .order-toast-progress {
+  background: #20a779;
+}
+.order-toast.is-warning .order-toast-progress {
+  background: #e39a16;
+}
+.order-toast.is-error .order-toast-progress {
+  background: #e0525b;
+}
+@keyframes orderToastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes orderToastProgress {
+  to {
+    transform: scaleX(0);
+  }
+}
+@media (max-width: 560px) {
+  .order-toast-viewport {
+    top: 64px;
+    width: calc(100vw - 20px);
+  }
+  .order-toast {
+    grid-template-columns: 34px minmax(0, 1fr) 26px;
+    gap: 9px;
+    padding: 11px 10px 14px 12px;
+  }
+  .order-toast-icon {
+    width: 34px;
+    height: 34px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .order-toast,
+  .order-toast-progress {
+    animation: none;
+  }
+  .order-toast-progress {
+    display: none;
+  }
+}
 .home-wide-panel {
   grid-column: 1/-1;
   min-width: 0;
@@ -6065,6 +6206,24 @@ html[data-theme="dark"] .message {
 html[data-theme="dark"] .order-tabs button.active {
   background: #17232d;
   color: var(--brand);
+}
+html[data-theme="dark"] .order-toast {
+  border-color: #344653;
+  background: rgba(18, 27, 37, 0.97);
+  box-shadow: 0 16px 46px rgba(0, 0, 0, 0.42);
+}
+html[data-theme="dark"] .order-toast strong {
+  color: #e6eef4;
+}
+html[data-theme="dark"] .order-toast p {
+  color: #a8b6c1;
+}
+html[data-theme="dark"] .order-toast > button {
+  color: #8fa0ad;
+}
+html[data-theme="dark"] .order-toast > button:hover {
+  background: #20303c;
+  color: #e2ebf1;
 }
 html[data-theme="dark"] .service-hero {
   background: linear-gradient(135deg, #132433, #101923);

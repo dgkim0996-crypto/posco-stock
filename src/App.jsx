@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { INITIAL_MARKETS } from "./data/markets.js";
 import MarketList from "./components/MarketList.jsx";
 import Sparkline from "./components/Sparkline.jsx";
@@ -277,6 +277,8 @@ function TradingApp({ session, onSignOut }) {
   const [chartLoading, setChartLoading] = useState(false);
   const [chartError, setChartError] = useState("");
   const [message, setMessage] = useState("포스코증권 모의투자 계좌가 준비되었습니다.");
+  const [orderToasts, setOrderToasts] = useState([]);
+  const orderToastTimers = useRef(new Map());
   const [dashboardWidgets, setDashboardWidgets] = useState(loadDashboardWidgets);
   const [editDashboard, setEditDashboard] = useState(false);
   const [draggingWidget, setDraggingWidget] = useState(null);
@@ -296,6 +298,12 @@ function TradingApp({ session, onSignOut }) {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
+
+  // 주문 토스트의 자동 닫기 타이머가 화면 종료 후 남지 않도록 모두 정리한다.
+  useEffect(() => () => {
+    orderToastTimers.current.forEach((timer) => window.clearTimeout(timer));
+    orderToastTimers.current.clear();
+  }, []);
 
   // 자산 탭에서는 삭제되지 않는 감사 원장을 서버 원본으로 조회한다.
   useEffect(() => {
@@ -440,7 +448,7 @@ function TradingApp({ session, onSignOut }) {
   // 계좌 위험도를 주기적으로 재평가하고 청산 임계값 도달 시 서버의 원자적 강제청산 결과를 반영한다.
   useEffect(() => {
     let active=true;let timer;
-    const loadRisk=async()=>{try{const response=await apiFetch("/api/accounts/me/risk");const payload=await response.json();if(!response.ok)throw new Error(payload.error||"위험 평가 실패");if(!active)return;setRiskStatus(payload);if(payload.liquidations?.length){setCash(payload.account.krwBalance);setFuturesPositions(payload.futuresPositions.map((item)=>{const asset=INITIAL_MARKETS.futures.find((candidate)=>candidate.symbol===item.symbol);return{...item,assetId:item.symbol,name:asset?.name||item.symbol};}));setMessage(`${payload.liquidations.length}개 선물 포지션이 유지증거금 미달로 강제청산됐습니다.`);}}catch{}finally{if(active)timer=window.setTimeout(loadRisk,10000);}};
+    const loadRisk=async()=>{try{const response=await apiFetch("/api/accounts/me/risk");const payload=await response.json();if(!response.ok)throw new Error(payload.error||"위험 평가 실패");if(!active)return;setRiskStatus(payload);if(payload.liquidations?.length){setCash(payload.account.krwBalance);setFuturesPositions(payload.futuresPositions.map((item)=>{const asset=INITIAL_MARKETS.futures.find((candidate)=>candidate.symbol===item.symbol);return{...item,assetId:item.symbol,name:asset?.name||item.symbol};}));notifyOrder(`${payload.liquidations.length}개 선물 포지션이 유지증거금 미달로 강제청산됐습니다.`, "error", "포지션이 강제청산됐어요");}}catch{}finally{if(active)timer=window.setTimeout(loadRisk,10000);}};
     loadRisk();return()=>{active=false;window.clearTimeout(timer);};
   }, []);
 
@@ -889,6 +897,25 @@ function TradingApp({ session, onSignOut }) {
     ].slice(0, 40));
   }
 
+  // 주문창의 기존 안내문을 유지하면서 중요한 주문 결과를 화면 상단 토스트로 함께 알린다.
+  function notifyOrder(text, tone = "info", title = "주문 안내") {
+    setMessage(text);
+    const id = crypto.randomUUID();
+    setOrderToasts((prev) => [{ id, tone, title, text }, ...prev].slice(0, 4));
+    const timer = window.setTimeout(() => {
+      setOrderToasts((prev) => prev.filter((toast) => toast.id !== id));
+      orderToastTimers.current.delete(id);
+    }, 4800);
+    orderToastTimers.current.set(id, timer);
+  }
+
+  function dismissOrderToast(id) {
+    const timer = orderToastTimers.current.get(id);
+    if (timer) window.clearTimeout(timer);
+    orderToastTimers.current.delete(id);
+    setOrderToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }
+
   // 체결된 주문에 실제 체결가·시각을 붙여 체결 탭의 최신순 목록에 저장한다.
   function addFilledOrder(order, executionPrice) {
     setFilledOrders((prev) => [{
@@ -915,11 +942,18 @@ function TradingApp({ session, onSignOut }) {
       const executedQuantity=fillQuantity ?? order.quantity;
       if(completed)addFilledOrder({...order,id:result.order.id,quantity:result.order.filledQuantity},nativeExecutionPrice);
       pushTrade(`${LABELS[order.category]} · ${asset.name} ${executedQuantity} ${order.side==="BUY"?"매수":"매도"} · ${assetPrice({...asset,price:nativeExecutionPrice})}`);
-      setMessage(completed
-        ? `${asset.name} ${result.order.filledQuantity} ${order.side==="BUY"?"매수":"매도"} 전량 체결`
-        : `${asset.name} ${executedQuantity} 부분체결 · 잔여 ${result.order.remainingQuantity}`);
+      notifyOrder(
+        completed
+          ? `${asset.name} ${result.order.filledQuantity} ${order.side === "BUY" ? "매수" : "매도"} 전량 체결`
+          : `${asset.name} ${executedQuantity} 부분체결 · 잔여 ${result.order.remainingQuantity}`,
+        completed ? "success" : "info",
+        completed ? "주문이 체결됐어요" : "주문이 부분 체결됐어요",
+      );
       return {completed,remainingQuantity:result.order.remainingQuantity};
-    } catch(error) { setMessage(`${asset.name} 주문 실패 · ${error.message}`); return null; }
+    } catch(error) {
+      notifyOrder(`${asset.name} 주문 실패 · ${error.message}`, "error", "주문을 처리하지 못했어요");
+      return null;
+    }
   }
 
   // 주문 입력을 검증하고 시장가는 즉시 체결, 지정가는 조건에 따라 체결 또는 대기시킨다.
@@ -928,11 +962,11 @@ function TradingApp({ session, onSignOut }) {
     const qty = Number(quantity);
     const requestedPrice = orderType === "LIMIT" ? Number(limitPrice) : selected.price;
     if (!Number.isFinite(qty) || qty <= 0) {
-      setMessage("주문 수량을 0보다 크게 입력해 주세요.");
+      notifyOrder("주문 수량을 0보다 크게 입력해 주세요.", "warning", "주문 내용을 확인해 주세요");
       return;
     }
     if (!Number.isFinite(requestedPrice) || requestedPrice <= 0) {
-      setMessage("지정가를 0보다 크게 입력해 주세요.");
+      notifyOrder("지정가를 0보다 크게 입력해 주세요.", "warning", "주문 내용을 확인해 주세요");
       return;
     }
     const reservedSellQuantity = pendingOrders
@@ -943,11 +977,11 @@ function TradingApp({ session, onSignOut }) {
       const shortQuantity = Math.max(0, reservedSellQuantity + qty - ownedQuantity);
       const shortAmount = spotPriceInKRW({ ...selected, price: requestedPrice }) * shortQuantity;
       if (shortQuantity > 0 && (category !== "stocks" || !financeAccount.lending.active)) {
-        setMessage("보유수량 초과 매도에는 대주거래 실행이 필요합니다.");
+        notifyOrder("보유수량 초과 매도에는 대주거래 실행이 필요합니다.", "warning", "매도 주문이 불가능해요");
         return;
       }
       if (shortQuantity > 0 && lendingUsed + shortAmount > financeAccount.lending.limit) {
-        setMessage("미체결 주문을 포함한 대주매도 금액이 대주한도를 초과합니다.");
+        notifyOrder("미체결 주문을 포함한 대주매도 금액이 대주한도를 초과합니다.", "warning", "매도 주문이 불가능해요");
         return;
       }
     }
@@ -978,15 +1012,16 @@ function TradingApp({ session, onSignOut }) {
           return sum + (asset ? spotPriceInKRW({ ...asset, price: item.limitPrice }) * item.quantity : 0);
         }, 0);
       if (side === "BUY" && estimatedAmount + reservedBuyAmount > cash) {
-        setMessage("주문가능금액이 부족합니다.");
+        notifyOrder("주문가능금액이 부족합니다.", "warning", "매수 주문이 불가능해요");
         return;
       }
       try {
         const response=await apiFetch("/api/accounts/me/pending-orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({symbol:selected.symbol,side,quantity:qty,limitPrice:requestedPrice})});
         const saved=await response.json();if(!response.ok)throw new Error(saved.error||"지정가 주문 저장 실패");
         setPendingOrders((prev)=>[{...order,id:saved.id,pendingOrderId:saved.id,orderId:saved.orderId||null,createdAt:saved.createdAt},...prev]);
-        setMessage(`${selected.name} ${qty} ${side==="BUY"?"매수":"매도"} 지정가 주문 접수`);setOrderTab("pending");
-      } catch(error){setMessage(`${selected.name} 지정가 주문 실패 · ${error.message}`);}
+        notifyOrder(`${selected.name} ${qty} ${side === "BUY" ? "매수" : "매도"} 지정가 주문 접수`, "info", "지정가 주문을 접수했어요");
+        setOrderTab("pending");
+      } catch(error){notifyOrder(`${selected.name} 지정가 주문 실패 · ${error.message}`, "error", "주문을 접수하지 못했어요");}
     }
   }
 
@@ -1005,8 +1040,9 @@ function TradingApp({ session, onSignOut }) {
     try {
       const response=await apiFetch(`/api/accounts/me/pending-orders/${order.pendingOrderId||order.id}`,{method:"DELETE"});
       const result=await response.json();if(!response.ok)throw new Error(result.error||"주문 취소 실패");
-      setPendingOrders((prev)=>prev.filter((item)=>item.id!==order.id));setMessage(`${order.name} 지정가 주문을 취소했습니다.`);
-    } catch(error){setMessage(`${order.name} 주문 취소 실패 · ${error.message}`);}
+      setPendingOrders((prev)=>prev.filter((item)=>item.id!==order.id));
+      notifyOrder(`${order.name} 지정가 주문을 취소했습니다.`, "info", "주문을 취소했어요");
+    } catch(error){notifyOrder(`${order.name} 주문 취소 실패 · ${error.message}`, "error", "주문을 취소하지 못했어요");}
   }
 
   /** 사용자가 입력한 새 가격·수량으로 대기 주문을 정정한다. */
@@ -1018,8 +1054,8 @@ function TradingApp({ session, onSignOut }) {
       const response = await apiFetch(`/api/accounts/me/pending-orders/${order.pendingOrderId || order.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ quantity: nextQuantity, limitPrice: nextLimitPrice }) });
       const saved = await response.json(); if (!response.ok) throw new Error(saved.error || "주문 정정 실패");
       setPendingOrders((prev) => prev.map((item) => item.id === order.id ? { ...item, quantity: saved.quantity, limitPrice: saved.limitPrice } : item));
-      setMessage(`${order.name} 지정가 주문을 정정했습니다.`);
-    } catch (error) { setMessage(`${order.name} 주문 정정 실패 · ${error.message}`); }
+      notifyOrder(`${order.name} 지정가 주문을 정정했습니다.`, "info", "주문을 정정했어요");
+    } catch (error) { notifyOrder(`${order.name} 주문 정정 실패 · ${error.message}`, "error", "주문을 정정하지 못했어요"); }
   }
 
   // 증거금을 확인한 뒤 LONG/SHORT 선물 포지션을 새로 연다.
@@ -1027,7 +1063,7 @@ function TradingApp({ session, onSignOut }) {
   async function openFuture(side) {
     const qty = Math.floor(Number(quantity));
     if (!Number.isFinite(qty) || qty < 1) {
-      setMessage("선물 계약 수를 1 이상 입력해 주세요.");
+      notifyOrder("선물 계약 수를 1 이상 입력해 주세요.", "warning", "주문 내용을 확인해 주세요");
       return;
     }
 
@@ -1036,8 +1072,9 @@ function TradingApp({ session, onSignOut }) {
       const result=await response.json();if(!response.ok)throw new Error(result.error||"선물 주문 실패");
       setCash(result.account.krwBalance);setFuturesPositions((prev)=>[...prev,{...result.position,assetId:selected.id,name:selected.name}]);
       addFilledOrder({id:result.position.id,assetId:selected.id,symbol:selected.symbol,name:selected.name,category,side:side==="LONG"?"BUY":"SELL",orderType:"MARKET",quantity:qty,limitPrice:null,orderedAt:new Date().toLocaleTimeString("ko-KR")},result.position.entryPrice);
-      setMessage(`${selected.name} ${side==="LONG"?"매수":"매도"} ${qty}계약 체결`);pushTrade(`선물옵션 · ${selected.name} ${side} ${qty}계약 · ${result.position.entryPrice.toFixed(2)}`);
-    } catch(error){setMessage(`${selected.name} 선물 주문 실패 · ${error.message}`);}
+      notifyOrder(`${selected.name} ${side === "LONG" ? "매수" : "매도"} ${qty}계약 체결`, "success", "선물 주문이 체결됐어요");
+      pushTrade(`선물옵션 · ${selected.name} ${side} ${qty}계약 · ${result.position.entryPrice.toFixed(2)}`);
+    } catch(error){notifyOrder(`${selected.name} 선물 주문 실패 · ${error.message}`, "error", "선물 주문을 처리하지 못했어요");}
   }
 
   // 선택 포지션의 증거금과 실현손익을 현금으로 돌려주고 포지션을 닫는다.
@@ -1046,7 +1083,7 @@ function TradingApp({ session, onSignOut }) {
     const pos = futuresPositions.find((x) => x.id === id);
     if (!pos) return;
 
-    try{const response=await apiFetch(`/api/accounts/me/futures/${id}/close`,{method:"POST"});const result=await response.json();if(!response.ok)throw new Error(result.error||"선물 청산 실패");setCash(result.account.krwBalance);setFuturesPositions((prev)=>prev.filter((x)=>x.id!==id));setMessage(`${pos.name} 청산 완료 · 손익 ${money(result.pnl)}`);pushTrade(`선물옵션 · ${pos.name} ${pos.side} 청산 · 손익 ${money(result.pnl)}`);}catch(error){setMessage(`${pos.name} 청산 실패 · ${error.message}`);}
+    try{const response=await apiFetch(`/api/accounts/me/futures/${id}/close`,{method:"POST"});const result=await response.json();if(!response.ok)throw new Error(result.error||"선물 청산 실패");setCash(result.account.krwBalance);setFuturesPositions((prev)=>prev.filter((x)=>x.id!==id));notifyOrder(`${pos.name} 청산 완료 · 손익 ${money(result.pnl)}`, "success", "포지션을 청산했어요");pushTrade(`선물옵션 · ${pos.name} ${pos.side} 청산 · 손익 ${money(result.pnl)}`);}catch(error){notifyOrder(`${pos.name} 청산 실패 · ${error.message}`, "error", "포지션을 청산하지 못했어요");}
   }
 
   // 모든 모의 거래·잔고·입력값을 최초 상태로 되돌린다.
@@ -1265,6 +1302,21 @@ function TradingApp({ session, onSignOut }) {
 
   return (
     <div className="terminal">
+      <div className="order-toast-viewport" aria-live="polite" aria-label="주문 처리 알림">
+        {orderToasts.map((toast) => (
+          <article className={`order-toast is-${toast.tone}`} key={toast.id} role={toast.tone === "error" ? "alert" : "status"}>
+            <span className="order-toast-icon" aria-hidden="true">
+              {toast.tone === "success" ? "✓" : toast.tone === "info" ? "i" : "!"}
+            </span>
+            <div>
+              <strong>{toast.title}</strong>
+              <p>{toast.text}</p>
+            </div>
+            <button type="button" onClick={() => dismissOrderToast(toast.id)} aria-label="주문 알림 닫기">×</button>
+            <span className="order-toast-progress" aria-hidden="true" />
+          </article>
+        ))}
+      </div>
       <header className="topbar">
         <div className="topbar-inner">
           <button type="button" className="brand" onClick={() => setMainTab("trading")} aria-label="POSCO 증권 홈">
