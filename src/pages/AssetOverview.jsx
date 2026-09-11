@@ -186,14 +186,16 @@ export default function AssetOverview({
       {subTab === "settlements" && (
         <article className="service-card">
           <div className="service-card-head"><div><span>결제 예정금액</span><strong>체결별 수수료·세금·D+2 결제</strong></div><em>최근 {settlements.length}건</em></div>
-          <div className="service-table-wrap"><table className="service-table"><thead><tr><th>거래일</th><th>결제일</th><th>종목</th><th>구분</th><th>체결금액</th><th>수수료</th><th>세금</th><th>순결제금액</th><th>상태</th></tr></thead><tbody>
-            {settlements.length === 0 ? <tr><td colSpan="9" className="empty">결제 예정 거래가 없습니다.</td></tr> : settlements.map((item) => <tr key={item.id}>
+          <div className="service-table-wrap"><table className="service-table"><thead><tr><th>거래일</th><th>결제일</th><th>종목</th><th>구분</th><th>체결금액</th><th>수수료</th><th>거래세</th><th>농특세</th><th>순결제금액</th><th>상태</th></tr></thead><tbody>
+            {settlements.length === 0 ? <tr><td colSpan="10" className="empty">결제 예정 거래가 없습니다.</td></tr> : settlements.map((item) => <tr key={item.id}>
               <td>{item.tradeDate}</td><td>{item.settlementDate}</td><td><strong>{item.symbol}</strong></td><td>{item.side === "BUY" ? "매수" : "매도"}</td>
-              <td>{won(item.grossAmount)}</td><td className="down">{won(-item.feeAmount)}</td><td className={item.taxAmount ? "down" : ""}>{item.taxAmount ? won(-item.taxAmount) : "-"}</td>
+              <td>{won(item.grossAmount)}</td><td className="down">{won(-item.feeAmount)}</td>
+              <td className={item.transactionTaxAmount ? "down" : ""}>{item.transactionTaxAmount ? won(-item.transactionTaxAmount) : "-"}</td>
+              <td className={item.agriculturalTaxAmount ? "down" : ""}>{item.agriculturalTaxAmount ? won(-item.agriculturalTaxAmount) : "-"}</td>
               <td className={item.netAmount >= 0 ? "up" : "down"}>{item.netAmount >= 0 ? "+" : ""}{won(item.netAmount)}</td><td><strong>{item.status === "SETTLED" ? "결제완료" : "결제예정"}</strong></td>
             </tr>)}
           </tbody></table></div>
-          <div className="longterm-notice">표시 요율은 모의투자 정책이며 실제 증권사 수수료·세금과 다를 수 있습니다. 결제일은 등록된 휴장일과 주말을 제외한 영업일 기준입니다.</div>
+          <div className="longterm-notice">국내주식 세금은 2026년 기준 체결 시 실제 모의잔액에서 차감됩니다. 해외주식 양도세와 ETF 배당소득세 예상액은 연간 손익통산·기본공제·과표기준가가 필요해 주문창 참고액에만 표시됩니다.</div>
         </article>
       )}
 

@@ -70,6 +70,8 @@ const mapOrder = (row) => ({
   cancelledQuantity: Number(row.cancelled_quantity || 0),
   feeAmount: Number(row.fee_amount || 0),
   taxAmount: Number(row.tax_amount || 0),
+  transactionTaxAmount: Number(row.transaction_tax_amount || 0),
+  agriculturalTaxAmount: Number(row.agricultural_tax_amount || 0),
   settlementDate: row.settlement_date || null,
   updatedAt: row.updated_at || row.created_at,
   borrowedQuantity: Number(row.borrowed_quantity || 0),

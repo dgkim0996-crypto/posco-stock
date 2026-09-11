@@ -9,6 +9,7 @@ import PasswordRecovery from "./components/PasswordRecovery.jsx";
 import poscoLogo from "./assets/posco-ci-blue.png";
 import { assetMatchesSearch } from "./utils/assetSearch.js";
 import { apiFetch, apiUrl, websocketUrl } from "./utils/api.js";
+import { estimateTradeTaxes, feeRateForTrade, TRADE_TAX_RULES_AS_OF } from "./utils/tradeTaxes.js";
 import { supabase } from "./lib/supabase.js";
 
 const AssetOverview = lazy(() => import("./pages/AssetOverview.jsx"));
@@ -39,7 +40,7 @@ const CHART_INDICATOR_OPTIONS = [
 
 // DB의 모의 거래 수수료 정책과 같은 비율로 최대 매수수량에 필요한 현금을 계산한다.
 function spotBuyFeeRate(category, asset) {
-  return category === "stocks" && asset?.unit === "USD" ? 0.0007 : 0.00015;
+  return feeRateForTrade(category, asset);
 }
 
 const DASHBOARD_STORAGE_KEY = "posco-dashboard-layout-v2";
@@ -887,6 +888,20 @@ function TradingApp({ session, onSignOut }) {
     if (!Number.isFinite(averagePrice) || averagePrice <= 0) return null;
     return selected.unit === "USD" ? averagePrice / USD_KRW : averagePrice;
   }, [category, futuresPositions, selected.id, selected.symbol, selected.unit, shortPositions, spotPositions]);
+  const orderTaxPreview = useMemo(() => {
+    const requestedPrice = orderType === "LIMIT" ? Number(limitPrice) : Number(selected.price);
+    const priceKrw = Number.isFinite(requestedPrice)
+      ? spotPriceInKRW({ ...selected, price: requestedPrice })
+      : 0;
+    return estimateTradeTaxes({
+      category,
+      asset: selected,
+      side: orderSide,
+      priceKrw,
+      quantity: Number(quantity),
+      averagePriceKrw: Number(spotPositions[selected.id]?.avgPrice),
+    });
+  }, [category, limitPrice, orderSide, orderType, quantity, selected, spotPositions]);
   const selectedTradeMarkers = useMemo(() => filledOrders
     .filter((order) => order.assetId === selected.id || order.symbol === selected.symbol)
     .slice(0, 30)
@@ -1007,7 +1022,15 @@ function TradingApp({ session, onSignOut }) {
       const nativeExecutionPrice=asset.unit==="USD"?result.order.price/USD_KRW:result.order.price;
       const completed=result.order.status==="FILLED";
       const executedQuantity=fillQuantity ?? order.quantity;
-      if(completed)addFilledOrder({...order,id:result.order.id,quantity:result.order.filledQuantity},nativeExecutionPrice);
+      if(completed)addFilledOrder({
+        ...order,
+        id:result.order.id,
+        quantity:result.order.filledQuantity,
+        feeAmount:result.order.feeAmount,
+        taxAmount:result.order.taxAmount,
+        transactionTaxAmount:result.order.transactionTaxAmount,
+        agriculturalTaxAmount:result.order.agriculturalTaxAmount,
+      },nativeExecutionPrice);
       pushTrade(`${LABELS[order.category]} · ${asset.name} ${executedQuantity} ${order.side==="BUY"?"매수":"매도"} · ${assetPrice({...asset,price:nativeExecutionPrice})}`);
       notifyOrder(
         completed
@@ -1768,6 +1791,24 @@ function TradingApp({ session, onSignOut }) {
                 )}
               </div>
 
+              {category !== "futures" && orderTaxPreview.grossAmount > 0 && (
+                <section className="order-tax-preview" aria-label="예상 수수료와 세금">
+                  <div className="order-tax-preview-head">
+                    <strong>예상 비용</strong>
+                    <span>{TRADE_TAX_RULES_AS_OF.slice(0, 4)}년 기준 · 체결가에 따라 변동</span>
+                  </div>
+                  <dl>
+                    <div><dt>주문금액</dt><dd>{money(orderTaxPreview.grossAmount)}</dd></div>
+                    <div><dt>수수료 ({(orderTaxPreview.feeRate * 100).toFixed(3)}%)</dt><dd>-{money(orderTaxPreview.feeAmount)}</dd></div>
+                    {orderTaxPreview.transactionTaxAmount > 0 && <div><dt>증권거래세 ({(orderTaxPreview.transactionTaxRate * 100).toFixed(2)}%)</dt><dd>-{money(orderTaxPreview.transactionTaxAmount)}</dd></div>}
+                    {orderTaxPreview.agriculturalTaxAmount > 0 && <div><dt>농어촌특별세 ({(orderTaxPreview.agriculturalTaxRate * 100).toFixed(2)}%)</dt><dd>-{money(orderTaxPreview.agriculturalTaxAmount)}</dd></div>}
+                    <div className="order-tax-preview-total"><dt>체결 후 순결제 예상</dt><dd className={orderTaxPreview.settlementAmount >= 0 ? "up" : "down"}>{orderTaxPreview.settlementAmount >= 0 ? "+" : "-"}{money(Math.abs(orderTaxPreview.settlementAmount))}</dd></div>
+                    {orderTaxPreview.deferredLabel && <div className="order-tax-preview-deferred"><dt>{orderTaxPreview.deferredLabel}</dt><dd>{orderTaxPreview.deferredTaxAmount > 0 ? `약 ${money(orderTaxPreview.deferredTaxAmount)}` : "별도 과세"}</dd></div>}
+                  </dl>
+                  {orderTaxPreview.deferredNote && <p>{orderTaxPreview.deferredNote}</p>}
+                </section>
+              )}
+
               <div className="order-submit">
                 <button
                   type="button"
@@ -1804,7 +1845,7 @@ function TradingApp({ session, onSignOut }) {
                     <article key={order.id} className="order-status-item is-filled">
                       <div><strong>{order.name}</strong><span>{order.symbol} · {order.filledAt}</span></div>
                       <div><b className={order.side === "BUY" ? "up" : "down"}>{order.side === "BUY" ? "매수" : "매도"}</b><strong>{order.quantity} · {assetPrice({ ...allAssets.find((item) => item.id === order.assetId), price: order.executionPrice })}</strong></div>
-                      <em>{order.orderType === "LIMIT" ? "지정가" : "시장가"} 체결</em>
+                      <em>{order.orderType === "LIMIT" ? "지정가" : "시장가"} 체결 · 수수료 {money(order.feeAmount || 0)}{order.taxAmount > 0 ? ` · 세금 ${money(order.taxAmount)}` : ""}</em>
                     </article>
                   ))}
                 </div>

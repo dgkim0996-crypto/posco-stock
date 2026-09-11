@@ -10,6 +10,7 @@ const mapSettlement = (row) => ({
   id: row.id, orderId: row.order_id, symbol: row.symbol, side: row.side,
   tradeDate: row.trade_date, settlementDate: row.settlement_date,
   grossAmount: Number(row.gross_amount), feeAmount: Number(row.fee_amount), taxAmount: Number(row.tax_amount),
+  transactionTaxAmount: Number(row.transaction_tax_amount || 0), agriculturalTaxAmount: Number(row.agricultural_tax_amount || 0),
   netAmount: Number(row.net_amount), status: row.status, settledAt: row.settled_at, createdAt: row.created_at,
 });
 
@@ -26,7 +27,9 @@ const getAll = async (accountIdValue) => {
 const getPolicies = async () => {
   const { data, error } = await getSupabaseAdmin().from("trade_charge_policies").select("*").order("code");
   if (error) throw createError(503, `수수료 정책 조회 실패: ${error.message}`, error);
-  return data.map((row) => ({ code: row.code, name: row.name, feeRate: Number(row.fee_rate), sellTaxRate: Number(row.sell_tax_rate), settlementDays: row.settlement_days }));
+  return data.map((row) => ({ code: row.code, name: row.name, feeRate: Number(row.fee_rate), sellTaxRate: Number(row.sell_tax_rate),
+    transactionTaxRate: Number(row.transaction_tax_rate || 0), agriculturalTaxRate: Number(row.agricultural_tax_rate || 0),
+    settlementDays: row.settlement_days, effectiveFrom: row.effective_from || null }));
 };
 
 export default { getAll, getPolicies };

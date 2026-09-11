@@ -836,6 +836,42 @@ button {
 .order-submit {
   padding: 3px 14px 0;
 }
+.order-tax-preview {
+  margin: 0 14px 8px;
+  padding: 10px 11px;
+  border: 1px solid #dce5eb;
+  border-radius: 8px;
+  background: #f7fafc;
+}
+.order-tax-preview-head,
+.order-tax-preview dl > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.order-tax-preview-head {
+  padding-bottom: 7px;
+  border-bottom: 1px solid #e6edf1;
+}
+.order-tax-preview-head strong { font-size: 11.5px; }
+.order-tax-preview-head span { color: #87939d; font-size: 9.5px; }
+.order-tax-preview dl { margin: 6px 0 0; }
+.order-tax-preview dl > div { min-height: 24px; }
+.order-tax-preview dt { color: #70808d; font-size: 10.5px; }
+.order-tax-preview dd { margin: 0; font-size: 11px; font-weight: 750; }
+.order-tax-preview .order-tax-preview-total {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid #e6edf1;
+}
+.order-tax-preview .order-tax-preview-deferred { color: #7357b5; }
+.order-tax-preview p {
+  margin: 7px 0 0;
+  color: #7a6a52;
+  font-size: 9.5px;
+  line-height: 1.45;
+}
 .order-submit button {
   width: 100%;
   padding: 12px;
@@ -6155,6 +6191,16 @@ body.dashboard-resizing * {
 .order-panel .order-submit {
   padding: 5px 16px 0;
 }
+.order-panel .order-tax-preview {
+  margin: 0 16px 10px;
+  padding: 12px 13px;
+}
+.order-panel .order-tax-preview-head strong { font-size: 13px; }
+.order-panel .order-tax-preview-head span { font-size: 11px; }
+.order-panel .order-tax-preview dl > div { min-height: 27px; }
+.order-panel .order-tax-preview dt,
+.order-panel .order-tax-preview dd { font-size: 12px; }
+.order-panel .order-tax-preview p { font-size: 11px; }
 .order-panel .order-submit button {
   min-height: 46px;
   font-family: inherit;
@@ -7457,6 +7503,17 @@ html[data-theme="dark"] .service-table td {
 html[data-theme="dark"] .service-table tbody tr:hover td {
   background: #182632;
 }
+html[data-theme="dark"] .order-tax-preview {
+  border-color: #334452;
+  background: #17232c;
+}
+html[data-theme="dark"] .order-tax-preview-head,
+html[data-theme="dark"] .order-tax-preview .order-tax-preview-total {
+  border-color: #334452;
+}
+html[data-theme="dark"] .order-tax-preview dt,
+html[data-theme="dark"] .order-tax-preview-head span { color: #9babb8; }
+html[data-theme="dark"] .order-tax-preview p { color: #c5ad85; }
 html[data-theme="dark"] .primary-feed-grid .research-list > button,
 html[data-theme="dark"] .primary-feed-grid .calendar-list > button {
   background: #121b25;
