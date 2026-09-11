@@ -271,8 +271,9 @@ button {
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.025);
 }
 .left-panel {
-  height: 840px;
-  min-height: 840px;
+  height: auto;
+  min-height: 980px;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1214,8 +1215,8 @@ footer strong {
     min-height: auto;
   }
   .left-panel {
-    height: 680px;
-    min-height: 680px;
+    height: auto;
+    min-height: 820px;
   }
   .tabs {
     padding-left: 16px;
@@ -1259,8 +1260,8 @@ footer strong {
     min-width: 82px;
   }
   .left-panel {
-    height: 560px;
-    min-height: 560px;
+    height: auto;
+    min-height: 700px;
   }
   .instrument {
     flex-direction: column;
