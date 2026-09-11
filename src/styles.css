@@ -5543,7 +5543,7 @@ body.dashboard-resizing * {
   padding: 13px 16px;
 }
 .order-panel .order-heading span {
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 650;
 }
 .order-panel .order-heading strong {
@@ -5657,14 +5657,17 @@ body.dashboard-resizing * {
   margin-top: 9px;
 }
 .order-panel .order-status-item strong {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 750;
+}
+.order-panel .order-status-item > div:first-child strong {
+  font-size: 16px;
 }
 .order-panel .order-status-item span {
   font-size: 11.5px;
 }
 .order-panel .order-status-item b {
-  font-size: 12px;
+  font-size: 14px;
 }
 .order-panel .order-status-item button {
   padding: 7px 10px;
