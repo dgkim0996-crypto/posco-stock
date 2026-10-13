@@ -1,0 +1,101 @@
+html[data-theme="dark"] .chart-indicator-menu summary {
+  border-color: #344653;
+  background: #17232d;
+  color: #b8c5cf;
+}
+html[data-theme="dark"] .chart-indicator-menu[open] summary {
+  border-color: #3d7596;
+  background: #18384c;
+  color: #73caf5;
+}
+html[data-theme="dark"] .chart-head .chart-indicator-popover {
+  border-color: #344653;
+  background: rgba(18, 27, 37, 0.98);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.38);
+}
+html[data-theme="dark"] .chart-indicator-popover-head strong,
+html[data-theme="dark"] .chart-indicator-popover button {
+  color: #d5e0e8;
+}
+html[data-theme="dark"] .chart-indicator-popover-head span,
+html[data-theme="dark"] .chart-indicator-popover button small {
+  color: #8294a2;
+}
+html[data-theme="dark"] .chart-indicator-popover button:hover {
+  background: #1a2935;
+}
+html[data-theme="dark"] .chart-indicator-popover button.active {
+  background: #18384c;
+}
+html[data-theme="dark"] .market-chart-wrap,
+html[data-theme="dark"] .sparkline {
+  background: #121b25;
+}
+html[data-theme="dark"] .grid-line {
+  stroke: #263541;
+}
+html[data-theme="dark"] .chart-volume-background {
+  fill: #101923;
+}
+html[data-theme="dark"] .chart-volume-divider {
+  stroke: #2d3b47;
+}
+html[data-theme="dark"] .chart-indicator-background {
+  fill: #101923;
+  stroke: #2d3b47;
+}
+html[data-theme="dark"] .indicator-guide-line {
+  stroke: #354653;
+}
+html[data-theme="dark"] .indicator-mid-line {
+  stroke: #2b3a46;
+}
+html[data-theme="dark"] .chart-indicator-label {
+  fill: #9aabb8;
+}
+html[data-theme="dark"] .chart-indicator-axis {
+  fill: #718491;
+}
+html[data-theme="dark"] .chart-average-line {
+  stroke: #9aa9b5;
+}
+html[data-theme="dark"] .chart-average-caption-bg {
+  fill: #18232d;
+  fill-opacity: 0.74;
+  stroke: #71808d;
+}
+html[data-theme="dark"] .chart-average-caption {
+  fill: #c0ccd5;
+}
+html[data-theme="dark"] .chart-average-price-bg {
+  fill: #425563;
+  fill-opacity: 0.86;
+}
+html[data-theme="dark"] .chart-trade-marker circle,
+html[data-theme="dark"] .chart-trade-marker rect {
+  stroke: #121b25;
+}
+html[data-theme="dark"] .chart-axis-text,
+html[data-theme="dark"] .chart-volume-label {
+  fill: #8697a6;
+}
+html[data-theme="dark"] .chart-volume-controls {
+  border-color: #34424f;
+  background: rgba(18, 27, 37, 0.94);
+}
+html[data-theme="dark"] .chart-volume-controls span {
+  color: #94a4b2;
+}
+html[data-theme="dark"] .chart-volume-controls button {
+  border-color: #40515f;
+  background: #17232d;
+  color: #d5dee5;
+}
+html[data-theme="dark"] .chart-volume-controls button:disabled {
+  color: #667683;
+  background: #111a22;
+}
+html[data-theme="dark"] .chart-hover-card {
+  background: rgba(18, 27, 37, 0.94);
+  border-color: #34424f;
+}

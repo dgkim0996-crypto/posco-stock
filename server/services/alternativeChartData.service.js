@@ -1,12 +1,8 @@
 import { INITIAL_MARKETS } from "../../src/data/markets.js";
-import alternativeMarketDataService from "./alternativeMarketData.service.js";
+import alternativeMarketDataService, { FUTURE_SYMBOLS, futurePriceSource } from "./alternativeMarketData.service.js";
 
 const VALID_PERIODS = new Set(["1m", "5m", "30m", "60m", "day"]);
 const PERIOD_MS = { "1m":60_000, "5m":300_000, "30m":1_800_000, "60m":3_600_000, day:86_400_000 };
-const FUTURE_SYMBOLS = {
-  K200:"^KS200", KQ150:"^KQ11", NQ:"NQ=F", ES:"ES=F", YM:"YM=F", NKD:"NKD=F",
-  CL:"CL=F", GC:"GC=F", SI:"SI=F", NG:"NG=F", HG:"HG=F",
-};
 const cache = new Map();
 
 const createError = (status, message) => Object.assign(new Error(message), { status });
@@ -65,7 +61,7 @@ const getChart = async (category, symbol, period) => {
   let source;
   if (category === "futures") {
     candles = await fetchYahooChart(FUTURE_SYMBOLS[symbol], period);
-    source = symbol === "K200" || symbol === "KQ150" ? "Yahoo 실제 기초지수" : "Yahoo 선물";
+    source = futurePriceSource(symbol);
   } else if (category === "crypto") {
     candles = await fetchYahooChart(`${symbol}-KRW`, period);
     source = "Yahoo 디지털자산";

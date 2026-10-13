@@ -1,0 +1,117 @@
+.dashboard-table-wrap {
+  max-height: 330px;
+  overflow: auto;
+  background: #fff;
+}
+.dashboard-table-wrap table {
+  min-width: 610px;
+}
+.dashboard-table-wrap th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 11px 13px;
+  background: #f8fafc;
+  color: #8794a1;
+  font-size: 11px;
+}
+.dashboard-table-wrap td {
+  padding: 12px 13px;
+  font-size: 12px;
+}
+.dashboard-history {
+  max-height: 310px;
+  background: #fff;
+}
+.dashboard-history .history-row {
+  padding: 13px 16px;
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+.dashboard-history .history-row span {
+  font-size: 10px;
+}
+.dashboard-history .history-row strong {
+  margin-top: 0;
+  font-size: 12px;
+}
+.dashboard-empty-state {
+  min-height: 170px;
+  margin-top: 12px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #c8d4df;
+  border-radius: 16px;
+  background: #fff;
+  color: #748293;
+  text-align: center;
+}
+.dashboard-empty-state strong {
+  color: #344658;
+  font-size: 15px;
+}
+.dashboard-empty-state span {
+  margin-top: 6px;
+  font-size: 12px;
+}
+.dashboard-empty-state button {
+  margin-top: 14px;
+  padding: 9px 13px;
+  color: var(--brand);
+}
+
+@media (max-width: 1180px) {
+  .widget-third {
+    grid-column: span 6;
+  }
+}
+@media (max-width: 900px) {
+  .dashboard-section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .dashboard-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .dashboard-toolbar-actions {
+    width: 100%;
+  }
+  .dashboard-toolbar-actions button {
+    flex: 1;
+  }
+  .widget-full,
+  .widget-half,
+  .widget-third {
+    grid-column: span 12;
+  }
+  .dashboard-widget-head {
+    align-items: flex-start;
+  }
+  .dashboard-widget-actions {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 560px) {
+  .dashboard-widget-head {
+    padding: 12px;
+    flex-direction: column;
+  }
+  .dashboard-widget-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .dashboard-widget-actions em {
+    margin-right: auto;
+  }
+  .dashboard-history .history-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+

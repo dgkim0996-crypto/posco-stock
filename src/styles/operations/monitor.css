@@ -1,0 +1,192 @@
+/* ===== 전체 화면 다크 모드 ===== */
+.page-loading {
+  min-height: 420px;
+  display: grid;
+  place-items: center;
+  color: #748493;
+  font-size: 13px;
+}
+.operations-page {
+  max-width: 1480px;
+  min-height: calc(100vh - 180px);
+  margin: 0 auto;
+  padding: 30px 2.2vw 50px;
+}
+.operations-heading {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 26px 28px;
+  border: 1px solid #dce6ed;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 7px 24px rgba(27, 62, 87, 0.06);
+}
+.operations-heading > div:first-child {
+  flex: 1;
+}
+.operations-heading span {
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 900;
+}
+.operations-heading h1 {
+  margin: 7px 0 5px;
+  color: #253c4f;
+  font-size: 27px;
+}
+.operations-heading p {
+  margin: 0;
+  color: #7d8b97;
+  font-size: 12px;
+}
+.operations-heading > button {
+  height: 40px;
+  padding: 0 15px;
+  border: 1px solid #b9d6e6;
+  border-radius: 9px;
+  background: #eef8fd;
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 900;
+}
+.operations-heading > button:disabled {
+  opacity: 0.55;
+}
+.operations-overall {
+  min-width: 150px;
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  align-items: center;
+  gap: 3px 9px;
+}
+.operations-overall i,
+.operations-card header i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #9aa7b2;
+}
+.operations-overall span {
+  font-size: 13px;
+}
+.operations-overall strong {
+  grid-column: 2;
+  color: #42586a;
+  font-size: 11px;
+}
+.operations-overall.ok i,
+.operations-card.ok header i {
+  background: #20a46b;
+  box-shadow: 0 0 0 5px rgba(32, 164, 107, 0.1);
+}
+.operations-overall.degraded i,
+.operations-card.degraded header i {
+  background: #e3a11a;
+}
+.operations-overall.down i,
+.operations-card.down header i {
+  background: #dc4a55;
+}
+.operations-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 11px;
+}
+.operations-card {
+  padding: 18px;
+  border: 1px solid #dfe7ed;
+  border-top: 3px solid #aab5bd;
+  border-radius: 13px;
+  background: #fff;
+}
+.operations-card.ok {
+  border-top-color: #20a46b;
+}
+.operations-card.degraded {
+  border-top-color: #e3a11a;
+}
+.operations-card.down {
+  border-top-color: #dc4a55;
+}
+.operations-card.idle {
+  border-top-color: #8294a2;
+}
+.operations-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.operations-card header span,
+.operations-card header strong {
+  display: block;
+}
+.operations-card header span {
+  color: #7d8d9a;
+  font-size: 10px;
+}
+.operations-card header strong {
+  margin-top: 5px;
+  color: #30485b;
+  font-size: 15px;
+}
+.operations-card dl {
+  margin: 17px 0 0;
+}
+.operations-card dl div {
+  padding: 7px 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid #edf1f4;
+}
+.operations-card dt,
+.operations-card dd {
+  font-size: 10px;
+}
+.operations-card dt {
+  color: #8a98a4;
+}
+.operations-card dd {
+  margin: 0;
+  color: #455b6c;
+  text-align: right;
+  font-weight: 800;
+}
+.operations-card p {
+  margin: 10px 0 0;
+  color: #b33d45;
+  font-size: 9px;
+  line-height: 1.5;
+}
+.operations-error {
+  margin-top: 14px;
+  padding: 13px;
+  border-radius: 10px;
+  background: #fff0f1;
+  color: #b33d45;
+  font-size: 12px;
+}
+.operations-checked {
+  text-align: right;
+  color: #929da7;
+  font-size: 10px;
+}
+@media (max-width: 1100px) {
+  .operations-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 620px) {
+  .operations-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .operations-grid {
+    grid-template-columns: 1fr;
+  }
+  .operations-overall {
+    min-width: 0;
+  }
+}

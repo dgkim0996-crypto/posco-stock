@@ -1,0 +1,106 @@
+.dashboard-toolbar > div:first-child small {
+  display: block;
+  margin-top: 6px;
+  color: #8293a2;
+  font-size: 10px;
+  font-weight: 650;
+}
+.dashboard-widget {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 250px;
+  transition:
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+.dashboard-section.is-editing .dashboard-widget {
+  cursor: default;
+  background: #fff;
+}
+.dashboard-widget.is-resizing {
+  z-index: 6;
+  border-color: var(--brand) !important;
+  box-shadow:
+    0 0 0 3px rgba(0, 133, 202, 0.1),
+    0 16px 34px rgba(27, 63, 91, 0.13);
+}
+.dashboard-widget-head {
+  flex: 0 0 auto;
+}
+.dashboard-widget-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #fff;
+}
+.dashboard-widget-body > .dashboard-table-wrap,
+.dashboard-widget-body > .dashboard-history {
+  height: 100%;
+  max-height: none;
+}
+.dashboard-table-wrap {
+  max-height: none;
+}
+.dashboard-history {
+  max-height: none;
+}
+.drag-handle {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+.widget-resize-handle {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  z-index: 8;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+.widget-resize-handle::before,
+.widget-resize-handle::after,
+.widget-resize-handle span::after {
+  content: "";
+  position: absolute;
+  height: 2px;
+  border-radius: 99px;
+  background: #8ca1b2;
+  transform: rotate(-45deg);
+  transform-origin: right center;
+}
+.widget-resize-handle::before {
+  right: 6px;
+  bottom: 7px;
+  width: 15px;
+}
+.widget-resize-handle::after {
+  right: 6px;
+  bottom: 12px;
+  width: 10px;
+}
+.widget-resize-handle span::after {
+  right: 6px;
+  bottom: 17px;
+  width: 5px;
+}
+.dashboard-section.is-editing .widget-resize-handle:hover::before,
+.dashboard-section.is-editing .widget-resize-handle:hover::after,
+.dashboard-section.is-editing .widget-resize-handle:hover span::after {
+  background: var(--brand);
+}
+body.dashboard-resizing,
+body.dashboard-resizing * {
+  user-select: none !important;
+  cursor: nwse-resize !important;
+}
+

@@ -1,0 +1,68 @@
+.trading-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(290px, 0.7fr);
+  align-items: stretch;
+  gap: 10px;
+  min-height: 0;
+}
+.chart-panel {
+  padding: 0 14px 10px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.chart-head {
+  height: 45px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #edf0f2;
+  color: #8d97a1;
+  font-size: 10px;
+}
+.chart-head div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.chart-head strong {
+  margin-right: 7px;
+  color: #334155;
+  font-size: 13px;
+}
+.chart-head div span {
+  padding: 4px 7px;
+  border: 1px solid #e1e6ea;
+  background: #fafbfc;
+}
+.sparkline {
+  width: 100%;
+  height: 360px;
+  display: block;
+  margin: auto 0;
+}
+.grid-line {
+  stroke: #edf0f3;
+  stroke-width: 1;
+}
+.chart-empty {
+  flex: 1;
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  color: #98a2ad;
+  font-size: 12px;
+}
+.chart-foot {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 9px 3px 0;
+  border-top: 1px solid #edf0f2;
+  color: #7f8a96;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow-x: auto;
+}

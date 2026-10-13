@@ -1,0 +1,146 @@
+@media (max-width: 1180px) {
+  .main-nav button {
+    min-width: 72px;
+    padding: 0 10px;
+  }
+  .workspace {
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+  .trading-grid {
+    grid-template-columns: 1fr;
+  }
+  .bottom {
+    grid-template-columns: 1fr;
+  }
+  .summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .summary > div:nth-child(3) {
+    border-right: 0;
+  }
+  .summary > div:nth-child(-n + 3) {
+    border-bottom: 1px solid #edf0f3;
+  }
+}
+@media (max-width: 900px) {
+  .utility-bar {
+    display: none;
+  }
+  .topbar {
+    position: static;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .main-nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+  }
+  .main-nav button {
+    height: 38px;
+  }
+  .account-strip {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 12px 16px;
+  }
+  .top-metrics {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    overflow-x: auto;
+  }
+  .top-metric-cards > div {
+    min-width: 105px;
+    text-align: left;
+  }
+  .workspace {
+    grid-template-columns: 1fr;
+    padding: 0 16px 10px;
+  }
+  .center {
+    grid-template-rows: auto;
+    min-height: auto;
+  }
+  .left-panel {
+    height: 680px;
+    min-height: 680px;
+  }
+  .tabs {
+    padding-left: 16px;
+    padding-right: 16px;
+    overflow-x: auto;
+  }
+  .bottom {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .quote-summary {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .quote-mini-grid {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .instrument {
+    align-items: flex-start;
+  }
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .summary > div {
+    border-bottom: 1px solid #edf0f3 !important;
+  }
+  .summary > div:nth-child(even) {
+    border-right: 0;
+  }
+}
+@media (max-width: 560px) {
+  .brand {
+    min-width: 0;
+  }
+  .account-mini {
+    display: none;
+  }
+  .main-nav button {
+    min-width: 82px;
+  }
+  .left-panel {
+    height: 560px;
+    min-height: 560px;
+  }
+  .instrument {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .quote-summary {
+    width: 100%;
+    align-items: stretch;
+  }
+  .price-box {
+    text-align: left;
+  }
+  .quote-mini-grid div {
+    min-width: 0;
+  }
+  .trading-grid {
+    display: block;
+  }
+  .order-panel {
+    margin-top: 10px;
+  }
+  .summary {
+    grid-template-columns: 1fr 1fr;
+  }
+  .chart-foot {
+    gap: 12px;
+  }
+  .tabs button {
+    min-width: 100px;
+    padding: 10px 12px;
+  }
+}
+

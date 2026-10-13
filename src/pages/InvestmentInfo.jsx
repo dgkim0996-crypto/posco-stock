@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { apiUrl } from "../utils/api.js";
+import { loadFeedSection, peekFeedSection } from "../features/feed/feedClient.js";
 
 // 시세 상태로 등락 순위를 만들고, 서버에서 받은 실제 뉴스·기업 일정을 함께 보여준다.
 function pct(value){ return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`; }
@@ -11,12 +12,22 @@ const formatFeedDate = (value, includeTime = false) => {
 };
 const ModalLinkIcon = () => <span className="modal-link-icon" aria-hidden="true">›</span>;
 const FULL_FEED_LIMIT = 30;
+const feedStatus = (payload) => payload?.items?.length ? "ready" : payload?.errors?.length ? "error" : payload ? "empty" : "loading";
+const latestUpdate = (...dates) => dates.filter(Boolean).sort().at(-1) || null;
+const initialFeed = () => {
+  const articles = peekFeedSection("articles");
+  const schedules = peekFeedSection("schedules");
+  return { articles, schedules };
+};
 
 export default function InvestmentInfo({ markets, indices, onOpenAsset }) {
   const [filter,setFilter] = useState("전체");
   const [temperatureMarket,setTemperatureMarket] = useState("전체");
-  const [feed,setFeed] = useState({ articles:[], schedules:[], updatedAt:null });
-  const [feedState,setFeedState] = useState("loading");
+  const [feed,setFeed] = useState(() => {
+    const { articles, schedules } = initialFeed();
+    return { articles: articles?.items || [], schedules: schedules?.items || [], updatedAt: latestUpdate(articles?.updatedAt, schedules?.updatedAt) };
+  });
+  const [feedState,setFeedState] = useState(() => ({ articles: feedStatus(peekFeedSection("articles")), schedules: feedStatus(peekFeedSection("schedules")) }));
   const [feedModal,setFeedModal] = useState(null);
   // 기사 본문과 일정 상세는 같은 모달 셸 안에서 서로 배타적으로 표시한다.
   const [articleDetail,setArticleDetail] = useState(null);
@@ -25,15 +36,22 @@ export default function InvestmentInfo({ markets, indices, onOpenAsset }) {
 
   // 모달이 열린 동안 배경 스크롤을 막고 Escape 키로 닫을 수 있게 한다.
   useEffect(() => {
-    const controller = new AbortController();
-    fetch(apiUrl("/api/feed"), { signal:controller.signal }).then((response) => {
-      if (!response.ok) throw new Error("피드 요청 실패");
-      return response.json();
-    }).then((payload) => {
-      setFeed(payload);
-      setFeedState(payload.articles?.length || payload.schedules?.length ? "ready" : "empty");
-    }).catch((error) => { if (error.name !== "AbortError") setFeedState("error"); });
-    return () => controller.abort();
+    let active = true;
+    for (const kind of ["articles", "schedules"]) {
+      const apply = (payload) => {
+        if (!active) return;
+        setFeed((previous) => ({ ...previous, [kind]: payload.items || [], updatedAt: latestUpdate(previous.updatedAt, payload.updatedAt) }));
+        setFeedState((previous) => ({ ...previous, [kind]: feedStatus(payload) }));
+      };
+      const fail = () => {
+        if (active) setFeedState((previous) => ({ ...previous, [kind]: previous[kind] === "ready" ? "ready" : "error" }));
+      };
+      loadFeedSection(kind).then((payload) => {
+        apply(payload);
+        if (payload.stale) loadFeedSection(kind, { refresh: true }).then(apply).catch(fail);
+      }).catch(fail);
+    }
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -58,7 +76,7 @@ export default function InvestmentInfo({ markets, indices, onOpenAsset }) {
   const rising = useMemo(() => temperatureUniverse.filter((item)=>item.change >= 0).sort((a,b)=>b.change-a.change),[temperatureUniverse]);
   const falling = useMemo(() => temperatureUniverse.filter((item)=>item.change < 0).sort((a,b)=>a.change-b.change),[temperatureUniverse]);
   const risingRatio = temperatureUniverse.length ? (rising.length / temperatureUniverse.length) * 100 : 50;
-  const feedMessage = feedState === "loading" ? "실제 데이터를 불러오는 중입니다." : feedState === "error" ? "외부 피드에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요." : "현재 표시할 실제 데이터가 없습니다.";
+  const feedMessage = (kind) => feedState[kind] === "loading" ? "실제 데이터를 불러오는 중입니다." : feedState[kind] === "error" ? "외부 피드에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요." : "현재 표시할 실제 데이터가 없습니다.";
   // 목록을 다시 열 때 이전 상세 선택을 함께 초기화한다.
   const openFeedList = (type) => { setArticleDetail(null); setScheduleDetail(null); setFeedModal(type); };
   const openArticle = async (item) => {
@@ -91,11 +109,11 @@ export default function InvestmentInfo({ markets, indices, onOpenAsset }) {
       <div className="service-two-col primary-feed-grid">
         <article className="service-card">
           <div className="service-card-head"><div><span>실제 뉴스</span><strong>오늘의 시장 기사</strong></div><button type="button" className="text-action" onClick={() => openFeedList("articles")}>전체 뉴스 <ModalLinkIcon /></button></div>
-          <div className="research-list">{feed.articles.length ? feed.articles.slice(0,6).map((item)=><button type="button" key={`${item.url}-${item.title}`} onClick={() => openArticle(item)}><span className="research-tag">{item.category}</span><span><strong>{item.title}</strong><em>{item.source} · {formatFeedDate(item.publishedAt, true)}</em></span><ModalLinkIcon /></button>) : <div className="feed-status">{feedMessage}</div>}</div>
+          <div className="research-list">{feed.articles.length ? feed.articles.slice(0,6).map((item)=><button type="button" key={`${item.url}-${item.title}`} onClick={() => openArticle(item)}><span className="research-tag">{item.category}</span><span><strong>{item.title}</strong><em>{item.source} · {formatFeedDate(item.publishedAt, true)}</em></span><ModalLinkIcon /></button>) : <div className="feed-status">{feedMessage("articles")}</div>}</div>
         </article>
         <article className="service-card">
           <div className="service-card-head"><div><span>실제 일정</span><strong>예정된 주요 실적 발표</strong></div><button type="button" className="text-action" onClick={() => openFeedList("schedules")}>전체 일정 <ModalLinkIcon /></button></div>
-          <div className="calendar-list">{feed.schedules.length ? feed.schedules.slice(0,6).map((item)=><button type="button" key={`${item.date}-${item.title}`} onClick={() => openSchedule(item)}><time>{formatFeedDate(item.date)}</time><span><strong>{item.title}</strong><em>{item.description} · {item.source}</em></span><ModalLinkIcon /></button>) : <div className="feed-status">{feedMessage}</div>}</div>
+          <div className="calendar-list">{feed.schedules.length ? feed.schedules.slice(0,6).map((item)=><button type="button" key={`${item.date}-${item.title}`} onClick={() => openSchedule(item)}><time>{formatFeedDate(item.date)}</time><span><strong>{item.title}</strong><em>{item.description} · {item.source}</em></span><ModalLinkIcon /></button>) : <div className="feed-status">{feedMessage("schedules")}</div>}</div>
         </article>
       </div>
 
@@ -153,7 +171,7 @@ export default function InvestmentInfo({ markets, indices, onOpenAsset }) {
                   <b>{formatFeedDate(item.date)}</b><div><span>{item.source}</span><strong>{item.title}</strong><p>{item.description}</p></div><ModalLinkIcon />
                 </button>
               ))}
-              {!articleDetail && !scheduleDetail && !(feedModal === "articles" ? feed.articles.length : feed.schedules.length) && <div className="feed-status">{feedMessage}</div>}
+              {!articleDetail && !scheduleDetail && !(feedModal === "articles" ? feed.articles.length : feed.schedules.length) && <div className="feed-status">{feedMessage(feedModal)}</div>}
             </div>
             <footer><span>외부 페이지로 이동하지 않고 저장된 최신 {Math.min(FULL_FEED_LIMIT, feedModal === "articles" ? feed.articles.length : feed.schedules.length)}개를 표시합니다.</span><button type="button" onClick={() => setFeedModal(null)}>확인</button></footer>
           </section>

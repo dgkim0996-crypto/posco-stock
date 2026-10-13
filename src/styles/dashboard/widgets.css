@@ -1,0 +1,209 @@
+/* ===== 사용자 편집형 투자 대시보드 ===== */
+.dashboard-section {
+  padding: 4px 2.2vw 18px;
+  background: #f4f6f9;
+}
+.dashboard-toolbar {
+  min-height: 66px;
+  padding: 12px 4px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.dashboard-toolbar > div:first-child span,
+.dashboard-toolbar > div:first-child strong {
+  display: block;
+}
+.dashboard-toolbar > div:first-child span {
+  color: #8c98a5;
+  font-size: 11px;
+  font-weight: 700;
+}
+.dashboard-toolbar > div:first-child strong {
+  margin-top: 4px;
+  color: #253647;
+  font-size: 16px;
+  letter-spacing: -0.025em;
+}
+.dashboard-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dashboard-toolbar-actions button,
+.hidden-widget-tray button,
+.dashboard-empty-state button {
+  border: 1px solid #d8e0e7;
+  border-radius: 10px;
+  background: #fff;
+  color: #526171;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.dashboard-toolbar-actions button {
+  height: 38px;
+  padding: 0 14px;
+}
+.dashboard-toolbar-actions button:hover,
+.hidden-widget-tray button:hover {
+  border-color: #8fc6ee;
+  color: var(--brand);
+  background: #f7fbff;
+}
+.dashboard-edit.active {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff !important;
+}
+.dashboard-reset {
+  background: #f9fafb !important;
+}
+.hidden-widget-tray {
+  margin: 0 0 12px;
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  border: 1px dashed #bdd7eb;
+  border-radius: 14px;
+  background: #edf7ff;
+}
+.hidden-widget-tray > span {
+  flex: 0 0 auto;
+  color: #597187;
+  font-size: 12px;
+  font-weight: 800;
+}
+.hidden-widget-tray button {
+  flex: 0 0 auto;
+  padding: 7px 11px;
+}
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.dashboard-widget {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #e3e9ef;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(25, 45, 65, 0.045);
+  transition:
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+.widget-full {
+  grid-column: span 12;
+}
+.widget-half {
+  grid-column: span 6;
+}
+.widget-third {
+  grid-column: span 4;
+}
+.dashboard-section.is-editing .dashboard-widget {
+  border-style: dashed;
+  border-color: #b7cadb;
+  cursor: grab;
+}
+.dashboard-section.is-editing .dashboard-widget:active {
+  cursor: grabbing;
+}
+.dashboard-widget.drag-over {
+  border-color: var(--brand) !important;
+  box-shadow:
+    0 0 0 3px rgba(0, 133, 202, 0.12),
+    0 8px 24px rgba(20, 54, 82, 0.08);
+  transform: translateY(-2px);
+}
+.dashboard-widget-head {
+  min-height: 66px;
+  padding: 12px 14px 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #edf1f4;
+  background: #fff;
+}
+.dashboard-widget.is-collapsed .dashboard-widget-head {
+  border-bottom: 0;
+}
+.dashboard-widget-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.dashboard-widget-title > div span,
+.dashboard-widget-title > div strong {
+  display: block;
+}
+.dashboard-widget-title > div span {
+  color: #93a0ac;
+  font-size: 10px;
+  font-weight: 700;
+}
+.dashboard-widget-title > div strong {
+  margin-top: 3px;
+  color: #243548;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+.drag-handle {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #f2f6f9;
+  color: #8395a6;
+  font-size: 19px;
+  line-height: 1;
+}
+.dashboard-widget-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+.dashboard-widget-actions em {
+  margin-right: 3px;
+  color: #8c98a4;
+  font-size: 11px;
+  font-style: normal;
+  white-space: nowrap;
+}
+.dashboard-widget-actions button {
+  height: 30px;
+  padding: 0 9px;
+  border: 1px solid #e0e6ec;
+  border-radius: 8px;
+  background: #f8fafb;
+  color: #657484;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dashboard-widget-actions button:hover {
+  border-color: #abd0eb;
+  background: #f2f9ff;
+  color: var(--brand);
+}
+.dashboard-widget-actions .collapse-widget {
+  width: 30px;
+  padding: 0;
+  border-color: #e5eaf0;
+  background: #fff;
+  color: #657484;
+  font-size: 17px;
+  font-weight: 500;
+}

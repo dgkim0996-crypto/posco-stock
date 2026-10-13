@@ -1,38 +1,9 @@
 import { getSupabaseAdmin } from "../lib/supabase.js";
-import { INITIAL_MARKETS } from "../../src/data/markets.js";
 import marketDataService from "./marketData.service.js";
-
-const spotAssets = Object.entries(INITIAL_MARKETS)
-  .filter(([category]) => category !== "futures")
-  .flatMap(([category, assets]) => assets.map((asset) => [asset.symbol, { ...asset, category }]));
-const assetMap = new Map(spotAssets);
-const createError = (status, message, cause) => Object.assign(new Error(message), { status, cause });
-
-/** 주문 입력값을 DB RPC에 전달 가능한 숫자·종목·유형으로 검증하고 정규화한다. */
-const validateOrder = ({ accountId, symbol, side, quantity, orderType = "MARKET", requestedPrice, pendingOrderId, fillQuantity }) => {
-  const parsedAccountId = Number(accountId);
-  const parsedQuantity = Number(quantity);
-  const normalizedSymbol = typeof symbol === "string" ? symbol.trim() : "";
-  const asset = assetMap.get(normalizedSymbol);
-  if (!Number.isInteger(parsedAccountId) || parsedAccountId <= 0) throw createError(400, "잘못된 accountId입니다.");
-  if (!asset) throw createError(400, "지원하지 않는 현물 종목입니다.");
-  if (!["BUY", "SELL"].includes(side)) throw createError(400, "side는 BUY 또는 SELL이어야 합니다.");
-  if (!["MARKET", "LIMIT"].includes(orderType)) throw createError(400, "orderType은 MARKET 또는 LIMIT이어야 합니다.");
-  if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) throw createError(400, "quantity는 0보다 큰 숫자여야 합니다.");
-  if (asset.category !== "crypto" && !Number.isInteger(parsedQuantity)) throw createError(400, "주식과 채권 주문수량은 정수여야 합니다.");
-  const parsedRequestedPrice = requestedPrice == null ? null : Number(requestedPrice);
-  if (parsedRequestedPrice != null && (!Number.isFinite(parsedRequestedPrice) || parsedRequestedPrice <= 0)) {
-    throw createError(400, "requestedPrice는 0보다 커야 합니다.");
-  }
-  const parsedFillQuantity = fillQuantity == null ? null : Number(fillQuantity);
-  if (parsedFillQuantity != null && (!Number.isFinite(parsedFillQuantity) || parsedFillQuantity <= 0 || parsedFillQuantity > parsedQuantity)) {
-    throw createError(400, "fillQuantity는 0보다 크고 미체결 수량 이하여야 합니다.");
-  }
-  if (parsedFillQuantity != null && asset.category !== "crypto" && !Number.isInteger(parsedFillQuantity)) {
-    throw createError(400, "주식과 채권의 부분체결 수량은 정수여야 합니다.");
-  }
-  return { accountId: parsedAccountId, symbol: normalizedSymbol, side, quantity: parsedQuantity, orderType, requestedPrice: parsedRequestedPrice, pendingOrderId, fillQuantity: parsedFillQuantity, asset };
-};
+import alternativeMarketDataService from "./alternativeMarketData.service.js";
+import { assertOrderCapacity } from "./orderCapacity.service.js";
+import { clientOrderIdOf, getOrderRequest } from "./orderIdempotency.service.js";
+import { accountIdOf, assertLimitCrossed, bindPendingOrder, orderError as createError, pendingIdOf, quoteIsFresh, toKrwPrice, validateSpotOrder } from "./spotOrderValidation.js";
 
 /** Supabase의 snake_case 계좌 행을 API의 camelCase 응답으로 변환한다. */
 const mapAccount = (row) => ({
@@ -79,58 +50,105 @@ const mapOrder = (row) => ({
   createdAt: row.created_at,
 });
 
-/** 실시간 시세가 있으면 우선 사용하고, 없으면 종목 기본 가격으로 체결 가격을 만든다. */
-const executionPriceFor = (input) => {
-  const livePrice = marketDataService.getQuote(input.symbol)?.price;
-  const nativePrice = Number.isFinite(livePrice) ? livePrice : Number(input.asset.price);
-  return input.asset.unit === "USD" ? nativePrice * 1380 : nativePrice;
+/** 오래된 캐시·초기 표시값으로 체결하지 않고 서버가 확인한 시장 데이터만 사용한다. */
+export const executionQuoteFor = async (input, market = marketDataService, alternative = alternativeMarketDataService, { refresh = true } = {}) => {
+  let quote;
+  const maxAgeMs = input.asset.category === "bonds" ? 7 * 86_400_000 : 120_000;
+  try {
+    if (input.asset.synthetic) {
+      const components = await Promise.all(input.asset.components.map(async (symbol) => {
+        let component = market.getQuote(symbol);
+        if (refresh && !quoteIsFresh(component, maxAgeMs)) component = await market.fetchQuote(symbol);
+        if (!quoteIsFresh(component, maxAgeMs) || !Number.isFinite(component.change)) throw createError(503, "합성 상품의 최신 기초시세가 없습니다.");
+        return component;
+      }));
+      const change = Math.max(-99, Math.min(99, components.reduce((sum, item) => sum + item.change, 0) / components.length * input.asset.leverage));
+      const price = toKrwPrice(input.asset, Math.max(100, 10000 * (1 + change / 100)));
+      return { price, nativePrice: price, source: "기초종목 시세 기반 모의 합성", isSimulation: true,
+        updatedAt: new Date(Math.max(...components.map((item) => Date.parse(item.updatedAt)))).toISOString() };
+    }
+    if (input.asset.category === "stocks") {
+      quote = market.getQuote(input.symbol);
+      if (refresh && !quoteIsFresh(quote, maxAgeMs)) quote = await market.fetchQuote(input.symbol);
+    } else {
+      const payload = refresh ? await alternative.loadQuotes() : alternative.getCachedQuotes();
+      const row = payload?.items?.[input.asset.category]?.find((item) => item.symbol === input.symbol);
+      const date = row?.priceUpdatedAt?.replace(/^(\d{4})(\d{2})(\d{2})$/, "$1-$2-$3");
+      quote = row && { ...row, source: row.priceSource, updatedAt: date };
+    }
+  } catch (error) {
+    throw createError(503, "최신 시세를 확인할 수 없어 주문을 체결하지 않았습니다. 잠시 후 다시 시도해 주세요.", error);
+  }
+  if (!quoteIsFresh(quote, maxAgeMs)) throw createError(503, "유효한 최신 시세가 없어 주문을 체결할 수 없습니다.");
+  return { price: toKrwPrice(input.asset, quote.price), nativePrice: quote.price,
+    source: quote.source, updatedAt: quote.updatedAt, isSimulation: true };
 };
 
 /** 시장가 또는 체결 조건을 만족한 지정가 주문을 RPC로 원자 처리하고 최종 잔고를 반환한다. */
-const createOrder = async (payload) => {
-  const input = validateOrder(payload);
-  const executionPrice = executionPriceFor(input);
-  const requestedPrice = input.requestedPrice == null ? null : input.requestedPrice * (input.asset.unit === "USD" ? 1380 : 1);
-  if (!input.pendingOrderId && input.orderType === "LIMIT") {
-    if (requestedPrice == null) throw createError(400, "지정가 주문에는 requestedPrice가 필요합니다.");
-    const crossed = input.side === "BUY"
-      ? executionPrice <= requestedPrice : executionPrice >= requestedPrice;
-    if (!crossed) throw createError(400, "아직 지정가 체결 조건에 도달하지 않았습니다.");
+const createOrder = async (payload, { database = getSupabaseAdmin(), quoteFor = executionQuoteFor, capacity = assertOrderCapacity } = {}) => {
+  let input;
+  if (payload.pendingOrderId != null) {
+    const accountId = accountIdOf(payload.accountId);
+    const pendingOrderId = pendingIdOf(payload.pendingOrderId);
+    const { data, error } = await database.from("pending_orders").select("*")
+      .eq("id", pendingOrderId).eq("account_id", accountId).maybeSingle();
+    if (error) throw createError(503, "미체결 주문 조회에 실패했습니다.", error);
+    input = bindPendingOrder({ ...payload, accountId, pendingOrderId }, data);
+  } else {
+    input = validateSpotOrder(payload);
   }
+  const requestedPrice = input.requestedPrice == null ? null : toKrwPrice(input.asset, input.requestedPrice);
+  const clientOrderId = input.pendingOrderId ? null : clientOrderIdOf(payload.clientOrderId);
+  if (clientOrderId) {
+    const cached = await getOrderRequest({ ...input, clientOrderId, kind: "SPOT", category: input.asset.category, price: requestedPrice }, database);
+    if (cached) return mapResult(cached, null, true);
+  }
+  const executionQuote = await quoteFor(input);
+  const executionPrice = executionQuote.price;
+  assertLimitCrossed(input, executionPrice);
+  const fillQuantity = input.fillQuantity ?? input.quantity;
+  await capacity({ ...input, quantity: fillQuantity, price: executionPrice,
+    remainingQuantity: input.pendingOrderId ? input.quantity - fillQuantity : 0, remainingPrice: requestedPrice ?? executionPrice }, database);
   const request = input.pendingOrderId
-    ? getSupabaseAdmin().rpc("place_pending_spot_order", {
+    ? database.rpc("place_pending_spot_order", {
       p_account_id: input.accountId, p_pending_order_id: input.pendingOrderId, p_execution_price: executionPrice,
-      p_fill_quantity: input.fillQuantity ?? input.quantity,
+      p_fill_quantity: fillQuantity,
     })
-    : getSupabaseAdmin().rpc("place_spot_order", {
+    : database.rpc("place_spot_order_once", {
       p_account_id: input.accountId, p_symbol: input.symbol, p_category: input.asset.category,
       p_side: input.side, p_order_type: input.orderType, p_quantity: input.quantity,
       p_requested_price: requestedPrice, p_execution_price: executionPrice,
+      p_client_order_id: clientOrderId,
     });
   const { data, error } = await request;
   if (error) {
+    if (error.code === "P4090") throw createError(409, error.message, error);
     if (error.code === "P0002") throw createError(404, error.message, error);
     if (error.code === "P0001" || error.code === "22023") {
       throw createError(400, error.message, error);
     }
     throw createError(503, `주문 처리 실패: ${error.message}`, error);
   }
+  if (clientOrderId) return mapResult(data, executionQuote);
   // 수수료 트리거가 원금 처리 직후 계좌·주문을 갱신하므로 RPC 내부의 이전 스냅샷 대신 최종 행을 다시 읽는다.
   const [finalAccount, finalOrder] = await Promise.all([
-    getSupabaseAdmin().from("accounts").select("*").eq("id", input.accountId).single(),
-    getSupabaseAdmin().from("orders").select("*").eq("id", data.order.id).single(),
+    database.from("accounts").select("*").eq("id", input.accountId).single(),
+    database.from("orders").select("*").eq("id", data.order.id).single(),
   ]);
   if (finalAccount.error || finalOrder.error) throw createError(503, "수수료 반영 결과 조회에 실패했습니다.", finalAccount.error || finalOrder.error);
-  return {
-    order: mapOrder(finalOrder.data), account: mapAccount(finalAccount.data), holding: mapHolding(data.holding),
+  return mapResult({ ...data, order: finalOrder.data, account: finalAccount.data }, executionQuote);
+};
+
+const mapResult = (data, executionQuote, replayed = false) => ({
+    executionQuote, replayed,
+    order: mapOrder(data.order), account: mapAccount(data.account), holding: mapHolding(data.holding),
     shortPosition: data.short_position && {
       accountId: data.short_position.account_id,
       symbol: data.short_position.symbol,
       quantity: Number(data.short_position.quantity),
       avgPrice: Number(data.short_position.avg_price),
     },
-  };
-};
+  });
 
 /** 한 계좌의 최근 체결 주문 100건을 최신순으로 조회한다. */
 const getAll = async (accountIdValue) => {

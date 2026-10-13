@@ -1,0 +1,159 @@
+/* 피드 지수 카드 전체 등락 배경 · 일정 상세 모달 */
+.index-grid article.index-up {
+  border-color: #e05264;
+  background: linear-gradient(145deg, #e95a6b, #cf3f53);
+  box-shadow: 0 8px 22px rgba(207, 63, 83, 0.2);
+}
+.index-grid article.index-down {
+  border-color: #3f7fd3;
+  background: linear-gradient(145deg, #4a8cdd, #326dc3);
+  box-shadow: 0 8px 22px rgba(50, 109, 195, 0.2);
+}
+.index-grid article.index-flat {
+  border-color: #8797a5;
+  background: linear-gradient(145deg, #91a1ae, #718391);
+}
+.index-grid article:is(.index-up, .index-down, .index-flat) > span {
+  color: rgba(255, 255, 255, 0.78);
+}
+.index-grid article:is(.index-up, .index-down, .index-flat) > strong,
+.index-grid article:is(.index-up, .index-down, .index-flat) > em {
+  color: #fff;
+}
+.index-grid article:is(.index-up, .index-down, .index-flat) > .mini-trend {
+  right: -14px;
+  bottom: -22px;
+  width: 100px;
+  height: 82px;
+  background: rgba(255, 255, 255, 0.18);
+  opacity: 1;
+}
+.market-index-row button.market-index-up {
+  border-color: #e05264;
+  background: linear-gradient(145deg, #e95a6b, #cf3f53);
+  box-shadow: 0 8px 22px rgba(207, 63, 83, 0.2);
+}
+.market-index-row button.market-index-down {
+  border-color: #3f7fd3;
+  background: linear-gradient(145deg, #4a8cdd, #326dc3);
+  box-shadow: 0 8px 22px rgba(50, 109, 195, 0.2);
+}
+.market-index-row button.market-index-flat {
+  border-color: #8797a5;
+  background: linear-gradient(145deg, #91a1ae, #718391);
+}
+.market-index-row
+  button:is(.market-index-up, .market-index-down, .market-index-flat)
+  > span,
+.market-index-row
+  button:is(.market-index-up, .market-index-down, .market-index-flat)
+  > span
+  em {
+  color: rgba(255, 255, 255, 0.78);
+}
+.market-index-row
+  button:is(.market-index-up, .market-index-down, .market-index-flat)
+  > strong,
+.market-index-row
+  button:is(.market-index-up, .market-index-down, .market-index-flat)
+  > b {
+  color: #fff !important;
+}
+.market-index-row
+  button:is(.market-index-up, .market-index-down, .market-index-flat).active {
+  border-color: rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.5),
+    0 8px 22px rgba(25, 49, 70, 0.2);
+}
+.feed-modal-body > button.feed-modal-item.schedule {
+  grid-template-columns: 72px minmax(0, 1fr) 20px;
+}
+.feed-schedule-detail {
+  padding: 16px 2px 28px;
+}
+.feed-schedule-detail > span {
+  display: block;
+  margin-top: 20px;
+  color: var(--brand);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+.feed-schedule-detail h3 {
+  margin: 7px 0 20px;
+  color: #273d4f;
+  font-size: 22px;
+  line-height: 1.45;
+}
+.feed-schedule-detail dl {
+  margin: 0;
+  border-top: 1px solid #edf1f4;
+}
+.feed-schedule-detail dl > div {
+  padding: 14px 2px;
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 15px;
+  border-bottom: 1px solid #edf1f4;
+}
+.feed-schedule-detail dt {
+  color: #8b98a4;
+  font-size: 11px;
+}
+.feed-schedule-detail dd {
+  margin: 0;
+  color: #405565;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+.feed-schedule-detail > p {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f6f9fb;
+  color: #84939f;
+  font-size: 10px;
+  line-height: 1.6;
+}
+html[data-theme="dark"] .feed-schedule-detail h3,
+html[data-theme="dark"] .feed-schedule-detail dd {
+  color: #e1ebf2;
+}
+html[data-theme="dark"] .feed-schedule-detail dl,
+html[data-theme="dark"] .feed-schedule-detail dl > div {
+  border-color: #293743;
+}
+html[data-theme="dark"] .feed-schedule-detail dt {
+  color: #91a2af;
+}
+html[data-theme="dark"] .feed-schedule-detail > p {
+  background: #17232d;
+  color: #9cabb7;
+}
+html[data-theme="dark"] .index-grid article.index-up {
+  background: linear-gradient(145deg, #a93649, #7f2636);
+  border-color: #b84658;
+}
+html[data-theme="dark"] .index-grid article.index-down {
+  background: linear-gradient(145deg, #315f9e, #244b82);
+  border-color: #3d6da9;
+}
+html[data-theme="dark"] .index-grid article.index-flat {
+  background: linear-gradient(145deg, #506170, #3b4b58);
+  border-color: #617280;
+}
+html[data-theme="dark"] .market-index-row button.market-index-up {
+  background: linear-gradient(145deg, #a93649, #7f2636);
+  border-color: #b84658;
+}
+html[data-theme="dark"] .market-index-row button.market-index-down {
+  background: linear-gradient(145deg, #315f9e, #244b82);
+  border-color: #3d6da9;
+}
+html[data-theme="dark"] .market-index-row button.market-index-flat {
+  background: linear-gradient(145deg, #506170, #3b4b58);
+  border-color: #617280;
+}
+

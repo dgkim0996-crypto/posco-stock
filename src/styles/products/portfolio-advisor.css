@@ -1,0 +1,246 @@
+.advisor-title h2 {
+  margin: 6px 0;
+  color: #263c4f;
+  font-size: 21px;
+}
+.advisor-title p {
+  margin: 0;
+  color: #788795;
+  font-size: 12px;
+}
+.advisor-controls select,
+.advisor-controls button {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-weight: 800;
+}
+.advisor-controls button {
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+.advisor-controls button:disabled {
+  opacity: 0.55;
+}
+.advisor-error {
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 9px;
+  background: #fff1f1;
+  color: #b42328;
+  font-size: 11px;
+}
+.market-outlook {
+  margin-top: 18px;
+  padding: 17px;
+  border-radius: 13px;
+  background: #f4f9fc;
+}
+.market-outlook > strong {
+  color: var(--brand);
+  font-size: 11px;
+}
+.market-outlook > p {
+  margin: 7px 0 13px;
+  color: #41576a;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.market-outlook > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+.market-outlook span {
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff;
+  color: #6e7e8c;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.market-outlook span b {
+  display: block;
+  margin-bottom: 4px;
+  color: #334b5e;
+}
+.advisor-recommendations {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.advisor-recommendations article {
+  padding: 15px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 11px;
+  align-items: start;
+  border: 1px solid #e1e8ed;
+  border-radius: 12px;
+}
+.advisor-recommendations article > div span {
+  color: var(--brand);
+  font-size: 9px;
+  font-weight: 900;
+}
+.advisor-recommendations h3 {
+  margin: 4px 0;
+  color: #2c4254;
+  font-size: 14px;
+}
+.advisor-recommendations p {
+  margin: 0;
+  color: #687a89;
+  font-size: 10px;
+  line-height: 1.55;
+}
+.advisor-recommendations small {
+  display: block;
+  margin-top: 5px;
+  color: #9a6d70;
+  font-size: 8px;
+}
+.advisor-recommendations article > b {
+  color: #1583ba;
+  font-size: 15px;
+}
+.advisor-recommendations article > button {
+  grid-column: 2/4;
+  padding: 8px;
+  border: 1px solid #9ac9e3;
+  border-radius: 7px;
+  background: #eef8fd;
+  color: var(--brand);
+  font-size: 10px;
+  font-weight: 900;
+}
+.longterm-notice {
+  margin-top: 13px;
+  padding: 13px 16px;
+  border-radius: 10px;
+  background: #f6f8fa;
+}
+@keyframes drawProjection {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (max-width: 900px) {
+  .longterm-facts {
+    grid-template-columns: 1fr 1fr;
+  }
+  .projection-head,
+  .advisor-title {
+    flex-direction: column;
+  }
+  .advisor-recommendations {
+    grid-template-columns: 1fr;
+  }
+  .market-outlook > div {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 560px) {
+  .longterm-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .longterm-facts {
+    grid-template-columns: 1fr;
+  }
+  .projection-head > div:last-child,
+  .advisor-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .projection-chart {
+    height: 190px;
+  }
+  .projection-legend b {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+/* AI 추천 결과는 장문을 편하게 읽을 수 있도록 본문과 보조문구까지 확대한다. */
+.advisor-title > div > span {
+  font-size: 12px;
+}
+.advisor-title h2 {
+  font-size: 25px;
+  line-height: 1.3;
+}
+.advisor-title p {
+  font-size: 15px;
+  line-height: 1.65;
+}
+.advisor-controls select,
+.advisor-controls button {
+  height: 44px;
+  padding: 0 16px;
+  font-size: 13px;
+}
+.advisor-error {
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.market-outlook {
+  padding: 21px;
+}
+.market-outlook > strong {
+  font-size: 14px;
+}
+.market-outlook > p {
+  margin: 9px 0 17px;
+  font-size: 15px;
+  line-height: 1.75;
+}
+.market-outlook > div {
+  gap: 11px;
+}
+.market-outlook span {
+  padding: 15px;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.market-outlook span b {
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+.advisor-recommendations {
+  margin-top: 16px;
+  gap: 13px;
+}
+.advisor-recommendations article {
+  padding: 19px;
+  gap: 14px;
+}
+.advisor-recommendations article > div span {
+  font-size: 12px;
+}
+.advisor-recommendations h3 {
+  margin: 6px 0;
+  font-size: 18px;
+  line-height: 1.35;
+}
+.advisor-recommendations p {
+  font-size: 14px;
+  line-height: 1.7;
+}
+.advisor-recommendations small {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.advisor-recommendations article > b {
+  font-size: 18px;
+}
+.advisor-recommendations article > button {
+  min-height: 40px;
+  padding: 9px;
+  font-size: 13px;
+}
+

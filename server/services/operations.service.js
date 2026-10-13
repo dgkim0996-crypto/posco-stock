@@ -3,6 +3,7 @@ import kisWebSocketService from "./kisWebSocket.service.js";
 import marketDataService from "./marketData.service.js";
 import marketDatabaseService from "./marketDatabase.service.js";
 import requestMetricsService from "./requestMetrics.service.js";
+import pendingOrderMatcher from "./pendingOrderMatcher.service.js";
 
 const component = (status, details) => ({ status, ...details });
 
@@ -31,6 +32,7 @@ const getStatus = async () => {
     marketRest: component(rest.ok ? "ok" : rest.cachedSymbols > 0 ? "degraded" : "down", rest),
     marketRealtime: component(realtime.connected ? "ok" : realtime.subscribedSymbols.length ? "degraded" : "idle", realtime),
     http: component(requestMetrics.errorRate >= 0.05 ? "degraded" : "ok", requestMetrics),
+    orderMatching: pendingOrderMatcher.getStatus(),
   };
   const states = Object.values(components).map(({ status }) => status);
   const status = states.includes("down") ? "down" : states.includes("degraded") ? "degraded" : "ok";

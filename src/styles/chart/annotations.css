@@ -1,0 +1,150 @@
+.chart-average-guide,
+.chart-trade-marker {
+  pointer-events: none;
+}
+.chart-average-line {
+  stroke: #7e8b95;
+  stroke-width: 1.2;
+  stroke-dasharray: 5 5;
+  opacity: 0.62;
+}
+.chart-average-caption-bg {
+  fill: #fff;
+  fill-opacity: 0.72;
+  stroke: #aab4bc;
+  stroke-opacity: 0.55;
+  stroke-width: 1;
+}
+.chart-average-caption {
+  fill: #667681;
+  font-size: 10px;
+  font-weight: 800;
+}
+.chart-average-price-bg {
+  fill: #526574;
+  fill-opacity: 0.82;
+}
+.chart-average-price {
+  fill: #fff;
+  font-size: 9px;
+  font-weight: 800;
+}
+.chart-trade-marker line {
+  stroke-width: 1.4;
+  opacity: 0.88;
+}
+.chart-trade-marker circle {
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+.chart-trade-marker rect {
+  stroke: #fff;
+  stroke-width: 1;
+  filter: drop-shadow(0 2px 3px rgba(35, 53, 68, 0.18));
+}
+.chart-trade-marker text {
+  fill: #fff;
+  font-size: 8.5px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+.chart-trade-marker.is-buy line {
+  stroke: #e5484d;
+}
+.chart-trade-marker.is-buy circle,
+.chart-trade-marker.is-buy rect {
+  fill: #e5484d;
+}
+.chart-trade-marker.is-sell line {
+  stroke: #2f6fed;
+}
+.chart-trade-marker.is-sell circle,
+.chart-trade-marker.is-sell rect {
+  fill: #2f6fed;
+}
+.up-bar {
+  fill: #e5484d;
+}
+.down-bar {
+  fill: #2f6fed;
+}
+.chart-crosshair line {
+  stroke: #7d8c99;
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.68;
+}
+.chart-crosshair circle {
+  fill: #fff;
+  stroke: #496579;
+  stroke-width: 2;
+}
+.chart-floating-label {
+  fill: #33495c;
+}
+.chart-floating-text {
+  fill: #fff;
+  font-size: 9px;
+  font-weight: 800;
+}
+.chart-time-label {
+  fill: #42576a;
+}
+.chart-time-floating-text {
+  fill: #fff;
+  font-size: 9px;
+  font-weight: 700;
+}
+.chart-hover-card {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border: 1px solid #e3e8ed;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 5px 18px rgba(25, 47, 67, 0.08);
+  backdrop-filter: blur(8px);
+}
+.chart-hover-card span {
+  color: #8b97a2;
+  font-size: 9px;
+}
+.chart-hover-card strong {
+  color: #34495b;
+  font-size: 12px;
+}
+.chart-hover-card.is-up strong {
+  color: var(--up);
+}
+.chart-hover-card.is-down strong {
+  color: var(--down);
+}
+.chart-indicator-legend {
+  position: absolute;
+  top: 52px;
+  left: 14px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  pointer-events: none;
+  font-size: 9px;
+  font-weight: 800;
+}
+.chart-indicator-legend span::before {
+  content: "";
+  width: 7px;
+  height: 2px;
+  margin-right: 4px;
+  display: inline-block;
+  vertical-align: middle;
+  background: currentColor;
+}
+.chart-indicator-legend .ma5 { color: #dc8d08; }
+.chart-indicator-legend .ma20 { color: #7c4ed8; }
+.chart-indicator-legend .bollinger { color: #208f8b; }

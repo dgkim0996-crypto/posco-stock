@@ -1,0 +1,70 @@
+/* 라이트 모드 전용: 제철소의 철강·해양 설비에서 가져온 스틸 블루 바탕과 청록 포인트다. */
+html:not([data-theme="dark"]) body {
+  background: #e7f0f4;
+}
+html:not([data-theme="dark"]) .terminal {
+  background:
+    linear-gradient(rgba(247, 251, 252, .82), rgba(231, 241, 245, .9)),
+    repeating-linear-gradient(90deg, rgba(39, 94, 119, .045) 0 1px, transparent 1px 88px),
+    radial-gradient(circle at 88% 0%, rgba(142, 204, 220, .36), transparent 31%),
+    radial-gradient(circle at 0% 42%, rgba(108, 161, 179, .18), transparent 26%),
+    #e7f0f4;
+}
+html:not([data-theme="dark"]) .utility-bar {
+  background: rgba(224, 237, 243, .88);
+  border-bottom-color: #c9dce3;
+  color: #58717d;
+}
+html:not([data-theme="dark"]) .account-strip {
+  background: rgba(247, 252, 253, .88);
+  border-bottom-color: #d1e1e5;
+}
+html:not([data-theme="dark"]) .panel,
+html:not([data-theme="dark"]) .chart-panel,
+html:not([data-theme="dark"]) .order-panel,
+html:not([data-theme="dark"]) .service-card,
+html:not([data-theme="dark"]) .dashboard-widget {
+  border-color: #cfdee2;
+  box-shadow: 0 10px 25px rgba(44, 86, 102, .075);
+}
+/* 피드 화면은 홈의 상품군 탭 바탕과 같은 면을 사용해 화면 전환 시 색이 끊기지 않게 한다. */
+html:not([data-theme="dark"]) .tabs,
+html:not([data-theme="dark"]) .info-page {
+  background: #eef5f7;
+}
+/* 상품군 탭을 선택하면 요청한 포스코 블루를 채움색으로 사용한다. */
+html:not([data-theme="dark"]) .tabs button.active {
+  border-color: #0e88c4;
+  background: #0e88c4;
+  color: #fff;
+  box-shadow: 0 5px 13px rgba(14, 136, 196, .22);
+}
+html:not([data-theme="dark"]) .favorites-filter.active {
+  border-color: #0e88c4;
+  background: #0e88c4;
+  color: #fff;
+  box-shadow: 0 5px 13px rgba(14, 136, 196, .18);
+}
+html:not([data-theme="dark"]) .favorites-filter.active span,
+html:not([data-theme="dark"]) .favorites-filter.active b {
+  background: rgba(255, 255, 255, .2);
+  color: #fff;
+}
+html:not([data-theme="dark"]) .chart-periods button.active {
+  border-color: #0e88c4;
+  background: #0e88c4;
+  color: #fff;
+  box-shadow: 0 4px 11px rgba(14, 136, 196, .2);
+}
+/* 팝업·동의 영역을 포함한 라이트 모드 체크박스의 선택 표시를 브랜드 블루로 통일한다. */
+html:not([data-theme="dark"]) input[type="checkbox"] {
+  accent-color: #0e88c4;
+}
+/* 주문 완료 팝업은 기존의 연한 성공 배경을 유지하고, 강조 요소만 포스코 블루로 바꾼다. */
+html:not([data-theme="dark"]) .order-toast.is-success .order-toast-icon,
+html:not([data-theme="dark"]) .order-toast.is-success strong {
+  color: #0e88c4;
+}
+html:not([data-theme="dark"]) .order-toast.is-success .order-toast-progress {
+  background: #0e88c4;
+}

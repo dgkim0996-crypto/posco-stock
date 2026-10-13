@@ -1,0 +1,222 @@
+/* 공통 표면을 부드러운 라운드 형태로 통일한다. 기존의 거래·데이터 기능에는 영향을 주지 않는 시각 레이어다. */
+:root {
+  --surface-radius: 18px;
+  --control-radius: 12px;
+  --pill-radius: 999px;
+}
+.terminal {
+  background:
+    radial-gradient(circle at 6% 0%, rgba(222, 246, 241, .55), transparent 28%),
+    radial-gradient(circle at 97% 15%, rgba(255, 240, 210, .4), transparent 26%),
+    #f7faf8;
+}
+.topbar,
+.account-strip,
+.utility-bar {
+  border-color: #e2ebe7;
+}
+.topbar {
+  border-radius: 0 0 22px 22px;
+  /* 홈 탭이 있는 최상단을 유리 표면처럼 은은하게 비추는 연파랑으로 처리한다. */
+  background:
+    linear-gradient(112deg, rgba(255, 255, 255, .9) 0%, rgba(231, 245, 255, .92) 46%, rgba(220, 239, 255, .88) 100%),
+    radial-gradient(ellipse at 17% -80%, rgba(255, 255, 255, .98) 0%, transparent 62%);
+  box-shadow: 0 5px 18px rgba(37, 78, 71, .05);
+}
+html[data-theme="dark"] .topbar {
+  background: linear-gradient(112deg, rgba(19, 35, 47, .96), rgba(18, 49, 68, .95));
+}
+.main-nav,
+.tabs,
+.order-tabs,
+.order-side-tabs,
+.chart-periods,
+.product-category-tabs,
+.inline-filter,
+.heatmap-market-tabs {
+  gap: 5px;
+}
+.main-nav button,
+.tabs button,
+.order-tabs button,
+.order-side-tabs button,
+.chart-periods button,
+.product-category-tabs button,
+.inline-filter button,
+.heatmap-market-tabs button,
+.bank-quick-grid button,
+.amount-presets button,
+.dashboard-toolbar-actions button,
+.hidden-widget-tray button {
+  border-radius: var(--pill-radius);
+}
+.main-nav button.active,
+.tabs button.active,
+.order-tabs button.active,
+.order-side-tabs button.active,
+.chart-periods button.active,
+.product-category-tabs button.active,
+.inline-filter button.active,
+.heatmap-market-tabs button.active {
+  box-shadow: 0 4px 12px rgba(34, 112, 104, .12);
+}
+.panel,
+.chart-panel,
+.order-panel,
+.service-card,
+.product-card,
+.asset-total-card,
+.asset-summary-card,
+.bank-form,
+.bank-help,
+.bank-empty,
+.market-list,
+.market-summary-card,
+.dashboard-widget,
+.operations-heading,
+.heatmap-heading,
+.service-hero,
+.feed-modal,
+.longterm-guide,
+.projection-card {
+  border-radius: var(--surface-radius);
+}
+.panel,
+.chart-panel,
+.order-panel,
+.service-card,
+.product-card,
+.asset-summary-card,
+.bank-form,
+.bank-help,
+.bank-empty,
+.dashboard-widget {
+  border-color: #e0ebe6;
+  box-shadow: 0 8px 24px rgba(44, 85, 76, .055);
+}
+.market-row,
+.mover-list button,
+.research-list button,
+.rank-mini button,
+.calendar-list > button,
+.feed-modal-body > button.feed-modal-item,
+.order-status-item,
+.bank-log-list > div,
+.market-index-row,
+.fundamentals-row,
+.advisor-recommendations article {
+  border-radius: 14px;
+}
+.market-row.active {
+  border-radius: 14px;
+  box-shadow: inset 3px 0 0 var(--signature-end), 0 5px 15px rgba(31, 112, 103, .08);
+}
+.table-wrap,
+.service-table-wrap,
+.dashboard-table-wrap {
+  border-radius: 14px;
+  overflow: hidden;
+}
+table th:first-child { border-top-left-radius: 12px; }
+table th:last-child { border-top-right-radius: 12px; }
+input,
+select,
+textarea,
+.order-type-select,
+.limit-price-input,
+.quantity-line input,
+.bank-form input {
+  border-radius: var(--control-radius) !important;
+}
+.primary-action,
+.order-submit button,
+.advisor-controls button,
+.product-card-actions button,
+.service-hero > .primary-action,
+.operations-heading > button,
+.feed-modal > footer button,
+.dashboard-empty-state button {
+  border-radius: var(--control-radius);
+}
+.order-toast,
+.message,
+.bank-message,
+.auth-message {
+  border-radius: 14px;
+}
+.product-icon,
+.research-tag,
+.guide-list b,
+.asset-logo,
+.bank-quick-grid i {
+  border-radius: 50%;
+}
+html[data-theme="dark"] .terminal {
+  background:
+    radial-gradient(circle at 6% 0%, rgba(34, 78, 74, .3), transparent 28%),
+    #0d191b;
+}
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .chart-panel,
+html[data-theme="dark"] .order-panel,
+html[data-theme="dark"] .service-card,
+html[data-theme="dark"] .product-card,
+html[data-theme="dark"] .asset-summary-card,
+html[data-theme="dark"] .bank-form,
+html[data-theme="dark"] .bank-help,
+html[data-theme="dark"] .bank-empty,
+html[data-theme="dark"] .dashboard-widget {
+  border-color: #2c4744;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+}
+@media (max-width: 720px) {
+  :root { --surface-radius: 15px; }
+  .topbar { border-radius: 0 0 16px 16px; }
+  .main-nav { gap: 3px; }
+  .main-nav button,
+  .tabs button,
+  .order-tabs button,
+  .chart-periods button { border-radius: 10px; }
+}
+
+/* 거래 상품군 탭은 기존의 첫·마지막 탭 전용 각진 규칙보다 우선해 각각 독립된 캡슐 버튼으로 표시한다. */
+.tabs {
+  align-items: center;
+  /* 위·아래 여백을 같게 해 상품군 탭이 두 영역 사이의 중앙에 놓이게 한다. */
+  padding: 9px 2.2vw;
+  background: transparent;
+}
+.tabs button,
+.tabs button:first-child,
+.tabs button:last-child {
+  border: 1px solid #dce7e2;
+  border-radius: var(--pill-radius);
+}
+.tabs button.active {
+  border: 1px solid #82bdb4;
+  border-bottom-color: #82bdb4;
+  background: #f5fffc;
+  color: #28766f;
+}
+html[data-theme="dark"] .tabs button,
+html[data-theme="dark"] .tabs button:first-child,
+html[data-theme="dark"] .tabs button:last-child {
+  border-color: #35534f;
+}
+html[data-theme="dark"] .tabs button.active {
+  border-color: #4f9288;
+  background: #173c39;
+  color: #9ce2d7;
+}
+@media (max-width: 720px) {
+  .tabs { padding-left: 16px; padding-right: 16px; }
+}
+
+/* 데스크톱에서는 관심·시세 목록을 두 행 더 보여, 왼쪽 패널의 하단을 종합차트 하단과 맞춘다. */
+@media (min-width: 900px) {
+  .left-panel {
+    height: 1100px;
+    min-height: 1100px;
+  }
+}
+

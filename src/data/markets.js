@@ -133,18 +133,21 @@ export const INITIAL_MARKETS = {
     { id:"ABNB", symbol:"ABNB", name:"Airbnb", price:132.50, change:-0.31, unit:"USD", market:"NASDAQ" },
     { id:"RBLX", symbol:"RBLX", name:"Roblox", price:117.80, change:1.48, unit:"USD", market:"NYSE" }
   ],
+  // 선물 손익·증거금은 원화로 정산한다. multiplier는 가격 1포인트당 원화 금액이다.
+  // 달러 표시 해외선물은 거래소 달러 승수(contractMultiplier)에 모의환율 1,380원(SIMULATED_USD_KRW)을 곱한 값이다.
   futures: [
-    { id:"K200", symbol:"K200", name:"KOSPI200 FUT", price:431.25, change:0.3, unit:"PTS", multiplier:250000, marginRate:0.08 },
-    { id:"KQ150", symbol:"KQ150", name:"KOSDAQ150 FUT", price:1286.40, change:0.7, unit:"PTS", multiplier:10000, marginRate:0.09 },
-    { id:"NQ", symbol:"NQ", name:"NASDAQ100 FUT", price:24182.5, change:-0.4, unit:"PTS", multiplier:20, marginRate:0.10 },
-    { id:"ES", symbol:"ES", name:"S&P500 FUT", price:6488.25, change:0.2, unit:"PTS", multiplier:50, marginRate:0.10 },
-    { id:"YM", symbol:"YM", name:"DOW FUT", price:45280, change:0.15, unit:"PTS", multiplier:5, marginRate:0.10 },
-    { id:"NKD", symbol:"NKD", name:"NIKKEI225 FUT", price:43120, change:-0.25, unit:"PTS", multiplier:5, marginRate:0.11 },
-    { id:"CL", symbol:"CL", name:"WTI CRUDE", price:73.18, change:1.0, unit:"USD", multiplier:1000, marginRate:0.12 },
-    { id:"GC", symbol:"GC", name:"GOLD FUT", price:2528.4, change:0.6, unit:"USD", multiplier:100, marginRate:0.09 },
-    { id:"SI", symbol:"SI", name:"SILVER FUT", price:31.42, change:0.85, unit:"USD", multiplier:5000, marginRate:0.12 },
-    { id:"NG", symbol:"NG", name:"NATURAL GAS", price:3.18, change:-1.15, unit:"USD", multiplier:10000, marginRate:0.14 },
-    { id:"HG", symbol:"HG", name:"COPPER FUT", price:4.36, change:0.42, unit:"USD", multiplier:25000, marginRate:0.12 }
+    { id:"K200", symbol:"K200", name:"KOSPI200 FUT", price:431.25, change:0.3, unit:"PTS", currency:"KRW", multiplier:250000, marginRate:0.08 },
+    // KOSDAQ150 지수의 공개 시세원이 없어 KOSDAQ 종합지수(^KQ11)를 기초자산으로 쓰므로 상품명에 그대로 표시한다.
+    { id:"KQ150", symbol:"KQ150", name:"KOSDAQ종합 연동 FUT", underlying:"KOSDAQ 종합지수", price:1286.40, change:0.7, unit:"PTS", currency:"KRW", multiplier:10000, marginRate:0.09 },
+    { id:"NQ", symbol:"NQ", name:"NASDAQ100 FUT", price:24182.5, change:-0.4, unit:"PTS", currency:"USD", contractMultiplier:20, multiplier:27600, marginRate:0.10 },
+    { id:"ES", symbol:"ES", name:"S&P500 FUT", price:6488.25, change:0.2, unit:"PTS", currency:"USD", contractMultiplier:50, multiplier:69000, marginRate:0.10 },
+    { id:"YM", symbol:"YM", name:"DOW FUT", price:45280, change:0.15, unit:"PTS", currency:"USD", contractMultiplier:5, multiplier:6900, marginRate:0.10 },
+    { id:"NKD", symbol:"NKD", name:"NIKKEI225 FUT", price:43120, change:-0.25, unit:"PTS", currency:"USD", contractMultiplier:5, multiplier:6900, marginRate:0.11 },
+    { id:"CL", symbol:"CL", name:"WTI CRUDE", price:73.18, change:1.0, unit:"USD", currency:"USD", contractMultiplier:1000, multiplier:1380000, marginRate:0.12 },
+    { id:"GC", symbol:"GC", name:"GOLD FUT", price:2528.4, change:0.6, unit:"USD", currency:"USD", contractMultiplier:100, multiplier:138000, marginRate:0.09 },
+    { id:"SI", symbol:"SI", name:"SILVER FUT", price:31.42, change:0.85, unit:"USD", currency:"USD", contractMultiplier:5000, multiplier:6900000, marginRate:0.12 },
+    { id:"NG", symbol:"NG", name:"NATURAL GAS", price:3.18, change:-1.15, unit:"USD", currency:"USD", contractMultiplier:10000, multiplier:13800000, marginRate:0.14 },
+    { id:"HG", symbol:"HG", name:"COPPER FUT", price:4.36, change:0.42, unit:"USD", currency:"USD", contractMultiplier:25000, multiplier:34500000, marginRate:0.12 }
   ],
   bonds: [
     { id:"KR2Y", symbol:"KR2Y", name:"한국 국채 2년", price:100000, yield:2.75, coupon:2.50, maturity:"2028-06", duration:1.9, change:0, unit:"KRW" },

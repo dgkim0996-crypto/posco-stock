@@ -1,0 +1,78 @@
+html[data-theme="dark"] .primary-feed-grid .research-list > button,
+html[data-theme="dark"] .primary-feed-grid .calendar-list > button {
+  background: #121b25;
+  border-color: #293743;
+  color: #d8e3eb;
+}
+html[data-theme="dark"] .primary-feed-grid .research-list > button:hover,
+html[data-theme="dark"] .primary-feed-grid .calendar-list > button:hover {
+  background: #192733;
+}
+html[data-theme="dark"]
+  .primary-feed-grid
+  .research-list
+  > button
+  > span
+  strong,
+html[data-theme="dark"] .primary-feed-grid .calendar-list > button strong {
+  color: #d8e3eb;
+}
+html[data-theme="dark"] .feed-modal {
+  background: #121b25;
+  border-color: #334451;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+html[data-theme="dark"] .feed-modal > header,
+html[data-theme="dark"] .feed-modal-item,
+html[data-theme="dark"] .feed-modal > footer {
+  border-color: #293743;
+}
+html[data-theme="dark"] .feed-modal > header h2,
+html[data-theme="dark"] .feed-modal-item > div > strong {
+  color: #e1ebf2;
+}
+html[data-theme="dark"] .feed-modal > header p,
+html[data-theme="dark"] .feed-modal-item > div > time,
+html[data-theme="dark"] .feed-modal-item > div > p,
+html[data-theme="dark"] .feed-modal > footer span {
+  color: #91a2af;
+}
+html[data-theme="dark"] .feed-modal > header button {
+  background: #17232d;
+  border-color: #344553;
+  color: #bdcad4;
+}
+html[data-theme="dark"] .feed-modal > footer {
+  background: #0f1821;
+}
+html[data-theme="dark"] .feed-modal-body > button.feed-modal-item {
+  background: transparent;
+  border-color: #293743;
+}
+html[data-theme="dark"] .feed-modal-body > button.feed-modal-item:hover {
+  background: #192733;
+}
+html[data-theme="dark"] .feed-modal-back {
+  background: #17232d;
+  border-color: #344553;
+  color: #b8c6d0;
+}
+html[data-theme="dark"] .feed-article-detail h3 {
+  color: #e1ebf2;
+}
+html[data-theme="dark"] .feed-article-copy {
+  border-color: #293743;
+}
+html[data-theme="dark"] .feed-article-copy p {
+  color: #bdcad4;
+}
+html[data-theme="dark"] .feed-article-state.error {
+  background: #321a20;
+  color: #ff9daa;
+}
+html[data-theme="dark"] .feed-article-state.error button {
+  background: #401f27;
+  border-color: #74404a;
+  color: #ffadb7;
+}
+

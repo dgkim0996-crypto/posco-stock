@@ -1,0 +1,216 @@
+/* 교육형 랜딩페이지처럼 큰 정보 위계와 부드러운 순차 모션을 적용한다. */
+.longterm-guide {
+  animation: longtermPageIn 0.65s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+.guide-back {
+  font-size: 14px;
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+.guide-back:hover {
+  transform: translateX(-4px);
+}
+.longterm-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 230px;
+  padding: 40px;
+}
+.longterm-hero::before,
+.longterm-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(4px);
+  pointer-events: none;
+}
+.longterm-hero::before {
+  width: 310px;
+  height: 310px;
+  right: -70px;
+  top: -160px;
+  background: radial-gradient(
+    circle,
+    rgba(125, 211, 252, 0.42),
+    transparent 68%
+  );
+  animation: heroGlow 7s ease-in-out infinite alternate;
+}
+.longterm-hero::after {
+  width: 230px;
+  height: 230px;
+  left: 38%;
+  bottom: -190px;
+  background: radial-gradient(
+    circle,
+    rgba(186, 230, 253, 0.28),
+    transparent 70%
+  );
+  animation: heroGlow 8.5s ease-in-out -2s infinite alternate-reverse;
+}
+.longterm-hero span {
+  font-size: 13px;
+}
+.longterm-hero h1 {
+  margin-top: 12px;
+  font-size: 44px;
+  line-height: 1.15;
+}
+.longterm-hero p {
+  margin-top: 12px;
+  font-size: 18px;
+  line-height: 1.6;
+}
+.longterm-hero > b {
+  max-width: 370px;
+  padding: 16px 18px;
+  font-size: 15px;
+  line-height: 1.55;
+  animation: gentleFloat 4s ease-in-out infinite;
+}
+.longterm-facts {
+  gap: 14px;
+  margin: 18px 0;
+}
+.longterm-facts > div {
+  padding: 22px;
+  opacity: 0;
+  transform: translateY(22px);
+  animation: cardRise 0.62s cubic-bezier(0.22, 0.8, 0.3, 1) forwards;
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.longterm-facts > div:nth-child(1) {
+  animation-delay: 0.12s;
+}
+.longterm-facts > div:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.longterm-facts > div:nth-child(3) {
+  animation-delay: 0.28s;
+}
+.longterm-facts > div:nth-child(4) {
+  animation-delay: 0.36s;
+}
+.longterm-facts > div:hover {
+  transform: translateY(-6px);
+  border-color: #9dcce5;
+  box-shadow: 0 14px 32px rgba(25, 93, 132, 0.12);
+}
+.longterm-facts span {
+  font-size: 13px;
+}
+.longterm-facts strong {
+  margin-top: 9px;
+  font-size: 17px;
+  line-height: 1.45;
+}
+.projection-card,
+.advisor-panel {
+  padding: 28px;
+  animation: sectionRise 0.7s cubic-bezier(0.22, 0.8, 0.3, 1) 0.22s both;
+}
+.projection-head span {
+  font-size: 13px;
+}
+.projection-head strong {
+  font-size: 23px;
+}
+.projection-head label {
+  font-size: 13px;
+}
+.projection-head input,
+.projection-head select {
+  height: 40px;
+  font-size: 13px;
+}
+.projection-legend span {
+  font-size: 14px;
+}
+.projection-legend b {
+  font-size: 16px;
+}
+.projection-card > p,
+.longterm-notice {
+  font-size: 13px;
+  line-height: 1.75;
+}
+.advisor-panel {
+  position: relative;
+  overflow: hidden;
+}
+.advisor-panel::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--brand),
+    #7dd3fc,
+    transparent
+  );
+  background-size: 220% 100%;
+  animation: advisorScan 3.8s linear infinite;
+}
+.market-outlook {
+  animation: resultReveal 0.55s ease both;
+}
+.market-outlook span {
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+.market-outlook span:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(23, 86, 121, 0.09);
+}
+.advisor-recommendations article {
+  opacity: 0;
+  animation: cardRise 0.5s cubic-bezier(0.22, 0.8, 0.3, 1) forwards;
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+.advisor-recommendations article:nth-child(1) {
+  animation-delay: 0.08s;
+}
+.advisor-recommendations article:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.advisor-recommendations article:nth-child(3) {
+  animation-delay: 0.24s;
+}
+.advisor-recommendations article:nth-child(4) {
+  animation-delay: 0.32s;
+}
+.advisor-recommendations article:nth-child(5) {
+  animation-delay: 0.4s;
+}
+.advisor-recommendations article:hover {
+  transform: translateY(-5px);
+  border-color: #8fc8e7;
+  box-shadow: 0 13px 28px rgba(20, 83, 119, 0.11);
+}
+.advisor-controls button,
+.advisor-recommendations article > button {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.advisor-controls button:hover,
+.advisor-recommendations article > button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 133, 202, 0.2);
+}

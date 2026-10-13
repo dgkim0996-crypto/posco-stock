@@ -1,0 +1,71 @@
+.auth-links button:hover,
+.logout-button:hover {
+  color: var(--brand);
+}
+.auth-loading {
+  padding: 18px 22px;
+  border-radius: 14px;
+  background: #fff;
+  color: #607484;
+  box-shadow: 0 12px 34px rgba(25, 62, 88, 0.12);
+}
+.logout-button {
+  height: 40px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+html[data-theme="dark"] .auth-page {
+  background:
+    radial-gradient(circle at 20% 10%, #173d51 0, transparent 38%),
+    linear-gradient(145deg, #09121a, #101d27);
+}
+html[data-theme="dark"] .auth-card {
+  background: #121b25;
+  border-color: #2b3c49;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+html[data-theme="dark"] .auth-card h1 {
+  color: #e7eff5;
+}
+html[data-theme="dark"] .auth-card > p {
+  color: #9bacb9;
+}
+html[data-theme="dark"] .auth-card input {
+  background: #0d1720;
+  border-color: #344653;
+  color: #e0eaf1;
+}
+html[data-theme="dark"] .auth-divider::before,
+html[data-theme="dark"] .auth-divider::after {
+  background: #344653;
+}
+html[data-theme="dark"] .social-login-google {
+  border-color: #435767;
+  background: #182633;
+  color: #e7eff5;
+}
+html[data-theme="dark"] .auth-message {
+  background: #173247;
+  color: #8bd5fa;
+}
+html[data-theme="dark"] .auth-loading {
+  background: #121b25;
+  color: #aabac6;
+}
+@media (max-width: 560px) {
+  .auth-page {
+    padding: 16px;
+  }
+  .auth-card {
+    padding: 30px 22px;
+    border-radius: 20px;
+  }
+  .auth-card h1 {
+    font-size: 23px;
+  }
+  .logout-button {
+    padding: 0 4px;
+    font-size: 10px;
+  }
+}
+

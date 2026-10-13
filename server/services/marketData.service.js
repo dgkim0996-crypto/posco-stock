@@ -100,6 +100,12 @@ const fetchOverseasQuote = async (instrument, token) => {
   };
 };
 
+// 현재가 REST 응답(FHKST01010100, HHDFS00000300)에는 체결시각 필드가 없어 updatedAt은 조회시각이다.
+// 가격과 누적거래량이 그대로면 새 체결이 없었으므로 이전 시각을 유지한다. 그래야 장 마감·주말에
+// 같은 종가가 폴링마다 "최신 시세"가 되어 미체결 주문이 같은 가격으로 반복 체결되지 않는다.
+const isSameTrade = (previous, quote) => Boolean(previous?.updatedAt)
+  && previous.price === quote.price && (previous.volume ?? null) === (quote.volume ?? null);
+
 // 종목의 통화로 국내/해외 조회 함수를 선택한 뒤 정상 가격을 메모리와 SQLite에 반영한다.
 const fetchQuote = async (symbol) => {
   const instrument = TRACKED_INSTRUMENTS.find((item) => item.symbol === symbol);
@@ -109,9 +115,12 @@ const fetchQuote = async (symbol) => {
     ? await fetchDomesticQuote(instrument, token)
     : await fetchOverseasQuote(instrument, token);
   if (!Number.isFinite(quote.price)) throw new Error(`${symbol} 현재가 응답이 올바르지 않습니다.`);
+  const previous = quoteCache.get(symbol);
+  if (isSameTrade(previous, quote)) quote.updatedAt = previous.updatedAt;
   // 정상 응답만 반영한다. DB 저장 실패 시에도 이번에 수신한 값은 메모리에서 계속 제공한다.
   quoteCache.set(symbol, quote);
-  lastLiveUpdateAt = quote.updatedAt;
+  // 수집기 상태의 "최근 수신"은 시세 시각과 별개로 KIS 응답을 받은 시각이다.
+  lastLiveUpdateAt = new Date().toISOString();
   try {
     marketDatabaseService.saveQuote(quote);
   } catch (error) {

@@ -1,0 +1,280 @@
+/* 자산현황 */
+.asset-highlight-grid {
+  display: grid;
+  grid-template-columns: 1.35fr repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.asset-total-card,
+.asset-summary-card {
+  min-height: 150px;
+  padding: 20px;
+  border: 1px solid #e1e7ed;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 5px 20px rgba(28, 53, 77, 0.04);
+}
+.asset-total-card {
+  background: var(--signature-gradient);
+  color: #fff;
+  border: 0;
+}
+.asset-total-card > span,
+.asset-summary-card > span {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+}
+.asset-total-card > span {
+  color: #dbefff;
+}
+.asset-total-card > strong {
+  display: block;
+  margin-top: 11px;
+  font-size: 29px;
+  letter-spacing: -0.035em;
+}
+.asset-delta {
+  margin-top: 9px;
+  display: flex;
+  gap: 10px;
+}
+.asset-delta b,
+.asset-delta em {
+  font-size: 12px;
+  font-style: normal;
+  color: #fff !important;
+}
+.asset-total-card small {
+  display: block;
+  margin-top: 17px;
+  color: #cce8f8;
+  font-size: 10px;
+}
+.asset-summary-card > span {
+  color: #8794a1;
+}
+.asset-summary-card > strong {
+  display: block;
+  margin-top: 16px;
+  color: #25384a;
+  font-size: 22px;
+}
+.asset-summary-card small {
+  display: block;
+  margin-top: 18px;
+  color: #9ba5ae;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.asset-overview-grid {
+  align-items: stretch;
+}
+.allocation-body {
+  padding: 22px;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  align-items: center;
+  gap: 28px;
+}
+.allocation-donut {
+  width: 155px;
+  height: 155px;
+  margin: auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(
+    #1198d5 0 57%,
+    #58b6dd 57% 68%,
+    #90c8e0 68% 76%,
+    #d1dce6 76% 100%
+  );
+  position: relative;
+}
+.allocation-donut::after {
+  content: "";
+  position: absolute;
+  inset: 24px;
+  border-radius: 50%;
+  background: #fff;
+}
+.allocation-donut > div {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.allocation-donut strong,
+.allocation-donut span {
+  display: block;
+}
+.allocation-donut strong {
+  font-size: 23px;
+  color: #24384a;
+}
+.allocation-donut span {
+  margin-top: 3px;
+  color: #8a97a3;
+  font-size: 10px;
+}
+.allocation-list > div {
+  padding: 9px 0;
+  display: grid;
+  grid-template-columns: 1fr auto 48px;
+  gap: 12px;
+  border-bottom: 1px solid #f0f2f4;
+  font-size: 11px;
+}
+.allocation-list > div:last-child {
+  border: 0;
+}
+.allocation-list span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #6e7d8b;
+}
+.allocation-list i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.allocation-list strong {
+  color: #35495c;
+}
+.allocation-list em {
+  color: #8b98a5;
+  font-style: normal;
+  text-align: right;
+}
+.alloc-cash {
+  background: #cbd6e0;
+}
+.alloc-stock {
+  background: #0f8fd0;
+}
+.alloc-bond {
+  background: #57b1db;
+}
+.alloc-crypto {
+  background: #87c3dd;
+}
+.alloc-futures {
+  background: #6f90ad;
+}
+.profit-breakdown {
+  padding: 8px 18px;
+}
+.profit-breakdown > div {
+  padding: 15px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #eef1f3;
+}
+.profit-breakdown span {
+  color: #778594;
+  font-size: 12px;
+}
+.profit-breakdown strong {
+  font-size: 15px;
+}
+.mini-bar-group {
+  padding: 7px 18px 18px;
+}
+.mini-bar-group > div {
+  display: grid;
+  grid-template-columns: 96px 1fr 48px;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+.mini-bar-group span,
+.mini-bar-group em {
+  font-size: 10px;
+  color: #8996a3;
+  font-style: normal;
+}
+.mini-bar-group i {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #edf1f4;
+}
+.mini-bar-group b {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--brand);
+}
+.profit-list,
+.comparison-block {
+  padding: 12px 18px 18px;
+}
+.profit-list > div,
+.comparison-block > div {
+  padding: 16px 2px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #edf1f4;
+}
+.profit-list > div:last-child,
+.comparison-block > div:last-child {
+  border-bottom: 0;
+}
+.profit-list .total {
+  margin-top: 7px;
+  padding-top: 18px;
+  border-top: 2px solid #dde4ea;
+}
+.profit-list span,
+.comparison-block span {
+  color: #748291;
+  font-size: 12px;
+}
+.profit-list strong,
+.comparison-block strong {
+  font-size: 15px;
+}
+.account-detail-card dl {
+  margin: 0;
+  padding: 8px 18px 18px;
+}
+.account-detail-card dl > div {
+  padding: 14px 2px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #edf1f4;
+}
+.account-detail-card dt {
+  color: #7c8996;
+  font-size: 12px;
+}
+.account-detail-card dd {
+  margin: 0;
+  color: #34485a;
+  font-size: 12px;
+  font-weight: 800;
+}
+.quick-menu-grid {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+}
+.quick-menu-grid button {
+  padding: 17px 14px;
+  border: 1px solid #e1e7ec;
+  border-radius: 10px;
+  background: #fafcfd;
+  color: #4d6072;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 800;
+}
+.quick-menu-grid button:hover {
+  border-color: #9bc9ea;
+  background: #f5fbff;
+  color: var(--brand);
+}
+

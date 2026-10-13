@@ -1,0 +1,104 @@
+/* 피드 행의 화살표는 외부 이동이 아니라 같은 화면의 모달 상세 진입을 뜻한다. */
+.modal-link-icon {
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+}
+.text-action {
+  text-decoration: none;
+}
+.feed-status {
+  min-height: 112px;
+  padding: 30px 18px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  color: #8c99a5;
+  font-size: 11px;
+  text-align: center;
+}
+.primary-feed-grid .service-card-head {
+  min-height: 76px;
+  padding: 16px 20px;
+}
+.primary-feed-grid .service-card-head > div span {
+  color: #527087;
+  font-size: 13px;
+  font-weight: 900;
+}
+.primary-feed-grid .service-card-head > div strong {
+  margin-top: 5px;
+  font-size: 18px;
+}
+.primary-feed-grid .text-action {
+  font-size: 13px;
+}
+.primary-feed-grid .research-list > button {
+  min-height: 72px;
+  padding: 15px 20px;
+  grid-template-columns: 52px minmax(0, 1fr) 22px;
+  gap: 14px;
+}
+.primary-feed-grid .research-tag {
+  padding: 6px 2px;
+  font-size: 10px;
+}
+.primary-feed-grid .research-list > button > span strong {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.primary-feed-grid .research-list > button > span em {
+  margin-top: 5px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.primary-feed-grid .calendar-list {
+  padding: 6px 20px 17px;
+}
+.primary-feed-grid .calendar-list time {
+  font-size: 12px;
+}
+.primary-feed-grid .modal-link-icon {
+  font-size: 15px;
+}
+.primary-feed-grid .service-card-head > .text-action {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.primary-feed-grid .calendar-list > button {
+  width: 100%;
+  min-height: 72px;
+  padding: 15px 0;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 22px;
+  gap: 14px;
+  align-items: center;
+  border: 0;
+  border-bottom: 1px solid #eef1f4;
+  background: transparent;
+  text-align: left;
+}
+.primary-feed-grid .calendar-list > button:hover {
+  background: #f7fbfe;
+}
+.primary-feed-grid .calendar-list > button strong,
+.primary-feed-grid .calendar-list > button em {
+  display: block;
+}
+.primary-feed-grid .calendar-list > button strong {
+  color: #425467;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.primary-feed-grid .calendar-list > button em {
+  margin-top: 5px;
+  overflow: hidden;
+  color: #99a4af;
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

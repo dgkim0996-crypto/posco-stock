@@ -1,0 +1,109 @@
+.chart-volume-controls {
+  position: absolute;
+  top: 50%;
+  right: 98px;
+  transform: translateY(var(--volume-control-offset, 116px));
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px 3px 8px;
+  border: 1px solid #dce4ea;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 3px 10px rgba(25, 47, 67, 0.08);
+  backdrop-filter: blur(6px);
+}
+.chart-volume-controls span {
+  margin-right: 2px;
+  color: #71808e;
+  font-size: 10px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.chart-volume-controls button {
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #ccd7df;
+  border-radius: 6px;
+  background: #fff;
+  color: #28465b;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+.chart-volume-controls button:hover:not(:disabled) {
+  border-color: #8fc5e5;
+  background: #eef8fe;
+  color: var(--brand);
+}
+.chart-volume-controls button:disabled {
+  color: #b9c2c9;
+  background: #f3f5f7;
+  cursor: default;
+}
+.sparkline {
+  touch-action: none;
+  cursor: grab;
+}
+.sparkline:active {
+  cursor: grabbing;
+}
+.market-chart-wrap {
+  min-height: var(--chart-height, 360px);
+  overflow: hidden;
+}
+.market-chart-wrap {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 50px;
+}
+.sparkline {
+  flex: 0 0 auto;
+  height: var(--price-chart-height, 360px);
+}
+.volume-chart-panel {
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid #dce8ec;
+  border-radius: 10px;
+  background: #f4f8fa;
+}
+.volume-chart-head {
+  height: 30px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #dce8ec;
+}
+.volume-chart-head strong {
+  color: #627988;
+  font-size: 10px;
+  font-weight: 800;
+}
+.volume-sparkline {
+  display: block;
+  width: 100%;
+  height: var(--volume-chart-height, 100px);
+}
+.chart-volume-controls {
+  position: static;
+  transform: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.chart-volume-controls span { margin-right: 4px; }
+html[data-theme="dark"] .volume-chart-panel { border-color: #2d3b47; background: #101923; }
+html[data-theme="dark"] .volume-chart-head { border-color: #2d3b47; }
+html[data-theme="dark"] .volume-chart-head strong { color: #94a4b2; }
+.chart-foot {
+  font-size: 11px;
+  padding-top: 9px;
+}
+

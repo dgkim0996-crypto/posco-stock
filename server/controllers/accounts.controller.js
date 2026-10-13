@@ -1,4 +1,5 @@
 import accountsService from "../services/accounts.service.js";
+import pendingOrderMatcher from "../services/pendingOrderMatcher.service.js";
 
 // 계좌 라우터의 HTTP 입력을 검증하고 서비스 결과를 상태코드와 JSON으로 변환한다.
 
@@ -39,9 +40,12 @@ export const resetAccount = async (req, res, next) => {
 
 export const getAccountState = async (req, res, next) => {
   try {
+    // Serverless runtimes have no persistent timer. Each authenticated refresh
+    // opportunistically checks a bounded batch using already fetched server quotes.
+    const matching = await pendingOrderMatcher.runForAccount(req.accountId);
     const state = await accountsService.getState(req.accountId);
     if (!state) return res.status(404).json({ error:"계좌를 찾을 수 없습니다." });
-    return res.json(state);
+    return res.json({ ...state, matching });
   } catch (error) { return next(error); }
 };
 

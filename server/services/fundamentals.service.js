@@ -1,8 +1,15 @@
 import kisAuthService from "./kisAuth.service.js";
 import kisRequestService from "./kisRequest.service.js";
+import { instruments } from "../data/instruments.data.js";
 
 const cache = new Map();
+// 같은 종목의 동시 요청은 하나의 KIS 조회를 공유해 직렬 큐를 반복 점유하지 않게 한다.
+const inFlight = new Map();
 const CACHE_MS = 10 * 60 * 1000;
+// 공개 경로에서 임의 종목코드로 KIS를 호출하지 못하도록 서비스 중인 국내 종목만 조회한다.
+const SUPPORTED_SYMBOLS = new Set(instruments
+  .filter((item) => ["KOSPI", "KOSDAQ"].includes(item.market) && /^\d{6}$/.test(item.symbol))
+  .map((item) => item.symbol));
 const number = (value) => { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : null; };
 
 async function kisGet(path, trId, params, token) {
@@ -16,9 +23,16 @@ async function kisGet(path, trId, params, token) {
 
 export async function getFundamentals(symbol) {
   if (!/^\d{6}$/.test(symbol)) return { symbol, supported: false, source: null, message: "해외주식 재무지표 데이터 소스가 연결되지 않았습니다." };
+  if (!SUPPORTED_SYMBOLS.has(symbol)) return { symbol, supported: false, source: null, message: "재무지표를 제공하지 않는 종목입니다." };
   const saved = cache.get(symbol);
   if (saved && Date.now() - saved.savedAt < CACHE_MS) return saved.data;
+  if (!inFlight.has(symbol)) {
+    inFlight.set(symbol, loadFundamentals(symbol).finally(() => inFlight.delete(symbol)));
+  }
+  return inFlight.get(symbol);
+}
 
+async function loadFundamentals(symbol) {
   const token = await kisAuthService.getAccessToken();
   const quote = await kisGet("/uapi/domestic-stock/v1/quotations/inquire-price", "FHKST01010100", { fid_cond_mrkt_div_code: "J", fid_input_iscd: symbol }, token);
   let ratios = [];

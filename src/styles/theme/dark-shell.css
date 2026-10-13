@@ -1,0 +1,178 @@
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --brand: #55b9ef;
+  --brand-dark: #279bd8;
+  --navy: #09111b;
+  --text: #e6edf4;
+  --muted: #94a4b5;
+  --line: #2b3947;
+  --soft: #17212c;
+  --panel: #121b25;
+  --yield: #f2b85b;
+  --signature-start: #075f9d;
+  --signature-end: #0088c4;
+  --signature-soft: #173247;
+  --signature-shadow: 0 10px 28px rgba(0, 126, 190, 0.18);
+  background: #0b121a;
+}
+html[data-theme="dark"] body,
+html[data-theme="dark"] .terminal,
+html[data-theme="dark"] .service-page,
+html[data-theme="dark"] .dashboard-section,
+html[data-theme="dark"] .heatmap-page {
+  background: #0b121a;
+  color: var(--text);
+}
+html[data-theme="dark"] .topbar {
+  background: rgba(15, 23, 32, 0.97);
+  border-color: #263440;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+}
+html[data-theme="dark"] .brand-copy {
+  border-color: #354451;
+}
+html[data-theme="dark"] .brand strong {
+  color: #eef5fa;
+}
+html[data-theme="dark"] .brand-mark {
+  filter: brightness(1.25);
+}
+html[data-theme="dark"] .main-nav button {
+  color: #a9b6c2;
+}
+html[data-theme="dark"] .main-nav button:hover {
+  background: #1b2935;
+  color: #e8f1f7;
+}
+html[data-theme="dark"] .main-nav button.active {
+  background: #173247;
+  color: var(--brand);
+}
+html[data-theme="dark"] .header-search,
+html[data-theme="dark"] .account-mini,
+html[data-theme="dark"] .theme-toggle,
+html[data-theme="dark"] .header-global-search.is-open {
+  background: #17222d;
+  border-color: #31404d;
+  color: #d7e2ea;
+}
+html[data-theme="dark"] .account-mini strong {
+  color: #e2ebf2;
+}
+html[data-theme="dark"] .theme-toggle:hover {
+  background: #20394a;
+  color: #7dd0fa;
+}
+html[data-theme="dark"] .header-search-results,
+html[data-theme="dark"] .header-search-results > button {
+  background: #141f29;
+  border-color: #293845;
+}
+html[data-theme="dark"] .header-search-results > button:hover {
+  background: #1a2b38;
+}
+html[data-theme="dark"] .header-search-results span strong,
+html[data-theme="dark"] .header-search-results b,
+html[data-theme="dark"] .header-search-form input {
+  color: #dce7ee;
+}
+html[data-theme="dark"] .account-strip {
+  background: #151c20;
+}
+html[data-theme="dark"] .tabs {
+  background: #0b121a;
+}
+html[data-theme="dark"] .tabs button {
+  background: #16212b;
+  border-color: #2c3b48;
+  color: #9dabb7;
+}
+html[data-theme="dark"] .tabs button.active {
+  background: #121b25;
+  border-bottom-color: #121b25;
+  color: var(--brand);
+}
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .service-card,
+html[data-theme="dark"] .heatmap-panel,
+html[data-theme="dark"] .index-grid article,
+html[data-theme="dark"] .market-index-row button {
+  background: #121b25;
+  border-color: #2b3947;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.16);
+}
+html[data-theme="dark"] .panel-title,
+html[data-theme="dark"] .service-card-head,
+html[data-theme="dark"] .chart-head,
+html[data-theme="dark"] .order-tabs,
+html[data-theme="dark"] .order-heading {
+  border-color: #293743;
+}
+html[data-theme="dark"] .panel-title strong,
+html[data-theme="dark"] .instrument h1,
+html[data-theme="dark"] .service-card-head > div strong,
+html[data-theme="dark"] .service-hero h1,
+html[data-theme="dark"] .order-heading strong,
+html[data-theme="dark"] .index-grid strong,
+html[data-theme="dark"] .heatmap-heading h1 {
+  color: #e7eff5;
+}
+html[data-theme="dark"] .stock-search,
+html[data-theme="dark"] .stock-search input,
+html[data-theme="dark"] .order-type-select,
+html[data-theme="dark"] .limit-price-input,
+html[data-theme="dark"] .bank-form input,
+html[data-theme="dark"] .fake-input,
+html[data-theme="dark"] .finance-form .amount-input input {
+  background: #0f1821;
+  border-color: #33424f;
+  color: #dce6ed;
+}
+html[data-theme="dark"] .quantity-line input {
+  background: #0f1821;
+  border-color: #33424f;
+  color: #dce6ed;
+}
+html[data-theme="dark"] .quantity-max {
+  background: #193143;
+  border-color: #3f7898;
+  color: #73caf5;
+}
+html[data-theme="dark"] .quantity-max:hover {
+  background: #20445b;
+  border-color: #55b9ef;
+}
+html[data-theme="dark"] .market-row,
+html[data-theme="dark"] .mover-list button {
+  background: #121b25;
+  border-color: #26343f;
+  color: #d7e1e9;
+}
+html[data-theme="dark"] .market-row:hover,
+html[data-theme="dark"] .mover-list button:hover {
+  background: #192733;
+}
+html[data-theme="dark"] .market-row.active {
+  background: #173247;
+}
+html[data-theme="dark"] .market-identity strong,
+html[data-theme="dark"] .mover-list button > span strong,
+html[data-theme="dark"] .rank-mini button,
+html[data-theme="dark"] td {
+  color: #d8e3eb;
+}
+html[data-theme="dark"] .favorites-filter,
+html[data-theme="dark"] .chart-periods button,
+html[data-theme="dark"] .inline-filter button,
+html[data-theme="dark"] .amount-presets button,
+html[data-theme="dark"] .outline-action {
+  background: #17232d;
+  border-color: #33424f;
+  color: #aebbc6;
+}
+html[data-theme="dark"] .chart-periods button.active,
+html[data-theme="dark"] .inline-filter button.active {
+  background: #18384c;
+  border-color: #3d7596;
+  color: #73caf5;
+}

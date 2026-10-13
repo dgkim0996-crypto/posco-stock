@@ -11,6 +11,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "preview:brokerage": "node scripts/brokerage-preview.mjs",
+    "test:unit": "node --test scripts/trading-rules.test.mjs scripts/order-workspace.test.mjs scripts/order-idempotency.test.mjs scripts/order-services.test.mjs scripts/chart-model.test.mjs scripts/chart-service.test.mjs scripts/trading-app.test.mjs scripts/investment-feed.test.mjs scripts/feed-screen.test.mjs scripts/server-hardening.test.mjs scripts/market-websocket.test.mjs scripts/client-resilience.test.mjs scripts/futures-risk.test.mjs",
+    "test:brokerage-db": "node scripts/order-reservations-e2e.mjs && node scripts/order-idempotency-e2e.mjs",
     "server": "node server/server.js",
     "server:dev": "nodemon server/server.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run server:dev\"",
@@ -33,6 +36,7 @@
     "ws": "^8.21.3"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "concurrently": "^8.2.2",
     "nodemon": "^3.1.4"
   }

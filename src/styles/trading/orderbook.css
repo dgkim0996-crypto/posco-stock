@@ -1,0 +1,72 @@
+.realtime-orderbook {
+  margin: 0 16px 12px;
+  border: 1px solid #e5e9ee;
+  border-radius: 10px;
+  overflow: auto;
+  max-height: 330px;
+  background: #fff;
+}
+.orderbook-title,
+.orderbook-total {
+  position: sticky;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: #f7f9fb;
+  font-size: 10px;
+  color: #7e8995;
+}
+.orderbook-title {
+  top: 0;
+}
+.orderbook-total {
+  bottom: 0;
+  border-top: 1px solid #e5e9ee;
+}
+.orderbook-title strong {
+  color: #24303c;
+  font-size: 11px;
+}
+.orderbook-level {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 52px;
+  align-items: center;
+  border: 0;
+  border-top: 1px solid #f1f3f5;
+  padding: 4px 9px;
+  background: #fff;
+  font-size: 10px;
+  cursor: pointer;
+}
+.orderbook-level:hover {
+  filter: brightness(0.97);
+}
+.orderbook-level span {
+  text-align: left;
+  color: #7e8995;
+}
+.orderbook-level strong {
+  text-align: right;
+  font-size: 11px;
+}
+.orderbook-level em {
+  text-align: right;
+  font-style: normal;
+}
+.orderbook-level.ask strong,
+.orderbook-level.ask em {
+  color: #e34f5f;
+}
+.orderbook-level.bid strong,
+.orderbook-level.bid em {
+  color: #3177d5;
+}
+.orderbook-waiting {
+  padding: 14px 12px;
+  color: #87929d;
+  font-size: 10px;
+  line-height: 1.5;
+}

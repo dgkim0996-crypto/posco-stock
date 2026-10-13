@@ -1,0 +1,36 @@
+.order-tabs button b {
+  display: inline-grid;
+  min-width: 17px;
+  height: 17px;
+  margin-left: 4px;
+  padding: 0 4px;
+  place-items: center;
+  border-radius: 9px;
+  background: #e7edf2;
+  color: #657483;
+  font-size: 9px;
+}
+.order-tabs button.active b {
+  background: #dff1fb;
+  color: var(--brand);
+}
+.order-type-select,
+.limit-price-input {
+  width: 115px;
+  padding: 7px 8px;
+  border: 1px solid #cfd6dd;
+  background: #fff;
+  color: #3a4754;
+  outline: none;
+  text-align: right;
+  font-size: 12px;
+}
+.order-type-select:focus,
+.limit-price-input:focus {
+  border-color: var(--brand);
+}
+.order-type-select:disabled {
+  background: #f3f5f7;
+  color: #88939e;
+}
+

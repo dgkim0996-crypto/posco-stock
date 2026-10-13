@@ -25,12 +25,23 @@ import authProvidersRouter from "./routes/authProviders.routes.js";
 import { notFound } from "./middleware/notFound.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { requestMetrics } from "./middleware/requestMetrics.js";
+import { requireAccount } from "./middleware/auth.js";
 
 // Express 앱 구성 파일. 요청은 CORS/본문 파싱 → 라우터 → 404 → 공통 오류 처리 순서로 흐른다.
 
 dotenv.config();
 
 const app = express();
+
+// 배포 환경의 역방향 프록시 한 단계만 신뢰해 req.ip가 실제 클라이언트 주소가 되게 한다.
+// 프록시 구성이 다르면 TRUST_PROXY(홉 수, "loopback" 등, false)로 바꾼다.
+const parseTrustProxy = (value) => {
+  if (value === undefined || value === "") return 1;
+  if (value === "false") return false;
+  if (value === "true") return true;
+  return /^\d+$/.test(value) ? Number(value) : value;
+};
+app.set("trust proxy", parseTrustProxy(process.env.TRUST_PROXY?.trim()));
 
 const normalizeOrigin = (origin) => String(origin || "").trim().replace(/\/$/, "");
 const vercelOrigin = (hostname) => {
@@ -83,6 +94,8 @@ app.use("/api", stockImagesRouter);
 app.use("/api", authProvidersRouter);
 
 // 계좌 소유권이 필요한 변경/조회 API는 공개 시장 데이터 뒤에서 인증한다.
+// /api/accounts 아래 모든 요청은 여기서 한 번만 인증하고, 각 라우터의 requireAccount는 표식을 보고 통과한다.
+app.use("/api/accounts", requireAccount);
 app.use("/api", accountsRouter);
 app.use("/api", ordersRouter);
 app.use("/api", favoritesRouter);

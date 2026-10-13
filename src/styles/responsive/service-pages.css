@@ -1,0 +1,83 @@
+@media (max-width: 1180px) {
+  .asset-highlight-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .index-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .shortcut-row {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (max-width: 900px) {
+  .service-page {
+    padding: 20px 16px 34px;
+  }
+  .service-hero {
+    padding: 22px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .service-hero h1 {
+    font-size: 25px;
+  }
+  .service-two-col,
+  .service-three-col,
+  .banking-main-grid {
+    grid-template-columns: 1fr;
+  }
+  .span-2 {
+    grid-column: span 1;
+  }
+  .index-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .bank-quick-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .allocation-body {
+    grid-template-columns: 1fr;
+  }
+  .product-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .risk-guide,
+  .bank-balance {
+    width: 100%;
+  }
+}
+@media (max-width: 560px) {
+  .asset-highlight-grid,
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+  .index-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .bank-quick-grid {
+    grid-template-columns: 1fr;
+  }
+  .shortcut-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .subnav-tabs button {
+    min-width: 100px;
+  }
+  .compare-tray {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .compare-tray > div {
+    flex-wrap: wrap;
+  }
+  .account-service-grid {
+    grid-template-columns: 1fr;
+  }
+  .service-hero h1 {
+    font-size: 22px;
+  }
+}
+

@@ -7,6 +7,7 @@ const LABELS = {
   marketRest: "KIS REST 수집",
   marketRealtime: "KIS 실시간 연결",
   http: "HTTP 요청",
+  orderMatching: "지정가 자동체결",
 };
 
 const STATUS_LABELS = { ok: "정상", degraded: "저하", down: "중단", idle: "대기" };
@@ -66,7 +67,9 @@ export default function Operations() {
                 {key === "marketRest" && <dl><div><dt>수집기</dt><dd>{item.polling ? "실행 중" : "중지"}</dd></div><div><dt>최근 수신</dt><dd>{time(item.lastLiveUpdateAt)}</dd></div><div><dt>연속 실패</dt><dd>{item.consecutiveFailures}회</dd></div></dl>}
                 {key === "marketRealtime" && <dl><div><dt>브라우저</dt><dd>{item.clientCount}개</dd></div><div><dt>구독 종목</dt><dd>{item.subscribedSymbols.length}개</dd></div><div><dt>재접속</dt><dd>{item.reconnectAttempts}회</dd></div></dl>}
                 {key === "http" && <dl><div><dt>전체 요청</dt><dd>{item.totalRequests.toLocaleString()}건</dd></div><div><dt>오류율</dt><dd>{(item.errorRate * 100).toFixed(2)}%</dd></div><div><dt>평균 응답</dt><dd>{item.averageDurationMs}ms</dd></div></dl>}
+                {key === "orderMatching" && <dl><div><dt>최근 확인</dt><dd>{time(item.updatedAt)}</dd></div><div><dt>검사 / 체결</dt><dd>{item.checked || 0} / {item.matched || 0}건</dd></div><div><dt>시세·조건 대기</dt><dd>{item.deferred || 0}건</dd></div></dl>}
                 {item.lastError?.message && <p>{item.lastError.message}</p>}
+                {item.error && <p>{item.error}</p>}
               </article>
             ))}
           </section>

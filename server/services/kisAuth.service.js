@@ -74,6 +74,8 @@ const requestAccessToken = async () => {
       appkey: process.env.KIS_APP_KEY,
       appsecret: process.env.KIS_APP_SECRET,
     }),
+    // 공유 중인 토큰 요청이 멈추면 모든 KIS 호출이 함께 대기하므로 제한시간을 둔다.
+    signal: AbortSignal.timeout(Number(process.env.KIS_REQUEST_TIMEOUT_MS) || 10_000),
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok || !data.access_token) {

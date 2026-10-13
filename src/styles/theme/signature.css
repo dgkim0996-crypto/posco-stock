@@ -1,0 +1,179 @@
+/* 총 평가자산 카드에서 확장한 포스코증권 시그니처 테마 */
+.longterm-hero {
+  background: var(--signature-gradient);
+}
+.account-strip {
+  background: #fff;
+}
+.account-strip .market-status strong {
+  color: #263b4d;
+}
+.primary-action,
+.advisor-controls button,
+.auth-card form > button,
+.feed-modal > footer button {
+  border-color: transparent;
+  background: var(--signature-gradient);
+  box-shadow: var(--signature-shadow);
+}
+.primary-action:hover,
+.advisor-controls button:hover,
+.feed-modal > footer button:hover {
+  filter: brightness(1.06);
+}
+.main-nav button.active,
+.market-row.active,
+.product-category-tabs button.active,
+.inline-filter button.active,
+.chart-periods button.active {
+  background: var(--signature-soft);
+  border-color: #7fc5e8;
+  color: var(--signature-start);
+}
+.market-row.active {
+  box-shadow: inset 3px 0 0 var(--signature-end);
+}
+.product-icon,
+.research-tag,
+.guide-list b {
+  background: var(--signature-soft);
+  color: var(--signature-start);
+}
+.service-hero,
+.heatmap-heading,
+.operations-heading {
+  background: var(--signature-gradient);
+  border-color: transparent;
+  box-shadow: var(--signature-shadow);
+}
+.heatmap-heading {
+  padding: 28px 30px;
+  border-radius: 20px;
+}
+.service-hero .service-kicker,
+.heatmap-heading .heatmap-kicker,
+.operations-heading > div:first-child > span {
+  color: #d8f1ff;
+}
+.service-hero h1,
+.service-hero p,
+.heatmap-heading h1,
+.heatmap-heading p,
+.operations-heading h1,
+.operations-heading p {
+  color: #fff;
+}
+.service-hero .hero-live,
+.service-hero .risk-guide,
+.service-hero .bank-balance {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 6px 18px rgba(0, 70, 115, 0.14);
+}
+.operations-heading .operations-overall span,
+.operations-heading .operations-overall strong {
+  color: #fff;
+}
+.operations-heading > button,
+.service-hero > .primary-action {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(255, 255, 255, 0.8);
+  color: var(--signature-start);
+  box-shadow: 0 6px 18px rgba(0, 70, 115, 0.14);
+}
+.asset-total-card {
+  box-shadow: var(--signature-shadow);
+}
+html[data-theme="dark"] .service-hero,
+html[data-theme="dark"] .heatmap-heading,
+html[data-theme="dark"] .operations-heading {
+  background: var(--signature-gradient);
+  border-color: transparent;
+}
+html[data-theme="dark"] .service-hero .hero-live,
+html[data-theme="dark"] .service-hero .risk-guide,
+html[data-theme="dark"] .service-hero .bank-balance {
+  background: rgba(9, 25, 37, 0.78);
+  border-color: rgba(121, 208, 250, 0.3);
+}
+html[data-theme="dark"] .operations-heading > button,
+html[data-theme="dark"] .service-hero > .primary-action {
+  background: rgba(9, 25, 37, 0.78);
+  border-color: rgba(121, 208, 250, 0.3);
+  color: #b9e8ff;
+}
+html[data-theme="dark"] .main-nav button.active,
+html[data-theme="dark"] .market-row.active,
+html[data-theme="dark"] .product-category-tabs button.active,
+html[data-theme="dark"] .inline-filter button.active,
+html[data-theme="dark"] .chart-periods button.active {
+  background: var(--signature-soft);
+  border-color: #397594;
+  color: #79d0fa;
+}
+html[data-theme="dark"] .product-icon,
+html[data-theme="dark"] .research-tag,
+html[data-theme="dark"] .guide-list b {
+  background: var(--signature-soft);
+  color: #79d0fa;
+}
+@media (max-width: 900px) {
+  .heatmap-heading {
+    padding: 22px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* 홈 계좌 요약: 시그니처 배경 위 핵심 자산 수치 대비 강화 */
+.top-metrics {
+  gap: 10px;
+}
+.top-metric-cards {
+  min-height: 58px;
+  display: flex;
+}
+.top-metric-cards > div {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.top-metric-cards > div:nth-child(1) > span {
+  color: #73818d;
+}
+.top-metric-cards > div:nth-child(1) > strong {
+  color: #1f3444;
+}
+.top-metric-cards > div:nth-child(2) > span {
+  color: #73818d;
+}
+.top-metric-cards > div:nth-child(2) > strong {
+  color: #0878b2;
+}
+.top-metric-cards > div:nth-child(3) > span,
+.top-metric-cards > div:nth-child(4) > span {
+  color: #73818d;
+}
+html[data-theme="dark"] .account-strip .market-status strong {
+  color: #e7eff5;
+}
+html[data-theme="dark"] .top-metric-cards > div > span {
+  color: #94a5b3;
+}
+html[data-theme="dark"] .top-metric-cards > div:nth-child(1) > strong {
+  color: #e7eff5;
+}
+html[data-theme="dark"] .top-metric-cards > div:nth-child(2) > strong {
+  color: #79d0fa;
+}
+html:not([data-theme="dark"]) .account-strip .top-metric-cards > div:nth-child(1) > span,
+html:not([data-theme="dark"]) .account-strip .top-metric-cards > div:nth-child(2) > span {
+  color: #596b79 !important;
+}
+html:not([data-theme="dark"]) .account-strip .top-metric-cards > div:nth-child(1) > strong {
+  color: #172b3d !important;
+}
+html:not([data-theme="dark"]) .account-strip .top-metric-cards > div:nth-child(2) > strong {
+  color: #006fa9 !important;
+}

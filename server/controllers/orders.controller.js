@@ -4,6 +4,9 @@ import ordersService from "../services/orders.service.js";
 
 export const createOrder = async (req, res, next) => {
   try {
+    if (req.body.pendingOrderId != null) {
+      return res.status(409).json({ error: "미체결 지정가 주문은 서버가 시세를 확인해 자동 체결합니다. 계좌 상태를 새로고침해 주세요." });
+    }
     return res.status(201).json(await ordersService.createOrder({ ...req.body, accountId: req.accountId }));
   } catch (error) {
     return next(error);

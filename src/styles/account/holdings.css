@@ -1,0 +1,139 @@
+.home-wide-panel {
+  grid-column: 1/-1;
+  min-width: 0;
+}
+.account-panel {
+  overflow: hidden;
+}
+.summary {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+}
+.summary > div {
+  padding: 15px 18px;
+  border-right: 1px solid #edf0f3;
+}
+.summary > div:last-child {
+  border-right: 0;
+}
+.summary span,
+.summary strong {
+  display: block;
+}
+.summary span {
+  color: #8c96a1;
+  font-size: 10px;
+}
+.summary strong {
+  margin-top: 6px;
+  font-size: 13px;
+}
+.bottom {
+  padding: 0 2.2vw 13px;
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 0.8fr;
+  gap: 10px;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  padding: 10px 11px;
+  border-bottom: 1px solid #edf0f3;
+  text-align: right;
+  white-space: nowrap;
+  font-size: 11px;
+}
+th:first-child,
+td:first-child {
+  text-align: left;
+}
+th {
+  background: #fafbfc;
+  color: #8a95a0;
+  font-size: 10px;
+  font-weight: 600;
+}
+td:first-child strong,
+.sub-code {
+  display: block;
+}
+.sub-code {
+  margin-top: 2px;
+  color: #a0a8b1;
+  font-size: 9px;
+}
+.empty {
+  padding: 30px !important;
+  text-align: center !important;
+  color: #98a2ad;
+}
+.close {
+  padding: 5px 8px;
+  border: 1px solid #cfd8e1;
+  border-radius: 2px;
+  background: #fff;
+  color: #4b5b6b;
+  font-size: 10px;
+}
+.close:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+.history {
+  max-height: 285px;
+  overflow-y: auto;
+}
+.history-row {
+  padding: 10px 12px;
+  border-bottom: 1px solid #edf0f3;
+}
+.history-row span,
+.history-row strong {
+  display: block;
+}
+.history-row span {
+  color: #99a3ad;
+  font-size: 9px;
+}
+.history-row strong {
+  margin-top: 3px;
+  color: #4f5d69;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.empty-block {
+  padding: 34px 16px;
+  color: #9ba5af;
+  text-align: center;
+  font-size: 11px;
+}
+.up {
+  color: var(--up) !important;
+}
+.down {
+  color: var(--down) !important;
+}
+.yield {
+  color: var(--yield) !important;
+}
+footer {
+  margin-top: 4px;
+  padding: 22px 2.2vw 28px;
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  background: #eef1f4;
+  color: #7f8994;
+  text-align: center;
+  font-size: 10px;
+}
+footer strong {
+  color: #5c6874;
+}

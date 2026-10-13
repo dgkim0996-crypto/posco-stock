@@ -1,0 +1,184 @@
+/* 거래 화면: 실시간 호가창 */
+html[data-theme="dark"] .realtime-orderbook {
+  background: #0f1821;
+  border-color: #2c3b48;
+}
+html[data-theme="dark"] .orderbook-title,
+html[data-theme="dark"] .orderbook-total {
+  background: #17232d;
+  border-color: #2c3b48;
+  color: #91a2b0;
+}
+html[data-theme="dark"] .orderbook-title strong {
+  color: #e2ebf2;
+}
+html[data-theme="dark"] .orderbook-level {
+  background: #101a23;
+  border-color: #24333f;
+  color: #d9e4ec;
+}
+html[data-theme="dark"] .orderbook-level:hover {
+  background: #182733;
+  filter: none;
+}
+html[data-theme="dark"] .orderbook-level span,
+html[data-theme="dark"] .orderbook-waiting {
+  color: #92a3b1;
+}
+
+/* 주식 골라보기 */
+html[data-theme="dark"] .risk-guide,
+html[data-theme="dark"] .product-card {
+  background: #121b25;
+  border-color: #2b3947;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.18);
+}
+html[data-theme="dark"] .risk-guide strong,
+html[data-theme="dark"] .product-card h2 {
+  color: #e1ebf2;
+}
+html[data-theme="dark"] .risk-guide span,
+html[data-theme="dark"] .product-card p {
+  color: #94a5b3;
+}
+html[data-theme="dark"] .product-category-tabs button {
+  background: #17232d;
+  border-color: #33424f;
+  color: #aebbc6;
+}
+html[data-theme="dark"] .product-category-tabs button:hover {
+  background: #1d2e3b;
+  color: #dce7ee;
+}
+html[data-theme="dark"] .product-category-tabs button.active {
+  background: #18384c;
+  border-color: #3d7596;
+  color: #73caf5;
+}
+html[data-theme="dark"] .product-icon {
+  background: #18384c;
+  color: #73caf5;
+}
+html[data-theme="dark"] .product-tags span {
+  background: #1a2631;
+  color: #aebdca;
+}
+html[data-theme="dark"] .compare-tray {
+  background: rgba(18, 27, 37, 0.96);
+  border-color: #304451;
+  box-shadow: 0 9px 30px rgba(0, 0, 0, 0.32);
+}
+html[data-theme="dark"] .compare-tray > span {
+  color: #9eafbc;
+}
+html[data-theme="dark"] .compare-tray > span strong {
+  color: #e0eaf1;
+}
+html[data-theme="dark"] .compare-tray b,
+html[data-theme="dark"] .guide-list b {
+  background: #18384c;
+  color: #73caf5;
+}
+html[data-theme="dark"] .compare-tray > button {
+  color: #9aabb8;
+}
+html[data-theme="dark"] .guide-list > div,
+html[data-theme="dark"] .document-links button {
+  border-color: #293743;
+}
+html[data-theme="dark"] .guide-list strong,
+html[data-theme="dark"] .document-links button {
+  color: #d3dfe7;
+}
+html[data-theme="dark"] .guide-list em {
+  color: #91a2af;
+}
+
+/* 내 자산 */
+html[data-theme="dark"] .subnav-tabs {
+  border-color: #2b3947;
+}
+html[data-theme="dark"] .subnav-tabs button {
+  color: #94a5b3;
+}
+html[data-theme="dark"] .subnav-tabs button:hover {
+  color: #dce7ee;
+}
+html[data-theme="dark"] .subnav-tabs button.active {
+  border-bottom-color: var(--brand);
+  color: #73caf5;
+}
+html[data-theme="dark"] .asset-summary-card {
+  background: #121b25;
+  border-color: #2b3947;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.18);
+}
+html[data-theme="dark"] .asset-summary-card > strong,
+html[data-theme="dark"] .allocation-donut strong,
+html[data-theme="dark"] .allocation-list strong,
+html[data-theme="dark"] .account-detail-card dd {
+  color: #dce7ee;
+}
+html[data-theme="dark"] .asset-summary-card > span,
+html[data-theme="dark"] .asset-summary-card small,
+html[data-theme="dark"] .allocation-donut span,
+html[data-theme="dark"] .allocation-list span,
+html[data-theme="dark"] .allocation-list em,
+html[data-theme="dark"] .profit-breakdown span,
+html[data-theme="dark"] .mini-bar-group span,
+html[data-theme="dark"] .mini-bar-group em,
+html[data-theme="dark"] .profit-list span,
+html[data-theme="dark"] .comparison-block span,
+html[data-theme="dark"] .account-detail-card dt {
+  color: #91a2af;
+}
+html[data-theme="dark"] .allocation-donut::after {
+  background: #121b25;
+}
+html[data-theme="dark"] .allocation-list > div,
+html[data-theme="dark"] .profit-breakdown > div,
+html[data-theme="dark"] .profit-list > div,
+html[data-theme="dark"] .comparison-block > div,
+html[data-theme="dark"] .account-detail-card dl > div {
+  border-color: #293743;
+}
+html[data-theme="dark"] .profit-list .total {
+  border-top-color: #3a4a57;
+}
+html[data-theme="dark"] .mini-bar-group i {
+  background: #273541;
+}
+html[data-theme="dark"] .quick-menu-grid button {
+  background: #17232d;
+  border-color: #33424f;
+  color: #bdcad4;
+}
+html[data-theme="dark"] .quick-menu-grid button:hover {
+  background: #1d3546;
+  border-color: #477b98;
+  color: #73caf5;
+}
+html[data-theme="dark"] .service-table th {
+  background: #0f1821;
+  border-color: #2a3844;
+  color: #94a4b2;
+}
+html[data-theme="dark"] .service-table td {
+  background: #121b25;
+  border-color: #263541;
+  color: #d8e3eb;
+}
+html[data-theme="dark"] .service-table tbody tr:hover td {
+  background: #182632;
+}
+html[data-theme="dark"] .order-tax-preview {
+  border-color: #334452;
+  background: #17232c;
+}
+html[data-theme="dark"] .order-tax-preview-head,
+html[data-theme="dark"] .order-tax-preview .order-tax-preview-total {
+  border-color: #334452;
+}
+html[data-theme="dark"] .order-tax-preview dt,
+html[data-theme="dark"] .order-tax-preview-head span { color: #9babb8; }
+html[data-theme="dark"] .order-tax-preview p { color: #c5ad85; }

@@ -1,0 +1,118 @@
+@keyframes longtermPageIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cardRise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes sectionRise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes resultReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.985) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes heroGlow {
+  from {
+    transform: translate3d(-12px, 0, 0) scale(0.92);
+  }
+  to {
+    transform: translate3d(18px, 15px, 0) scale(1.12);
+  }
+}
+@keyframes gentleFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+@keyframes advisorScan {
+  to {
+    background-position: -220% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .longterm-guide,
+  .longterm-hero::before,
+  .longterm-hero::after,
+  .longterm-hero > b,
+  .longterm-facts > div,
+  .projection-card,
+  .advisor-panel,
+  .advisor-panel::before,
+  .market-outlook,
+  .advisor-recommendations article,
+  .projection-line {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .longterm-facts > div,
+  .market-outlook span,
+  .advisor-recommendations article,
+  .advisor-controls button,
+  .advisor-recommendations article > button {
+    transition: none !important;
+  }
+}
+@media (max-width: 560px) {
+  .longterm-guide {
+    padding-top: 20px;
+  }
+  .longterm-hero {
+    min-height: 0;
+    padding: 28px 23px;
+  }
+  .longterm-hero h1 {
+    font-size: 35px;
+  }
+  .longterm-hero p {
+    font-size: 16px;
+  }
+  .longterm-hero > b {
+    font-size: 13px;
+  }
+  .projection-card,
+  .advisor-panel {
+    padding: 20px;
+  }
+  .advisor-title h2 {
+    font-size: 22px;
+  }
+  .advisor-title p,
+  .market-outlook > p {
+    font-size: 14px;
+  }
+  .advisor-recommendations article {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    padding: 16px;
+  }
+  .advisor-recommendations p {
+    font-size: 13px;
+  }
+}

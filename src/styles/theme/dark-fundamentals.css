@@ -1,0 +1,95 @@
+html[data-theme="dark"] .fundamentals-head {
+  border-color: #293743;
+}
+html[data-theme="dark"] .fundamentals-head strong,
+html[data-theme="dark"] .fundamentals-grid strong {
+  color: #dce7ee;
+}
+html[data-theme="dark"] .fundamentals-head button {
+  background: #17232d;
+  border-color: #344553;
+  color: #aebdca;
+}
+html[data-theme="dark"] .fundamentals-grid > div {
+  background: #101a23;
+  border-color: #2b3947;
+}
+html[data-theme="dark"] .fundamentals-range {
+  background: #101a23;
+  color: #9aabb8;
+}
+html[data-theme="dark"] .fundamentals-range strong {
+  color: #d5e0e8;
+}
+html[data-theme="dark"] .fundamentals-guide-note,
+html[data-theme="dark"] .fundamentals-guide-note b { color: #9aabb8; }
+html[data-theme="dark"] .metric-help {
+  border-color: #40515e;
+  background: #17232d;
+  color: #a9b8c4;
+}
+html[data-theme="dark"] .metric-tooltip {
+  border-color: #344653;
+  background: #17232d;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+html[data-theme="dark"] .fundamentals-grid .metric-tooltip b,
+html[data-theme="dark"] .fundamental-advisor-head > div > strong { color: #dce7ee; }
+html[data-theme="dark"] .fundamentals-grid .metric-tooltip p,
+html[data-theme="dark"] .fundamentals-grid .metric-tooltip small,
+html[data-theme="dark"] .fundamental-advisor-head p { color: #a8b7c3; }
+html[data-theme="dark"] .fundamental-advisor {
+  border-color: #30414e;
+  background: linear-gradient(135deg, #111f29, #14212b);
+}
+html[data-theme="dark"] .fundamental-advisor-result {
+  border-color: #30414e;
+  background: rgba(11, 22, 30, 0.75);
+}
+html[data-theme="dark"] .advisor-summary { background: #172936; color: #bccad4; }
+html[data-theme="dark"] .advisor-metric-reads > div { border-color: #30414e; background: #101a23; }
+html[data-theme="dark"] .advisor-metric-reads strong { color: #c4d1da; }
+html[data-theme="dark"] .advisor-evidence > div { background: #142a26; }
+html[data-theme="dark"] .advisor-evidence > div.is-caution { background: #30221f; }
+html[data-theme="dark"] .advisor-evidence p { color: #b5c4c0; }
+html[data-theme="dark"] .synthetic-badge {
+  background: #401b25 !important;
+  border-color: #87384b !important;
+  color: #ff9caf !important;
+}
+html[data-theme="dark"] .synthetic-product-info > p {
+  color: #aebdca;
+}
+html[data-theme="dark"] .synthetic-product-info span {
+  background: #101a23;
+  color: #96a7b4;
+}
+html[data-theme="dark"] .synthetic-product-info span b {
+  color: #dbe6ed;
+}
+html[data-theme="dark"] footer {
+  background: #0d151e;
+  color: #8192a1;
+}
+html[data-theme="dark"] footer strong {
+  color: #bac7d1;
+}
+html[data-theme="dark"] .operations-heading,
+html[data-theme="dark"] .operations-card {
+  background: #121b25;
+  border-color: #2b3947;
+}
+html[data-theme="dark"] .operations-heading h1,
+html[data-theme="dark"] .operations-card header strong,
+html[data-theme="dark"] .operations-card dd {
+  color: #dce7ee;
+}
+html[data-theme="dark"] .operations-card dl div {
+  border-color: #293743;
+}
+html[data-theme="dark"] .operations-heading > button {
+  background: #173247;
+  border-color: #3f7898;
+  color: #73caf5;
+}
+

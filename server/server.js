@@ -2,6 +2,8 @@ import app from "./app.js";
 import dotenv from "dotenv";
 import marketDataService from "./services/marketData.service.js";
 import kisWebSocketService from "./services/kisWebSocket.service.js";
+import pendingOrderMatcher from "./services/pendingOrderMatcher.service.js";
+import riskService from "./services/risk.service.js";
 
 // 서버 실행 진입점.
 // 1) Express 앱을 포트에 연결하고 2) 연결 완료 후 KIS 시세 순환 수집을 시작한다.
@@ -14,6 +16,9 @@ const HOST = process.env.HOST || "0.0.0.0";
 const startServer = () => {
   const server = app.listen(PORT, HOST, () => {
     console.log("----------------------------------------");
+    pendingOrderMatcher.start();
+    // 브라우저 폴링과 무관하게 선물 보유 계좌의 유지증거금을 감시하고 강제청산한다.
+    riskService.startMonitor();
     console.log("포스코증권 API 서버가 실행되었습니다.");
     console.log(`http://${HOST}:${PORT}`);
     console.log("----------------------------------------");
@@ -32,6 +37,8 @@ const startServer = () => {
     console.log(`${signal} 수신: 신규 연결을 중단하고 서버를 안전하게 종료합니다.`);
     kisWebSocketService.stop();
     marketDataService.stopPolling();
+    pendingOrderMatcher.stop();
+    riskService.stopMonitor();
     const forceExitTimer = setTimeout(() => {
       console.error("정상 종료 제한시간을 초과해 프로세스를 종료합니다.");
       process.exit(1);

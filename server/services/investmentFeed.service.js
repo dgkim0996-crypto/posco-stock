@@ -2,15 +2,25 @@
 import marketDatabaseService from "./marketDatabase.service.js";
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
+const ERROR_RETRY_MS = 30 * 1000;
+// 공개 ?refresh=1 요청이 외부 피드를 반복 호출하지 않도록 강제 갱신 사이 최소 간격을 둔다.
+const FORCE_REFRESH_MIN_INTERVAL_MS = 30 * 1000;
 const REQUEST_TIMEOUT_MS = 7000;
 const FEED_LIMIT = 30;
+// 본문을 제공하지 않는 조선비즈 항목은 새 RSS와 저장된 피드에서 모두 제외한다.
+const isAvailableArticle = (item) => {
+  const publisher = String(item.source || "").replace(/[\s._-]/g, "").toLowerCase();
+  const titlePublisher = String(item.title || "").match(/\s[-–—|]\s([^–—|]+)$/)?.[1]?.replace(/[\s._-]/g, "").toLowerCase() || "";
+  return ![publisher, titlePublisher].some((name) => name.includes("조선비즈") || name.includes("chosunbiz") || name.includes("bizchosuncom"))
+    && !/^https?:\/\/(?:www\.)?(?:biz\.chosun\.com|chosunbiz\.com)(?:\/|$)/i.test(String(item.url || ""));
+};
 const restoredArticles = marketDatabaseService.loadFeedItems("articles");
 const restoredSchedules = marketDatabaseService.loadFeedItems("schedules");
-const restoredUpdatedAt = [restoredArticles.updatedAt, restoredSchedules.updatedAt].filter(Boolean).sort().at(-1) || null;
-let cachedFeed = restoredArticles.items.length || restoredSchedules.items.length
-  ? { articles: restoredArticles.items, schedules: restoredSchedules.items, updatedAt: restoredUpdatedAt, errors: [] }
-  : null;
-let cachedAt = 0;
+const availableRestoredArticles = restoredArticles.items.filter(isAvailableArticle);
+const feedCache = {
+  articles: { items: availableRestoredArticles, updatedAt: restoredArticles.updatedAt, checkedAt: Date.parse(restoredArticles.updatedAt) || 0, ready: availableRestoredArticles.length > 0, error: null, inFlight: null },
+  schedules: { items: restoredSchedules.items, updatedAt: restoredSchedules.updatedAt, checkedAt: Date.parse(restoredSchedules.updatedAt) || 0, ready: restoredSchedules.items.length > 0, error: null, inFlight: null },
+};
 // 같은 기사를 반복해서 열 때 언론사 페이지를 다시 파싱하지 않도록 본문도 캐시한다.
 const articleCache = new Map();
 let articleParserPromise = null;
@@ -49,7 +59,7 @@ const loadArticles = async () => {
     const item = match[1];
     const publishedAt = readTag(item, "pubDate");
     return { title: readTag(item, "title"), url: readTag(item, "link"), source: readTag(item, "source") || "Google 뉴스", publishedAt: publishedAt ? new Date(publishedAt).toISOString() : null, category: "뉴스" };
-  }).filter((item) => item.title && item.url);
+  }).filter((item) => item.title && item.url && isAvailableArticle(item));
 };
 
 const formatDate = (date) => date.toISOString().slice(0, 10);
@@ -80,6 +90,7 @@ const articleTime = (item) => {
 const mergeArticles = (freshItems, savedItems = []) => {
   const unique = new Map();
   for (const item of [...freshItems, ...savedItems]) {
+    if (!isAvailableArticle(item)) continue;
     const key = String(item.url || item.title || "");
     if (key && !unique.has(key)) unique.set(key, item);
   }
@@ -97,27 +108,67 @@ const mergeSchedules = (freshItems, savedItems = []) => {
   return [...unique.values()].sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title)).slice(0, FEED_LIMIT);
 };
 
-const saveRollingFeed = (articles, schedules) => {
+const saveRollingFeed = (kind, items) => {
   try {
-    marketDatabaseService.saveFeedItems("articles", articles);
-    marketDatabaseService.saveFeedItems("schedules", schedules);
+    marketDatabaseService.saveFeedItems(kind, items);
   } catch (error) {
     console.warn("투자 피드 캐시 저장 실패:", error.message);
   }
 };
 
+const feedSnapshot = (kind) => {
+  const cache = feedCache[kind];
+  return { items: cache.items, updatedAt: cache.updatedAt, stale: Date.now() - cache.checkedAt >= (cache.error ? ERROR_RETRY_MS : CACHE_TTL_MS), errors: cache.error ? [`${kind === "articles" ? "뉴스" : "일정"}: ${cache.error}`] : [] };
+};
+
+// 같은 종류의 동시 요청은 하나의 외부 조회를 공유한다. 실패해도 저장된 항목은 유지한다.
+const refreshFeedKind = (kind) => {
+  const cache = feedCache[kind];
+  if (cache.inFlight) return cache.inFlight;
+  cache.inFlight = (async () => {
+    try {
+      const freshItems = await (kind === "articles" ? loadArticles() : loadSchedules());
+      cache.items = kind === "articles" ? mergeArticles(freshItems, cache.items) : mergeSchedules(freshItems, cache.items);
+      cache.updatedAt = new Date().toISOString();
+      cache.error = null;
+      saveRollingFeed(kind, cache.items);
+      if (kind === "articles") {
+        const activeUrls = new Set(cache.items.map((item) => item.url));
+        for (const url of articleCache.keys()) if (!activeUrls.has(url)) articleCache.delete(url);
+      }
+    } catch (error) {
+      cache.error = error.message;
+    } finally {
+      cache.checkedAt = Date.now();
+      cache.ready = true;
+      cache.inFlight = null;
+    }
+    return feedSnapshot(kind);
+  })();
+  return cache.inFlight;
+};
+
+const loadFeedKind = async (kind, { force = false } = {}) => {
+  if (!Object.hasOwn(feedCache, kind)) throw new Error("지원하지 않는 피드 종류입니다.");
+  const cache = feedCache[kind];
+  // 진행 중인 갱신은 공유하고, 최근에 확인한 피드는 강제 요청이어도 저장된 결과를 반환한다.
+  const forceAllowed = force && (cache.inFlight || Date.now() - cache.checkedAt >= FORCE_REFRESH_MIN_INTERVAL_MS);
+  if (forceAllowed || !cache.ready) return refreshFeedKind(kind);
+  const snapshot = feedSnapshot(kind);
+  if (snapshot.stale) void refreshFeedKind(kind);
+  return snapshot;
+};
+
+// 이전 통합 API를 사용하는 클라이언트도 저장된 항목을 즉시 받을 수 있다.
 const loadFeed = async ({ force = false } = {}) => {
-  if (!force && cachedFeed && Date.now() - cachedAt < CACHE_TTL_MS) return cachedFeed;
-  const [articlesResult, schedulesResult] = await Promise.allSettled([loadArticles(), loadSchedules()]);
-  const articles = articlesResult.status === "fulfilled" ? mergeArticles(articlesResult.value, cachedFeed?.articles) : cachedFeed?.articles || [];
-  const schedules = schedulesResult.status === "fulfilled" ? mergeSchedules(schedulesResult.value, cachedFeed?.schedules) : cachedFeed?.schedules || [];
-  const refreshed = articlesResult.status === "fulfilled" || schedulesResult.status === "fulfilled";
-  const nextFeed = { articles, schedules, updatedAt: refreshed ? new Date().toISOString() : cachedFeed?.updatedAt || null, errors: [articlesResult.status === "rejected" ? `뉴스: ${articlesResult.reason.message}` : null, schedulesResult.status === "rejected" ? `일정: ${schedulesResult.reason.message}` : null].filter(Boolean) };
-  if (!nextFeed.articles.length && !nextFeed.schedules.length && cachedFeed) return cachedFeed;
-  saveRollingFeed(nextFeed.articles, nextFeed.schedules);
-  const activeArticleUrls = new Set(nextFeed.articles.map((item) => item.url));
-  for (const url of articleCache.keys()) if (!activeArticleUrls.has(url)) articleCache.delete(url);
-  cachedFeed = nextFeed; cachedAt = Date.now(); return nextFeed;
+  const [articles, schedules] = await Promise.all([
+    loadFeedKind("articles", { force }), loadFeedKind("schedules", { force }),
+  ]);
+  return {
+    articles: articles.items, schedules: schedules.items,
+    updatedAt: [articles.updatedAt, schedules.updatedAt].filter(Boolean).sort().at(-1) || null,
+    errors: [...articles.errors, ...schedules.errors],
+  };
 };
 
 // Google 뉴스 RSS의 중계 주소를 실제 언론사 기사 주소로 해석한다.
@@ -130,7 +181,7 @@ const resolveGoogleNewsUrl = async (googleUrl) => {
   const node = page.match(new RegExp(`<[^>]+data-n-a-id="${articleId}"[^>]*>`, "i"))?.[0];
   const signature = node?.match(/data-n-a-sg="([^"]+)"/i)?.[1];
   const timestamp = node?.match(/data-n-a-ts="([^"]+)"/i)?.[1];
-  if (!signature || !timestamp) throw Object.assign(new Error("뉴스 원문 주소를 확인하지 못했습니다."), { status: 502 });
+  if (!signature || !timestamp) throw Object.assign(new Error("뉴스 원문 주소를 확인하지 못했습니다."), { status: 502, expose: true });
 
   const request = ["garturlreq", [["X", "X", ["X", "X"], null, null, 1, 1, "KR:ko", null, 1, null, null, null, null, null, 0, 1], "X", "X", 1, [1, 1, 1], 1, 1, null, 0, 0, null, 0], articleId, Number(timestamp), signature];
   const body = new URLSearchParams({ "f.req": JSON.stringify([[['Fbv4je', JSON.stringify(request)]]]) });
@@ -141,7 +192,7 @@ const resolveGoogleNewsUrl = async (googleUrl) => {
   const envelope = responseText.split("\n\n").map((part) => part.trim()).find((part) => part.startsWith("[["));
   const decoded = envelope ? JSON.parse(JSON.parse(envelope)[0][2]) : null;
   const resolvedUrl = decoded?.[1];
-  if (typeof resolvedUrl !== "string" || !resolvedUrl.startsWith("https://")) throw Object.assign(new Error("뉴스 원문 주소를 확인하지 못했습니다."), { status: 502 });
+  if (typeof resolvedUrl !== "string" || !resolvedUrl.startsWith("https://")) throw Object.assign(new Error("뉴스 원문 주소를 확인하지 못했습니다."), { status: 502, expose: true });
   return resolvedUrl;
 };
 
@@ -161,8 +212,8 @@ const extractArticleParagraphs = async (html, url) => {
 
 // 임의 URL 프록시가 되지 않도록 현재 서버 피드에 존재하는 기사만 허용한다.
 const loadArticle = async (url) => {
-  const feed = await loadFeed();
-  const article = feed.articles.find((item) => item.url === url);
+  const feed = await loadFeedKind("articles");
+  const article = feed.items.find((item) => item.url === url);
   if (!article) throw Object.assign(new Error("현재 피드에 없는 뉴스입니다."), { status: 404 });
   const saved = articleCache.get(url);
   if (saved && Date.now() - saved.cachedAt < CACHE_TTL_MS) return saved.payload;
@@ -172,13 +223,13 @@ const loadArticle = async (url) => {
   if (resolved.protocol !== "https:" || ["localhost", "127.0.0.1", "::1"].includes(resolved.hostname)) throw Object.assign(new Error("허용되지 않은 뉴스 주소입니다."), { status: 400 });
   const response = await fetchWithTimeout(resolvedUrl, { headers: { Accept: "text/html,application/xhtml+xml", "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.7", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36" } });
   const contentType = response.headers.get("content-type") || "";
-  if (!contentType.includes("text/html")) throw Object.assign(new Error("본문 형식을 읽을 수 없습니다."), { status: 502 });
+  if (!contentType.includes("text/html")) throw Object.assign(new Error("본문 형식을 읽을 수 없습니다."), { status: 502, expose: true });
   const html = await response.text();
   const paragraphs = await extractArticleParagraphs(html, resolvedUrl);
-  if (!paragraphs.length) throw Object.assign(new Error("언론사에서 본문 제공을 제한하고 있습니다."), { status: 502 });
+  if (!paragraphs.length) throw Object.assign(new Error("언론사에서 본문 제공을 제한하고 있습니다."), { status: 502, expose: true });
   const payload = { title: article.title, source: article.source, publishedAt: article.publishedAt, paragraphs };
   articleCache.set(url, { cachedAt: Date.now(), payload });
   return payload;
 };
 
-export default { loadArticle, loadFeed };
+export default { loadArticle, loadFeed, loadFeedKind };

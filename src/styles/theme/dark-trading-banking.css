@@ -1,0 +1,103 @@
+html[data-theme="dark"] .order-tabs button,
+html[data-theme="dark"] .info-grid > div,
+html[data-theme="dark"] th,
+html[data-theme="dark"] .order-status-item,
+html[data-theme="dark"] .message {
+  background: #101923;
+  border-color: #293743;
+  color: #aab8c4;
+}
+html[data-theme="dark"] .order-tabs button.active {
+  background: #17232d;
+  color: var(--brand);
+}
+html[data-theme="dark"] .order-side-tabs {
+  background: #0e171f;
+}
+html[data-theme="dark"] .order-side-tabs button {
+  color: #8394a1;
+}
+html[data-theme="dark"] .order-side-tabs .is-buy.active,
+html[data-theme="dark"] .order-side-tabs .is-sell.active {
+  background: #1a2833;
+}
+html[data-theme="dark"] .order-toast {
+  border-color: #344653;
+  background: rgba(18, 27, 37, 0.97);
+  box-shadow: 0 16px 46px rgba(0, 0, 0, 0.42);
+}
+html[data-theme="dark"] .order-toast strong {
+  color: #e6eef4;
+}
+html[data-theme="dark"] .order-toast p {
+  color: #a8b6c1;
+}
+html[data-theme="dark"] .order-toast > button {
+  color: #8fa0ad;
+}
+html[data-theme="dark"] .order-toast > button:hover {
+  background: #20303c;
+  color: #e2ebf1;
+}
+html[data-theme="dark"] .service-hero {
+  background: linear-gradient(135deg, #132433, #101923);
+  border-color: #2b3d4a;
+}
+html[data-theme="dark"] .hero-live,
+html[data-theme="dark"] .bank-balance {
+  background: #17232d;
+  border-color: #334451;
+}
+html[data-theme="dark"] .rank-mini button {
+  border-color: #293743;
+}
+html[data-theme="dark"] .bank-quick-grid button,
+html[data-theme="dark"] .account-service-grid button,
+html[data-theme="dark"] .finance-product-grid > button {
+  background: #121d27;
+  border-color: #30404c;
+}
+html[data-theme="dark"] .bank-quick-grid button:hover,
+html[data-theme="dark"] .bank-quick-grid button.active,
+html[data-theme="dark"] .finance-product-grid > button.selected {
+  background: #193143;
+  border-color: #3f7898;
+}
+html[data-theme="dark"] .exchange-balance > div,
+html[data-theme="dark"] .finance-summary,
+html[data-theme="dark"] .finance-notice,
+html[data-theme="dark"] .bank-help,
+html[data-theme="dark"] .bank-message {
+  background: #101923;
+  border-color: #2b3946;
+}
+html[data-theme="dark"] .finance-application {
+  border-color: #30404c;
+}
+html[data-theme="dark"] .finance-product-grid strong,
+html[data-theme="dark"] .finance-summary strong,
+html[data-theme="dark"] .exchange-balance strong,
+html[data-theme="dark"] .bank-log-list strong {
+  color: #d9e4ec;
+}
+/* 홈 로고는 아이콘 종류별로 명암을 달리해 흰 사각형이 도드라지지 않게 한다. */
+html[data-theme="dark"] .asset-logo {
+  border-color: #344553;
+  box-shadow: 0 2px 9px rgba(0, 0, 0, 0.24);
+}
+html[data-theme="dark"] .asset-logo-local {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+html[data-theme="dark"] .asset-logo-remote {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+html[data-theme="dark"] .asset-logo-fallback {
+  background: linear-gradient(145deg, hsl(var(--asset-hue) 32% 24%), #17232d);
+}
+html[data-theme="dark"] .asset-logo-fallback b {
+  color: hsl(var(--asset-hue) 72% 75%);
+}

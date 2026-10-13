@@ -1,0 +1,223 @@
+.order-panel {
+  overflow: hidden;
+}
+.order-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  height: 46px;
+  border-bottom: 1px solid var(--line);
+}
+.order-tabs button {
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: #f8f9fb;
+  color: #818c97;
+  font-size: 12px;
+}
+.order-tabs button:last-child {
+  border-right: 0;
+}
+.order-tabs button.active {
+  background: #fff;
+  color: var(--brand);
+  font-weight: 800;
+  box-shadow: inset 0 -2px 0 var(--brand);
+}
+.order-heading {
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #edf0f3;
+}
+.order-heading span {
+  font-size: 12px;
+  color: #66727f;
+}
+.order-heading strong {
+  font-size: 14px;
+}
+.order-side-tabs {
+  margin: 12px 14px 2px;
+  padding: 3px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  border-radius: 10px;
+  background: #f1f4f6;
+}
+.order-side-tabs button {
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #82909b;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.order-side-tabs .is-buy.active {
+  background: #fff;
+  color: var(--up);
+  box-shadow: 0 3px 12px rgba(229, 72, 77, 0.12);
+}
+.order-side-tabs .is-sell.active {
+  background: #fff;
+  color: var(--down);
+  box-shadow: 0 3px 12px rgba(47, 111, 237, 0.12);
+}
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #edf0f3;
+  gap: 1px;
+  border-bottom: 1px solid #edf0f3;
+}
+.info-grid > div {
+  padding: 9px 11px;
+  background: #fafbfc;
+}
+.info-grid span,
+.info-grid strong {
+  display: block;
+}
+.info-grid span {
+  color: #8c97a3;
+  font-size: 9px;
+}
+.info-grid strong {
+  margin-top: 3px;
+  font-size: 11px;
+}
+.order-form {
+  padding: 10px 14px;
+}
+.order-line {
+  min-height: 43px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #eff2f4;
+}
+.order-line > span {
+  color: #7d8995;
+  font-size: 11px;
+}
+.order-line strong {
+  font-size: 12px;
+}
+.fake-select {
+  min-width: 115px;
+  padding: 7px 8px;
+  border: 1px solid #d8dee4;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #3a4754;
+}
+.fake-select b {
+  font-weight: 500;
+  color: #99a2ab;
+}
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.quantity-line input {
+  width: 115px;
+  padding: 7px 8px;
+  border: 1px solid #cfd6dd;
+  outline: none;
+  text-align: right;
+  font-size: 13px;
+}
+.quantity-line input:focus {
+  border-color: var(--brand);
+}
+.quantity-max {
+  height: 31px;
+  padding: 0 9px;
+  border: 1px solid #9ccbea;
+  border-radius: 6px;
+  background: #eef8fd;
+  color: var(--brand);
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.quantity-max:hover {
+  border-color: var(--brand);
+  background: #dff2fc;
+}
+.order-submit {
+  padding: 3px 14px 0;
+}
+.order-tax-preview {
+  margin: 0 14px 8px;
+  padding: 10px 11px;
+  border: 1px solid #dce5eb;
+  border-radius: 8px;
+  background: #f7fafc;
+}
+.order-tax-preview-head,
+.order-tax-preview dl > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.order-tax-preview-head {
+  padding-bottom: 7px;
+  border-bottom: 1px solid #e6edf1;
+}
+.order-tax-preview-head strong { font-size: 11.5px; }
+.order-tax-preview-head span { color: #87939d; font-size: 9.5px; }
+.order-tax-preview dl { margin: 6px 0 0; }
+.order-tax-preview dl > div { min-height: 24px; }
+.order-tax-preview dt { color: #70808d; font-size: 10.5px; }
+.order-tax-preview dd { margin: 0; font-size: 11px; font-weight: 750; }
+.order-tax-preview .order-tax-preview-total {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid #e6edf1;
+}
+.order-tax-preview .order-tax-preview-deferred { color: #7357b5; }
+.order-tax-preview p {
+  margin: 7px 0 0;
+  color: #7a6a52;
+  font-size: 9.5px;
+  line-height: 1.45;
+}
+.order-submit button {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.buy {
+  background: var(--up);
+}
+.sell {
+  background: var(--down);
+}
+.message {
+  margin: 10px 14px 14px;
+  padding: 9px 10px;
+  min-height: 48px;
+  border: 1px solid #e0e5e9;
+  background: #fafbfc;
+  color: #6f7b87;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.message b {
+  display: block;
+  margin-bottom: 2px;
+  color: #3f4e5d;
+  font-size: 10px;
+}

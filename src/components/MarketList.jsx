@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import AssetLogo from "./AssetLogo.jsx";
 import { assetMatchesSearch } from "../utils/assetSearch.js";
+import { formatChangeAmount } from "../utils/marketChange.js";
 
 // 상품 검색, 선택 상태, 현재가와 등락률을 렌더링하는 왼쪽 시장 목록이다.
 
@@ -81,7 +82,7 @@ export default function MarketList({ assets, selectedId, onSelect, type, favorit
                 <span className="yield">YTM {asset.yield.toFixed(2)}%</span>
               ) : (
                 <span className={asset.change >= 0 ? "up" : "down"}>
-                  {asset.change >= 0 ? "+" : ""}{asset.change.toFixed(2)}%
+                  {formatChangeAmount(asset)} ({asset.change >= 0 ? "+" : ""}{asset.change.toFixed(2)}%)
                 </span>
               )}
             </div>

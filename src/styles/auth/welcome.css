@@ -1,0 +1,142 @@
+/* 첫 로그인 사용자가 부담 없이 서비스 흐름을 익히는 따뜻한 톤의 안내 창이다. */
+.welcome-guide-backdrop {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(20, 43, 58, 0.34);
+  backdrop-filter: blur(7px);
+  animation: welcome-guide-fade-in 220ms ease-out;
+}
+.welcome-guide {
+  position: relative;
+  width: min(600px, 100%);
+  overflow: hidden;
+  padding: 42px 46px 30px;
+  border: 1px solid rgba(255, 255, 255, .82);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 88% 3%, #fff1cd 0, transparent 28%),
+    radial-gradient(circle at 4% 45%, #dff6f3 0, transparent 24%),
+    #fffdfa;
+  box-shadow: 0 28px 80px rgba(15, 50, 66, .26);
+  color: #2c424b;
+  animation: welcome-guide-rise-in 300ms cubic-bezier(.2, .8, .2, 1);
+}
+.welcome-guide-close {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .7);
+  color: #6d7d80;
+  font-size: 24px;
+  line-height: 1;
+}
+.welcome-guide-close:hover { background: #fff; color: #244651; }
+.welcome-guide-sparkles {
+  margin-bottom: 11px;
+  color: #f2a846;
+  font-size: 31px;
+}
+.welcome-guide-eyebrow {
+  color: #4c958d;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .14em;
+}
+.welcome-guide h1 {
+  margin: 9px 0 12px;
+  color: #244651;
+  font-size: clamp(24px, 4vw, 31px);
+  line-height: 1.33;
+  letter-spacing: -.045em;
+}
+.welcome-guide > p {
+  max-width: 470px;
+  margin: 0;
+  color: #63777a;
+  font-size: 14px;
+  line-height: 1.72;
+}
+.welcome-guide-steps {
+  display: grid;
+  gap: 10px;
+  margin: 25px 0;
+  padding: 0;
+  list-style: none;
+}
+.welcome-guide-steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid #e6efea;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, .72);
+}
+.welcome-guide-steps b {
+  width: 31px;
+  color: #d69a43;
+  font-size: 12px;
+}
+.welcome-guide-steps strong,
+.welcome-guide-steps span { display: block; }
+.welcome-guide-steps strong { color: #35535a; font-size: 13px; }
+.welcome-guide-steps span { margin-top: 3px; color: #849394; font-size: 12px; }
+.welcome-guide-actions {
+  display: flex;
+  gap: 10px;
+}
+.welcome-guide-actions button {
+  height: 48px;
+  border-radius: 13px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.welcome-guide-secondary {
+  flex: 1;
+  border: 1px solid #d7e4df;
+  background: #fff;
+  color: #587074;
+}
+.welcome-guide-primary {
+  flex: 1.45;
+  border: 0;
+  background: linear-gradient(135deg, #4f9a91, #2d7e8c);
+  box-shadow: 0 9px 20px rgba(45, 126, 140, .22);
+  color: #fff;
+}
+.welcome-guide-primary span { margin-left: 6px; font-size: 17px; }
+.welcome-guide > small {
+  display: block;
+  margin-top: 15px;
+  color: #98a5a3;
+  font-size: 11px;
+  text-align: center;
+}
+@keyframes welcome-guide-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes welcome-guide-rise-in { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+html[data-theme="dark"] .welcome-guide {
+  border-color: #38545a;
+  background: radial-gradient(circle at 90% 0, #473d29 0, transparent 28%), #16272d;
+  color: #dce9e6;
+}
+html[data-theme="dark"] .welcome-guide h1 { color: #edf7f4; }
+html[data-theme="dark"] .welcome-guide > p,
+html[data-theme="dark"] .welcome-guide-steps span { color: #aebfbd; }
+html[data-theme="dark"] .welcome-guide-steps li { border-color: #315055; background: rgba(24, 48, 53, .8); }
+html[data-theme="dark"] .welcome-guide-steps strong { color: #dce9e6; }
+html[data-theme="dark"] .welcome-guide-secondary { border-color: #3b5c60; background: #1d3439; color: #d4e4df; }
+html[data-theme="dark"] .welcome-guide-close { background: #253d42; color: #bbcac6; }
+@media (max-width: 560px) {
+  .welcome-guide-backdrop { padding: 12px; align-items: end; }
+  .welcome-guide { padding: 32px 22px 24px; border-radius: 24px; }
+  .welcome-guide-actions { flex-direction: column-reverse; }
+  .welcome-guide-actions button { flex: auto; }
+}

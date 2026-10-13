@@ -1,0 +1,240 @@
+.stock-search {
+  margin: 11px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #cfd6dd;
+  background: #fff;
+}
+.stock-search span {
+  padding-left: 10px;
+  color: #84909d;
+  font-size: 18px;
+}
+.stock-search input {
+  width: 100%;
+  padding: 9px 9px;
+  border: 0;
+  outline: none;
+  color: #263544;
+  font-size: 13px;
+}
+.stock-search input::placeholder {
+  color: #a8b1ba;
+}
+.favorites-filter {
+  margin: -3px 11px 8px;
+  padding: 7px 9px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e1e6ea;
+  border-radius: 7px;
+  background: #fafbfc;
+  color: #7e8a96;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.favorites-filter span {
+  color: #b8c0c8;
+}
+.favorites-filter b {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 9px;
+  background: #e7edf2;
+  color: #657483;
+  font-size: 9px;
+}
+.favorites-filter.active {
+  border-color: #efd071;
+  background: #fff9df;
+  color: #775d00;
+}
+.favorites-filter.active span {
+  color: #f2b705;
+}
+.favorites-filter.active b {
+  background: #ffeaa3;
+  color: #775d00;
+}
+.market-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  padding: 0 6px 8px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.market-columns {
+  padding: 7px 7px;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #edf0f3;
+  border-bottom: 1px solid #edf0f3;
+  color: #98a1ab;
+  font-size: 10px;
+}
+.market-row {
+  width: 100%;
+  padding: 13px 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border: 0;
+  border-bottom: 1px solid #eff2f5;
+  background: #fff;
+  color: #2b3946;
+  text-align: left;
+}
+.market-row:hover {
+  background: #f7fafc;
+}
+.market-row.active {
+  background: #eef6fd;
+  box-shadow: inset 3px 0 0 var(--brand);
+}
+.market-row strong,
+.market-row span {
+  display: block;
+}
+.market-row > div:first-child strong {
+  font-size: 13px;
+}
+.market-row > div:first-child span {
+  margin-top: 3px;
+  color: #99a3ae;
+  font-size: 10px;
+}
+.market-right {
+  margin-left: auto;
+  text-align: right;
+}
+.market-right strong {
+  font-size: 12px;
+}
+.market-right span {
+  margin-top: 3px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.favorite-button {
+  flex: 0 0 27px;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #c5ccd3;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+.favorite-button:hover {
+  background: #fff7d5;
+  color: #e0a900;
+}
+.favorite-button.active {
+  color: #f2b705;
+}
+.search-empty {
+  padding: 28px 8px;
+  text-align: center;
+  color: #9ca6b0;
+  font-size: 12px;
+}
+.center {
+  display: grid;
+  grid-template-rows: max-content minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+}
+.instrument {
+  min-height: 100px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.instrument-name > span {
+  color: #8894a0;
+  font-size: 11px;
+}
+.instrument h1 {
+  margin: 5px 0 7px;
+  font-size: 26px;
+  letter-spacing: -0.04em;
+}
+.badges {
+  display: flex;
+  gap: 5px;
+}
+.badges b {
+  padding: 3px 5px;
+  border: 1px solid #dce4ea;
+  border-radius: 2px;
+  color: #74808c;
+  background: #fafbfc;
+  font-size: 9px;
+  font-weight: 700;
+}
+.quote-summary {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.price-box {
+  text-align: right;
+}
+.price-box strong,
+.price-box span {
+  display: block;
+}
+.price-box strong {
+  font-size: 30px;
+  letter-spacing: -0.03em;
+}
+.price-box span {
+  margin-top: 5px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.quote-mini-grid {
+  display: grid;
+  gap: 7px;
+  padding-left: 19px;
+  border-left: 1px solid #e6e9ed;
+}
+.quote-mini-grid div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 155px;
+}
+.quote-mini-grid span {
+  color: #909aa5;
+  font-size: 10px;
+}
+.quote-mini-grid strong {
+  font-size: 11px;
+}
+.risk-alert {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: #fff7e6;
+  color: #9a6500;
+  font-size: 10px;
+}
+.risk-alert strong {
+  font-size: 11px;
+}
+.risk-alert.margin_call,
+.risk-alert.liquidation {
+  background: #fff0f1;
+  color: #c63849;
+}

@@ -1,0 +1,61 @@
+
+/* 전역 디자인 토큰: 브랜드·상승·하락 색상과 기본 글꼴을 모든 화면이 공유한다. */
+:root {
+  font-family:
+    "Pretendard Variable",
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    "Segoe UI",
+    "Noto Sans KR",
+    "Malgun Gothic",
+    sans-serif;
+  color: #1f2937;
+  background: #f4f6f9;
+  --brand: #05507d;
+  --brand-dark: #043f63;
+  --navy: #0d2235;
+  --text: #1c2733;
+  --muted: #718096;
+  --line: #dce2e8;
+  --soft: #f7f9fb;
+  --panel: #ffffff;
+  --up: #e5484d;
+  --down: #2f6fed;
+  --yield: #d58512;
+  --signature-start: #0b6fb8;
+  --signature-end: #0097d7;
+  --signature-gradient: linear-gradient(
+    135deg,
+    var(--signature-start),
+    var(--signature-end)
+  );
+  --signature-soft: #e8f6fd;
+  --signature-shadow: 0 10px 26px rgba(11, 111, 184, 0.2);
+}
+/* 브라우저 기본값을 정리하고 앱 전체의 박스 크기·배경·입력 폰트를 통일한다. */
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f4f6f9;
+  color: var(--text);
+  font-weight: 450;
+  letter-spacing: -0.018em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  letter-spacing: inherit;
+}
+button {
+  cursor: pointer;
+}

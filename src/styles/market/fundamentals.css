@@ -1,0 +1,174 @@
+/* 선택한 국내주식의 실제 기업정보와 재무지표 */
+.fundamentals-panel {
+  width: 100%;
+  overflow: hidden;
+}
+.fundamentals-head {
+  min-height: 72px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid #e8edf1;
+}
+.fundamentals-head > div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.fundamentals-head span {
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 900;
+}
+.fundamentals-head strong {
+  color: #293e51;
+  font-size: 19px;
+}
+.fundamentals-head em {
+  color: #8b98a4;
+  font-size: 11px;
+  font-style: normal;
+}
+.fundamentals-head button {
+  padding: 8px 11px;
+  border: 1px solid #d4dfe7;
+  border-radius: 7px;
+  background: #fff;
+  color: #607385;
+  font-size: 11px;
+  font-weight: 800;
+}
+.fundamentals-guide-note {
+  margin: 14px 20px -2px;
+  color: #7f8e9c;
+  font-size: 11px;
+}
+.fundamentals-guide-note b { color: #536b7f; }
+.fundamentals-grid {
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 9px;
+}
+.fundamentals-grid > div {
+  position: relative;
+  min-height: 76px;
+  padding: 13px;
+  border: 1px solid #e3e9ee;
+  border-radius: 10px;
+  background: #fafcfd;
+}
+.fundamentals-grid .metric-label,
+.fundamentals-grid strong {
+  display: block;
+}
+.fundamentals-grid .metric-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #7d8d9b;
+  font-size: 11px;
+}
+.fundamentals-grid strong {
+  margin-top: 8px;
+  color: #273e51;
+  font-size: 16px;
+}
+.fundamentals-grid .is-empty strong {
+  color: #a2adb6;
+  font-size: 12px;
+}
+.metric-help {
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #cbd6df;
+  border-radius: 50%;
+  background: #fff;
+  color: #728596;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: help;
+}
+.metric-help:hover,
+.metric-help:focus-visible {
+  border-color: var(--brand);
+  color: var(--brand);
+  outline: none;
+}
+.metric-tooltip {
+  position: absolute;
+  z-index: 30;
+  top: 42px;
+  left: 10px;
+  width: min(280px, calc(100vw - 54px));
+  padding: 14px;
+  border: 1px solid #dce5eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(30, 52, 68, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.14s ease, transform 0.14s ease, visibility 0.14s;
+  pointer-events: none;
+}
+.fundamentals-grid > div:nth-child(6n + 5) .metric-tooltip,
+.fundamentals-grid > div:nth-child(6n) .metric-tooltip { right: 10px; left: auto; }
+.fundamentals-grid > div:hover .metric-tooltip,
+.fundamentals-grid > div:focus-within .metric-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.fundamentals-grid .metric-tooltip b {
+  display: block;
+  color: #213b50;
+  font-size: 13px;
+}
+.fundamentals-grid .metric-tooltip p {
+  margin: 6px 0 10px;
+  color: #607487;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.fundamentals-grid .metric-tooltip small {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 7px;
+  margin-top: 6px;
+  color: #6e8090;
+  font-size: 10px;
+  line-height: 1.45;
+}
+.fundamentals-grid .metric-tooltip em {
+  color: var(--brand);
+  font-style: normal;
+  font-weight: 900;
+}
+.fundamentals-range {
+  margin: 0 20px;
+  padding: 13px 15px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 15px;
+  border-radius: 9px;
+  background: #f3f8fb;
+  color: #758695;
+  font-size: 11px;
+}
+.fundamentals-range i {
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #4f77db, #26a6d1, #e5535b);
+}
+.fundamentals-range strong {
+  margin-left: 6px;
+  color: #354c5e;
+}

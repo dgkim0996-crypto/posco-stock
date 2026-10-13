@@ -1,0 +1,182 @@
+/* 뱅킹·업무 */
+.bank-balance strong {
+  font-size: 19px;
+}
+.bank-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.bank-quick-grid button {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e0e7ed;
+  border-radius: 14px;
+  background: #fff;
+  text-align: left;
+}
+.bank-quick-grid button:hover,
+.bank-quick-grid button.active {
+  border-color: #9ccbea;
+  background: #f4fbff;
+}
+.bank-quick-grid i {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #edf7fd;
+  color: var(--brand);
+  font-size: 17px;
+  font-style: normal;
+}
+.bank-quick-grid strong,
+.bank-quick-grid em {
+  display: block;
+}
+.bank-quick-grid strong {
+  color: #34495b;
+  font-size: 12px;
+}
+.bank-quick-grid em {
+  margin-top: 3px;
+  color: #97a2ac;
+  font-size: 9px;
+  font-style: normal;
+}
+.banking-main-grid {
+  grid-template-columns: 1.1fr 0.9fr;
+}
+.bank-form {
+  padding: 18px;
+}
+.bank-form label {
+  display: block;
+  margin-bottom: 14px;
+}
+.bank-form label > span {
+  display: block;
+  margin-bottom: 7px;
+  color: #71808e;
+  font-size: 11px;
+  font-weight: 800;
+}
+.bank-form input,
+.fake-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #d7dfe6;
+  border-radius: 9px;
+  background: #fff;
+  color: #35495b;
+  font-size: 12px;
+  outline: none;
+}
+.bank-form input:focus {
+  border-color: var(--brand);
+}
+.fake-input {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafb;
+}
+.fake-input b {
+  color: #506579;
+  font-size: 11px;
+}
+.amount-input {
+  position: relative;
+}
+.amount-input input {
+  padding-right: 44px;
+  text-align: right;
+  font-size: 15px;
+  font-weight: 800;
+}
+.amount-input b {
+  position: absolute;
+  right: 13px;
+  top: 14px;
+  color: #7f8c98;
+  font-size: 11px;
+}
+.amount-presets {
+  display: flex;
+  gap: 6px;
+  margin: -3px 0 15px;
+}
+.amount-presets button {
+  padding: 6px 9px;
+  border: 1px solid #dce3e9;
+  border-radius: 7px;
+  background: #f8fafb;
+  color: #667787;
+  font-size: 9px;
+  font-weight: 800;
+}
+.bank-help {
+  margin: 8px 0 15px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f8fafb;
+  color: #8a96a2;
+  font-size: 9px;
+  line-height: 1.6;
+}
+.exchange-balance {
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+.exchange-balance > div {
+  padding: 13px;
+  border: 1px solid #e1e7ed;
+  border-radius: 10px;
+  background: #f9fbfc;
+}
+.exchange-balance span,
+.exchange-balance strong {
+  display: block;
+}
+.exchange-balance span {
+  color: #8c98a4;
+  font-size: 10px;
+}
+.exchange-balance strong {
+  margin-top: 7px;
+  color: #34495b;
+  font-size: 14px;
+}
+.exchange-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.bank-message {
+  margin: 0 18px 18px;
+  padding: 11px 12px;
+  border: 1px solid #d9e7f1;
+  border-radius: 9px;
+  background: #f4faff;
+}
+.bank-message b,
+.bank-message span {
+  display: block;
+}
+.bank-message b {
+  color: #4d6c83;
+  font-size: 9px;
+}
+.bank-message span {
+  margin-top: 4px;
+  color: #667989;
+  font-size: 10px;
+  line-height: 1.5;
+}

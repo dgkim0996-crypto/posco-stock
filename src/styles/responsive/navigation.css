@@ -1,0 +1,93 @@
+@media (max-width: 1300px) {
+  .topbar-inner:has(.summary-actions) {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .topbar-inner:has(.summary-actions) .main-nav {
+    order: 3;
+    width: 100%;
+    flex-basis: 100%;
+    overflow-x: auto;
+  }
+}
+@media (max-width: 900px) {
+  .topbar {
+    position: sticky;
+    top: 0;
+    padding: 10px 16px;
+  }
+  .topbar-inner {
+    min-height: auto;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .brand {
+    min-width: 0;
+    margin-right: auto;
+  }
+  .header-actions {
+    margin-left: 0;
+  }
+  .main-nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    flex-basis: 100%;
+    padding-bottom: 2px;
+  }
+  .main-nav button {
+    height: 38px;
+    padding: 0 13px;
+  }
+}
+@media (max-width: 720px) {
+  .header-actions.summary-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+@media (max-width: 560px) {
+  .header-actions .header-market-clock span {
+    display: none;
+  }
+  .header-actions.summary-actions .header-search-form {
+    width: min(120px, calc(100vw - 215px));
+  }
+  .topbar {
+    padding: 9px 12px;
+  }
+  .brand-mark {
+    width: 78px;
+    height: auto;
+    border-radius: 0;
+  }
+  .brand strong {
+    font-size: 17px;
+  }
+  .brand span {
+    display: none;
+  }
+  .account-mini {
+    display: none;
+  }
+  .header-search-form {
+    width: min(220px, calc(100vw - 90px));
+  }
+  .header-search-results {
+    position: fixed;
+    top: 65px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+  .main-nav {
+    gap: 3px;
+  }
+  .main-nav button {
+    min-width: auto;
+    padding: 0 11px;
+    font-size: 13px;
+  }
+}
+

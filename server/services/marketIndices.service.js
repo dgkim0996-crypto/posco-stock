@@ -1,5 +1,7 @@
 // 공개 시세 응답에서 주요 지수와 환율을 읽어 한 가지 화면 모델로 변환한다.
 const CACHE_TTL_MS = 60 * 1000;
+// 공개 ?refresh=1이나 연속 실패가 외부 시세 서버를 반복 호출하지 않도록 조회 시도 사이 최소 간격을 둔다.
+const MIN_REFRESH_INTERVAL_MS = 15 * 1000;
 const REQUEST_TIMEOUT_MS = 7000;
 const SYMBOLS = {
   KOSPI: "^KS11",
@@ -11,6 +13,8 @@ const SYMBOLS = {
 
 let cachedIndices = null;
 let cachedAt = 0;
+let lastAttemptAt = 0;
+let inFlight = null;
 
 const loadIndex = async ([name, symbol]) => {
   const controller = new AbortController();
@@ -36,15 +40,29 @@ const loadIndex = async ([name, symbol]) => {
   }
 };
 
-const loadIndices = async ({ force = false } = {}) => {
-  if (!force && cachedIndices && Date.now() - cachedAt < CACHE_TTL_MS) return cachedIndices;
+const refreshIndices = async () => {
+  lastAttemptAt = Date.now();
   const results = await Promise.allSettled(Object.entries(SYMBOLS).map(loadIndex));
   const items = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
   if (!items.length && cachedIndices) return cachedIndices;
-  if (!items.length) throw new Error("시장 지수를 불러오지 못했습니다.");
+  if (!items.length) throw Object.assign(new Error("시장 지수를 불러오지 못했습니다."), { status: 503 });
   cachedIndices = { items, updatedAt: new Date().toISOString(), source: "Yahoo Finance" };
   cachedAt = Date.now();
   return cachedIndices;
+};
+
+// 동시에 들어온 조회는 하나의 외부 요청을 공유하고, 최소 간격 안의 재조회는 저장된 값을 사용한다.
+const loadIndices = async ({ force = false } = {}) => {
+  if (inFlight) return inFlight;
+  const now = Date.now();
+  const expired = !cachedIndices || now - cachedAt >= CACHE_TTL_MS;
+  const throttled = now - lastAttemptAt < MIN_REFRESH_INTERVAL_MS;
+  if ((!expired && !force) || throttled) {
+    if (cachedIndices) return cachedIndices;
+    throw Object.assign(new Error("시장 지수를 불러오지 못했습니다."), { status: 503, retryAfter: Math.ceil((lastAttemptAt + MIN_REFRESH_INTERVAL_MS - now) / 1000) });
+  }
+  inFlight = refreshIndices().finally(() => { inFlight = null; });
+  return inFlight;
 };
 
 export default { loadIndices };

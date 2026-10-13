@@ -1,0 +1,185 @@
+/* 장기자산관리 상품 안내와 AI 포트폴리오 분석 */
+.longterm-guide {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 30px 2.2vw 45px;
+}
+.guide-back {
+  margin-bottom: 14px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 900;
+}
+.longterm-hero {
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #082f49, #075985 58%, #0284c7);
+  color: #fff;
+}
+.longterm-hero span {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: #a9dcf7;
+}
+.longterm-hero h1 {
+  margin: 8px 0 0;
+  font-size: 32px;
+}
+.longterm-hero p {
+  margin: 7px 0 0;
+  color: #d7edf8;
+  font-size: 14px;
+}
+.longterm-hero > b {
+  max-width: 320px;
+  padding: 12px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+}
+.longterm-facts {
+  margin: 14px 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.longterm-facts > div {
+  padding: 17px;
+  border: 1px solid #e0e8ee;
+  border-radius: 13px;
+  background: #fff;
+}
+.longterm-facts span,
+.longterm-facts strong {
+  display: block;
+}
+.longterm-facts span {
+  color: #8a98a5;
+  font-size: 10px;
+}
+.longterm-facts strong {
+  margin-top: 7px;
+  color: #2d4356;
+  font-size: 13px;
+}
+.projection-card,
+.advisor-panel {
+  margin-top: 14px;
+  padding: 22px;
+  border: 1px solid #dfe8ee;
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 6px 22px rgba(24, 55, 79, 0.05);
+}
+.projection-head,
+.advisor-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.projection-head span,
+.advisor-title > div > span {
+  color: var(--brand);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+.projection-head strong {
+  display: block;
+  margin-top: 5px;
+  color: #283d50;
+  font-size: 18px;
+}
+.projection-head > div:last-child,
+.advisor-controls {
+  display: flex;
+  gap: 8px;
+}
+.projection-head label {
+  color: #748493;
+  font-size: 10px;
+}
+.projection-head input,
+.projection-head select,
+.advisor-controls select {
+  height: 34px;
+  margin-left: 5px;
+  padding: 0 8px;
+  border: 1px solid #d5dfe6;
+  border-radius: 7px;
+  background: #fff;
+  color: #43566a;
+}
+.projection-head input {
+  width: 110px;
+  text-align: right;
+}
+.projection-chart {
+  width: 100%;
+  height: 250px;
+  margin-top: 16px;
+  overflow: visible;
+}
+.projection-axis {
+  stroke: #dfe6eb;
+}
+.projection-line {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: drawProjection 1.3s ease forwards;
+}
+.deposit-line {
+  stroke: #94a3b8;
+}
+.irp-line {
+  stroke: #078acb;
+}
+.projection-legend {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.projection-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #728291;
+  font-size: 11px;
+}
+.projection-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.deposit-dot {
+  background: #94a3b8;
+}
+.irp-dot {
+  background: #078acb;
+}
+.projection-legend b {
+  margin-left: auto;
+  color: #087db6;
+  font-size: 13px;
+}
+.projection-card > p,
+.longterm-notice {
+  color: #8996a2;
+  font-size: 10px;
+  line-height: 1.6;
+}
