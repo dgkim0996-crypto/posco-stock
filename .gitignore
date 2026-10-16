@@ -4,5 +4,7 @@ dist/
 .env
 .cache/
 .pptx-work/
+.codex-build/
+u_중요코드/
 output/*
 !output/포스코증권_6단계_완료보고서_최종.pptx

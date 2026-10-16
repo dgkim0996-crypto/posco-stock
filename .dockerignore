@@ -7,3 +7,7 @@ dist
 output
 *.pptx
 npm-debug.log*
+.codex-build
+u_중요코드
+docs
+*.bat
